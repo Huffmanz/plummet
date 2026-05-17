@@ -1,102 +1,160 @@
-[gd_scene format=3 uid="uid://bnxkfv3qmzt4p"]
+[gd_scene format=3 uid="uid://bnxkfv3qm0t4p"]
 
-[ext_resource type="Script" path="res://scripts/visual/game_board.gd" id="1_gamebrd"]
-[ext_resource type="Script" path="res://scripts/visual/board_canvas.gd" id="2_boardcvs"]
-[ext_resource type="Script" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
-[ext_resource type="Script" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
+[ext_resource type="Script" uid="uid://ddkojelartdav" path="res://scripts/visual/game_board.gd" id="1_gamebrd"]
+[ext_resource type="Script" uid="uid://rc02r6wdhkry" path="res://scripts/visual/board_canvas.gd" id="2_boardcvs"]
+[ext_resource type="Script" uid="uid://dt8p18ujv6rb0" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
+[ext_resource type="Script" uid="uid://rmame1hoea4x" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
+[ext_resource type="Script" uid="uid://b4d44rx2wjhhe" path="res://scripts/animation/anim_layer.gd" id="5_animlyr"]
 
-[node name="GameBoard" type="Control"]
+[node name="GameBoard" type="Control" unique_id=1723042778]
+layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 script = ExtResource("1_gamebrd")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=2001824056]
+layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.12, 0.12, 0.15, 1.0)
+color = Color(0.12, 0.12, 0.15, 1)
 
-[node name="BoardCanvas" type="Node2D" parent="."]
+[node name="BoardCanvas" type="Node2D" parent="." unique_id=697475631]
 script = ExtResource("2_boardcvs")
 
-[node name="GhostCanvas" type="Node2D" parent="."]
+[node name="GhostCanvas" type="Node2D" parent="." unique_id=1932619104]
 script = ExtResource("3_ghostcvs")
 
-[node name="LeftPanel" type="VBoxContainer" parent="."]
-custom_minimum_size = Vector2(160, 0)
+[node name="AnimLayer" type="Node2D" parent="." unique_id=1129054763]
+script = ExtResource("5_animlyr")
 
-[node name="PlayerTitle" type="Label" parent="LeftPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=601448502]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer" unique_id=1549813536]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+
+[node name="PlayerTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1080029853]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "PLAYER"
 
-[node name="PlayerScore" type="Label" parent="LeftPanel"]
+[node name="PlayerScore" type="Label" parent="MarginContainer/LeftPanel" unique_id=1941758077]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Score: 0"
 
-[node name="PlayerTurns" type="Label" parent="LeftPanel"]
+[node name="PlayerTurns" type="Label" parent="MarginContainer/LeftPanel" unique_id=102212865]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Turns: 40"
 
-[node name="QueueTitle" type="Label" parent="LeftPanel"]
+[node name="QueueTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1032767253]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Next:"
 
-[node name="QueueCanvas" type="Control" parent="LeftPanel"]
-layout_mode = 2
+[node name="QueueCanvas" type="Control" parent="MarginContainer/LeftPanel" unique_id=399047196]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(112, 112)
+layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("4_queuecvs")
 
-[node name="RightPanel" type="VBoxContainer" parent="."]
+[node name="RightPanel" type="VBoxContainer" parent="MarginContainer" unique_id=892930335]
+unique_name_in_owner = true
 custom_minimum_size = Vector2(160, 0)
-
-[node name="AITitle" type="Label" parent="RightPanel"]
 layout_mode = 2
-text = "AI"
+size_flags_horizontal = 8
+size_flags_vertical = 0
 
-[node name="AIScore" type="Label" parent="RightPanel"]
+[node name="AITitle" type="Label" parent="MarginContainer/RightPanel" unique_id=1216232477]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "AI"
+horizontal_alignment = 2
+
+[node name="AIScore" type="Label" parent="MarginContainer/RightPanel" unique_id=978216441]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Score: 0"
+horizontal_alignment = 2
 
-[node name="AITurns" type="Label" parent="RightPanel"]
+[node name="AITurns" type="Label" parent="MarginContainer/RightPanel" unique_id=1153181058]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Turns: 40"
+horizontal_alignment = 2
 
-[node name="ChipCount" type="Label" parent="RightPanel"]
+[node name="ChipCount" type="Label" parent="MarginContainer/RightPanel" unique_id=941501561]
+unique_name_in_owner = true
 layout_mode = 2
 text = "Chips: 0"
+horizontal_alignment = 2
 
-[node name="EnemyName" type="Label" parent="RightPanel"]
+[node name="EnemyName" type="Label" parent="MarginContainer/RightPanel" unique_id=1412658590]
+unique_name_in_owner = true
 layout_mode = 2
-text = ""
+horizontal_alignment = 2
 
-[node name="EnemyGimmick" type="Label" parent="RightPanel"]
+[node name="EnemyGimmick" type="Label" parent="MarginContainer/RightPanel" unique_id=1184147292]
+unique_name_in_owner = true
 layout_mode = 2
-text = ""
+horizontal_alignment = 2
 autowrap_mode = 2
 
-[node name="BottomStrip" type="Control" parent="."]
-custom_minimum_size = Vector2(0, 44)
+[node name="BottomStrip" type="Control" parent="MarginContainer" unique_id=869220148]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 8
 
-[node name="TurnIndicator" type="Label" parent="BottomStrip"]
-anchor_left = 0.0
-anchor_right = 0.5
-anchor_bottom = 1.0
+[node name="TurnIndicator" type="Label" parent="MarginContainer/BottomStrip" unique_id=1471655483]
+unique_name_in_owner = true
+layout_mode = 1
+offset_left = -1.0
+offset_top = -28.0
+offset_right = 92.0
+offset_bottom = -5.0
 text = "YOUR TURN"
 horizontal_alignment = 1
 
-[node name="MatchInfo" type="Label" parent="BottomStrip"]
+[node name="MatchInfo" type="Label" parent="MarginContainer/BottomStrip" unique_id=808579990]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.5
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = -1.0
+offset_top = -28.0
+offset_right = -1.0
+offset_bottom = -5.0
 text = "Act 1 · Match 1"
 horizontal_alignment = 2
 
-[node name="RotatePrompt" type="Label" parent="."]
+[node name="RotatePrompt" type="Label" parent="." unique_id=1117598531]
+visible = false
+layout_mode = 1
+anchors_preset = -1
 anchor_left = 0.3
-anchor_right = 0.7
 anchor_top = 0.45
+anchor_right = 0.7
 anchor_bottom = 0.55
 text = "Please rotate your device"
 horizontal_alignment = 1
 vertical_alignment = 1
-visible = false

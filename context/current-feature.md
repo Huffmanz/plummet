@@ -1,13 +1,28 @@
-# Current Feature
+# Current Feature — 04: AI Opponent
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
-- <!-- Add goals for the active feature -->
+- Column-scoring heuristic: evaluate every valid column and pick the highest score
+- Heuristic factors: AI clear (+1000/+1500), extend AI line (+100/piece), block player clear (+800/+1200), give player a clear (−500), column height penalty (−10/row above halfway)
+- Ties broken randomly among tied columns
+- Noise parameter: replace top-scored column with random valid column at given probability
+- Alternating turn management: player → AI → player, 40 turns each
+- Match end: both players reach 40 turns, or board fills completely
+- Gimmick hook interface: 6 named hooks that fire at specific points in the turn sequence
+- AI piece queue: tracks current and next pieces
 
 ## Notes
-- <!-- Add implementation notes and constraints -->
+- Heuristic is one-ply only — no lookahead beyond immediate drop result
+- Difficulty expressed via noise, not heuristic weights: low (0–5%), medium (10–15%), high (20%+)
+- Noise samples only from VALID columns (never full ones)
+- If all columns are full on AI's turn: skip turn and trigger match end
+- Gimmick hooks: on_turn_start, on_column_selected, on_piece_landed, on_cascade_complete, on_player_turn_start, on_player_piece_landed
+- Hooks receive board state and may modify it, modify selected column, or inject pieces
+- Heuristic simulates a drop without actually placing the piece
+- Individual enemy gimmicks are feature 08 — only the hook interface lives here
+- AI queue is hidden from player
 
 ## History
 

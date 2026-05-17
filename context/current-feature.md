@@ -1,39 +1,11 @@
-# Current Feature: Feature 11 — Animations + Juice
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Pieces animate downward to their landing position visibly
-- Cleared cells animate out before gravity runs
-- Score popups appear above cleared cells with correct values
-- Cascade multipliers appear in the popup correctly (e.g. "100 ×2")
-- Cross-color chain bonus displays as a distinct "+150 CHAIN" popup
-- Screen shake triggers on cascade depth 2+ and Volatile explosions
-- Combo announcement text appears on cascade depth 2+ ("COMBO" / "CHAIN" / "CASCADE")
-- Sound plays on clear, land, and cascade
-- All animations complete before the next turn input is accepted
-- A mute option disables all sounds
-
 ## Notes
-
-**Implementation priority (stop when time runs out):**
-1. Clear animation — highest impact
-2. Score popups — makes scoring legible without the scoreboard
-3. Piece drop animation — polish on every action
-4. Cascade timing and pacing — makes combo chains exciting
-5. Sound cues — transforms the feel of every interaction
-6. Screen shake — high drama for big moments
-7. Combo announcement text — nice to have
-
-**Key design rules:**
-- All juice effects are cosmetic — game must be fully playable with all animations disabled
-- Cascades should pace visually: ~8-frame pause after clear, gravity animates, ~4-frame pause before next clear check; shorten pauses ~10% per cascade depth level
-- Screen shake table: depth 2 = light (2px/4f), depth 3+ = medium (4px/6f), Volatile = medium (4px/6f), board flip = heavy (8px/12f), match win = light (2px/4f)
-- Popups float upward and fade over ~30 frames; stack vertically to avoid overlap
-- Reduced motion option should skip to final states immediately
-- Screen shake must be independently disableable
 
 ## History
 
@@ -48,6 +20,9 @@ Implemented `ScoreCalculator` (base values, cascade depth multiplier ×2^depth, 
 
 ### Feature 12 — Visual Layer
 Implemented the full rendering pipeline: `RenderState` data snapshot (84 `CellState` cells, 2-entry player queue, scores, turn state, frozen columns, landing rows), `RenderStateBuilder` bridging game logic to visuals, `ThemeBase`/`ThemeJam` with swappable draw methods (purple/teal circles, 4 piece-type border styles, 6 modifier badge types, AI center-dot accessibility marker), `LayoutManager` computing DESKTOP/MOBILE/TOO_SMALL modes with dynamic cell sizing (32–48 px), `BoardRenderer` with frozen-column rejection and ghost-piece placement, and `BoardCanvas`/`GhostCanvas`/`QueueCanvas` thin draw wrappers. `GameBoard` scene wires the full player-vs-AI loop (drop → cascade → score → AI response). 27 acceptance tests pass covering data correctness, theme contracts, renderer validity checks, and builder mappings.
+
+### Feature 11 — Animations + Juice
+Implemented `AnimLayer` (Node2D overlay) with five animation systems: piece drop (1400 px/s fall with 3-phase squash→stretch→restore on landing), clear animation (2-frame white flash + 6-frame contract-to-point), score popups (yellow text floating upward over 30 frames with cascade multiplier label e.g. "100 ×2"), screen shake (light 2px/4f at cascade depth 2, medium 4px/6f at depth 3+, light on match win), and combo announcement text (COMBO/CHAIN/CASCADE fading in/holding/out centered on board). Cascade loop converted to async coroutine with paced timing (~8-frame pause post-clear, ~4-frame post-gravity, each shrinking 10% per depth). `BoardCanvas` and `GhostCanvas` gain `shake_offset` for synchronized shake. Cross-color chain popup "+150 CHAIN" spawns on detection. Accessibility: R key toggles reduced motion (skips all animation), M key toggles mute (wired for future audio). All animations complete before next turn input is accepted via `_animating` flag.
 
 ### Feature 04 — AI Opponent
 Implemented `AIOpponent` with a one-ply column-scoring heuristic (AI clear +1000/+1500, extend AI line +100/piece, block player clear +800/+1200, give player a clear −500, column height penalty −10/row above halfway), random tie-breaking, and a `noise` parameter for difficulty tuning. Implemented `TurnManager` with strict player→AI alternation, 40 turns each, and match-end signals for turn exhaustion or board fill. Added six gimmick hook slots (`on_turn_start`, `on_column_selected`, `on_piece_landed`, `on_cascade_complete`, `on_player_turn_start`, `on_player_piece_landed`) for future enemy scripts. AI tracks a hidden current/next piece queue. Added `get_landing_row()` to `BoardEngine`. 27 acceptance tests pass.

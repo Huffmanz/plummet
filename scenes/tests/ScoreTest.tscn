@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://btpicdj34078s"]
+
+[ext_resource type="Script" uid="uid://crwqj50p6na8o" path="res://scripts/scoring/scoring_test.gd" id="1_gojpv"]
+
+[node name="ScoreTest" type="Node" unique_id=1974837267]
+script = ExtResource("1_gojpv")

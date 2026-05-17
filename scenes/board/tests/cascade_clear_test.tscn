@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://jxp2illrm7se"]
+
+[ext_resource type="Script" uid="uid://brjibcid3rpxf" path="res://scripts/board/cascade_loop_test.gd" id="1_j14wh"]
+
+[node name="CascadeClearTest" type="Node" unique_id=1270142266]
+script = ExtResource("1_j14wh")

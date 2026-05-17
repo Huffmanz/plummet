@@ -1,11 +1,39 @@
-# Current Feature
+# Current Feature: Feature 11 — Animations + Juice
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Pieces animate downward to their landing position visibly
+- Cleared cells animate out before gravity runs
+- Score popups appear above cleared cells with correct values
+- Cascade multipliers appear in the popup correctly (e.g. "100 ×2")
+- Cross-color chain bonus displays as a distinct "+150 CHAIN" popup
+- Screen shake triggers on cascade depth 2+ and Volatile explosions
+- Combo announcement text appears on cascade depth 2+ ("COMBO" / "CHAIN" / "CASCADE")
+- Sound plays on clear, land, and cascade
+- All animations complete before the next turn input is accepted
+- A mute option disables all sounds
+
 ## Notes
+
+**Implementation priority (stop when time runs out):**
+1. Clear animation — highest impact
+2. Score popups — makes scoring legible without the scoreboard
+3. Piece drop animation — polish on every action
+4. Cascade timing and pacing — makes combo chains exciting
+5. Sound cues — transforms the feel of every interaction
+6. Screen shake — high drama for big moments
+7. Combo announcement text — nice to have
+
+**Key design rules:**
+- All juice effects are cosmetic — game must be fully playable with all animations disabled
+- Cascades should pace visually: ~8-frame pause after clear, gravity animates, ~4-frame pause before next clear check; shorten pauses ~10% per cascade depth level
+- Screen shake table: depth 2 = light (2px/4f), depth 3+ = medium (4px/6f), Volatile = medium (4px/6f), board flip = heavy (8px/12f), match win = light (2px/4f)
+- Popups float upward and fade over ~30 frames; stack vertically to avoid overlap
+- Reduced motion option should skip to final states immediately
+- Screen shake must be independently disableable
 
 ## History
 

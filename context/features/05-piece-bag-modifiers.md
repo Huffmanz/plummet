@@ -3,13 +3,13 @@
 
 ## Purpose
 
-The piece bag and modifier system is the core roguelike mechanic. The player builds a bag of 7 pieces between matches, attaching modifiers that stack and interact. This is where combos are designed. The payoff happens on the board.
+The piece bag and modifier system is the core roguelike mechanic. The player builds a bag of 7 (make configurable) pieces between matches, attaching modifiers that stack and interact. This is where combos are designed. The payoff happens on the board.
 
 ---
 
 ## Scope
 
-- Piece bag of 7, cycling through the match
+- Piece bag of 7 (configurable), cycling through the match
 - Modifier attachment (up to 3 per piece)
 - All 6 modifiers and their resolution logic
 - Modifier resolution order

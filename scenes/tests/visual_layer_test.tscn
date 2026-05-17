@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cqfxkn4m0pvbt"]
+
+[ext_resource type="Script" path="res://scripts/visual/visual_layer_test.gd" id="1_vltest"]
+
+[node name="VisualLayerTest" type="Node"]
+script = ExtResource("1_vltest")

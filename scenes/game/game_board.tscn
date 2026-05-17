@@ -1,0 +1,102 @@
+[gd_scene format=3 uid="uid://bnxkfv3qmzt4p"]
+
+[ext_resource type="Script" path="res://scripts/visual/game_board.gd" id="1_gamebrd"]
+[ext_resource type="Script" path="res://scripts/visual/board_canvas.gd" id="2_boardcvs"]
+[ext_resource type="Script" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
+[ext_resource type="Script" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
+
+[node name="GameBoard" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_gamebrd")
+
+[node name="Background" type="ColorRect" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.12, 0.12, 0.15, 1.0)
+
+[node name="BoardCanvas" type="Node2D" parent="."]
+script = ExtResource("2_boardcvs")
+
+[node name="GhostCanvas" type="Node2D" parent="."]
+script = ExtResource("3_ghostcvs")
+
+[node name="LeftPanel" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(160, 0)
+
+[node name="PlayerTitle" type="Label" parent="LeftPanel"]
+layout_mode = 2
+text = "PLAYER"
+
+[node name="PlayerScore" type="Label" parent="LeftPanel"]
+layout_mode = 2
+text = "Score: 0"
+
+[node name="PlayerTurns" type="Label" parent="LeftPanel"]
+layout_mode = 2
+text = "Turns: 40"
+
+[node name="QueueTitle" type="Label" parent="LeftPanel"]
+layout_mode = 2
+text = "Next:"
+
+[node name="QueueCanvas" type="Control" parent="LeftPanel"]
+layout_mode = 2
+custom_minimum_size = Vector2(112, 112)
+size_flags_horizontal = 3
+script = ExtResource("4_queuecvs")
+
+[node name="RightPanel" type="VBoxContainer" parent="."]
+custom_minimum_size = Vector2(160, 0)
+
+[node name="AITitle" type="Label" parent="RightPanel"]
+layout_mode = 2
+text = "AI"
+
+[node name="AIScore" type="Label" parent="RightPanel"]
+layout_mode = 2
+text = "Score: 0"
+
+[node name="AITurns" type="Label" parent="RightPanel"]
+layout_mode = 2
+text = "Turns: 40"
+
+[node name="ChipCount" type="Label" parent="RightPanel"]
+layout_mode = 2
+text = "Chips: 0"
+
+[node name="EnemyName" type="Label" parent="RightPanel"]
+layout_mode = 2
+text = ""
+
+[node name="EnemyGimmick" type="Label" parent="RightPanel"]
+layout_mode = 2
+text = ""
+autowrap_mode = 2
+
+[node name="BottomStrip" type="Control" parent="."]
+custom_minimum_size = Vector2(0, 44)
+
+[node name="TurnIndicator" type="Label" parent="BottomStrip"]
+anchor_left = 0.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+text = "YOUR TURN"
+horizontal_alignment = 1
+
+[node name="MatchInfo" type="Label" parent="BottomStrip"]
+anchor_left = 0.5
+anchor_right = 1.0
+anchor_bottom = 1.0
+text = "Act 1 · Match 1"
+horizontal_alignment = 2
+
+[node name="RotatePrompt" type="Label" parent="."]
+anchor_left = 0.3
+anchor_right = 0.7
+anchor_top = 0.45
+anchor_bottom = 0.55
+text = "Please rotate your device"
+horizontal_alignment = 1
+vertical_alignment = 1
+visible = false

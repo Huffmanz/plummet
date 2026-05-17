@@ -99,6 +99,10 @@ func set_cell(col: int, row: int, piece: Piece) -> void:
 	_grid[col][row] = piece
 
 
+func get_landing_row(col: int) -> int:
+	return _lowest_empty_row(col)
+
+
 func is_column_full(col: int) -> bool:
 	var rows: int = _grid[col].size()
 	return _grid[col][rows - 1] != null

@@ -1,7 +1,7 @@
 # Current Feature — 04: AI Opponent
 
 ## Status
-In Progress
+Complete
 
 ## Goals
 - Column-scoring heuristic: evaluate every valid column and pick the highest score

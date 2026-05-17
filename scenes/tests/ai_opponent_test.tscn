@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://pidrgnkbycu"]
+
+[ext_resource type="Script" uid="uid://bsm6h8isiv8n0" path="res://scripts/ai/ai_opponent_test.gd" id="1_fihmk"]
+
+[node name="AiOpponentTest" type="Node" unique_id=2134412127]
+script = ExtResource("1_fihmk")

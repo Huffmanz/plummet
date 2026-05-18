@@ -1,33 +1,15 @@
-# Current Feature: Moar Juice (Feature 14)
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-**Board atmosphere:**
-- Board edge glow by turn — board border glows player color on your turn, AI color on theirs
-- Cascade heat — board background shifts warmer (orange/red) as cascade depth increases, cools after
-- Frozen column frost overlay — faint blue-tinted hatching over frozen columns for instant readability
-
-**Piece feedback:**
-- Drop shadow under falling piece — soft ellipse on landing cell that shrinks as piece approaches
-- Modifier trigger flash — piece briefly pulses accent color when a modifier activates
-- Piece glow on land — piece blooms to 120% color saturation on landing then settles
-
-**Score / cascade:**
-- Score milestone pop — crossing 500, 1000, 2000 etc. triggers a large centered text pop
-- Cascade counter badge — persistent "×N" badge in corner that ticks up each level, fades after chain
-
-**Meta / game state:**
-- Turn counter urgency — last 10 turns, turn counter label pulses red on each new turn
-- Enemy portrait reactions — AI face (shapes) that reacts: neutral / smug on big AI score / startled on player chain
+<!-- bullet points of what success looks like -->
 
 ## Notes
 
-- Highest value / least redundancy: frozen column frost, cascade heat, modifier trigger flash (fill gaps that currently exist)
-- All effects build on existing AnimLayer, BoardCanvas, GhostCanvas, GameBoard
-- Reduced motion toggle (R key) must skip all new animations
+<!-- additional context, constraints, or details -->
 
 ## History
 
@@ -51,3 +33,6 @@ Implemented `AIOpponent` with a one-ply column-scoring heuristic (AI clear +1000
 
 ### Feature 13 — Additional Juice
 Extended `AnimLayer`, `BoardCanvas`, `GhostCanvas`, `QueueCanvas`, and `GameBoard` with 19 polish effects: gravity animation (pieces slide to new rows after clears), landing impact burst (4–6 dots fly outward on piece landing), AI drop preview (faint column highlight 300ms before AI drops), column hover highlight (subtle vertical strip ~10% alpha), score counter tween (score ticks up over ~20 frames), piece trail while falling (2–3 ghost copies at decreasing alpha), column fill warning (column pulses red when 1–2 cells from full), piece lock flash (white flash on undroppable column), clear line sweep (thin line traces matched cells before flash), board idle breathe (0.999→1.001 scale pulse), your-turn indicator pop (bounces/scales in on player turn), AI thinking dots (animated "..." during AI turn), column rejection shake (horizontal shake on failed click), queue slide (next piece slides down into position), incoming piece drop preview (queued piece bounces), modifier badge pulse (badges pulse gently), multiplier escalation color (score popups shift yellow→orange→red with cascade depth), match-end score comparison (dramatic count-up side by side before winner reveal), and chip earn flash ("+1 chip" micro-popup near score). Added `MatchEndOverlay` scene and `JuiceTest` scene for isolated testing.
+
+### Feature 14 — Moar Juice
+Extended `AnimLayer`, `BoardRenderer`, `GameBoard`, `ThemeJam`, and added `EnemyPortrait` with 11 polish effects: board edge glow pulses player/AI color on active turn, cascade heat shifts board background warmer as chain depth increases, frozen column frost overlay draws blue hatching over locked columns, drop shadow ellipse shrinks toward landing cell as piece falls, piece blooms to 120% saturation on landing then settles, modifier trigger flash pulses accent color on activation, score milestone pop fires large centered text at 500/1000/2000+, cascade counter badge shows ×N depth in corner during chains and fades after, turn counter pulses red in last 10 turns, EnemyPortrait (shape-based face) reacts neutral/smug/startled based on game events, and BLOCKED! popup fires when a placement cuts across 3+ consecutive opponent pieces.

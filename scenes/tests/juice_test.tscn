@@ -1,0 +1,43 @@
+[gd_scene format=3 uid="uid://cjuicetst1x3n"]
+
+[ext_resource type="PackedScene" uid="uid://bnxkfv3qm0t4p" path="res://scenes/game/game_board.tscn" id="1_gameboard"]
+[ext_resource type="Script" uid="uid://dcl0bfwdi613y" path="res://scripts/visual/juice_test.gd" id="2_juicetst"]
+
+[node name="JuiceTest" unique_id=1839426264 instance=ExtResource("1_gameboard")]
+script = ExtResource("2_juicetst")
+
+[node name="PlayerTitle" parent="MarginContainer/LeftPanel" parent_id_path=PackedInt32Array(1549813536) index="0" unique_id=1080029853]
+theme_override_font_sizes/font_size = 16
+
+[node name="PlayerScore" parent="MarginContainer/LeftPanel" parent_id_path=PackedInt32Array(1549813536) index="1" unique_id=1941758077]
+theme_override_font_sizes/font_size = 8
+
+[node name="PlayerTurns" parent="MarginContainer/LeftPanel" parent_id_path=PackedInt32Array(1549813536) index="2" unique_id=102212865]
+theme_override_font_sizes/font_size = 8
+
+[node name="QueueTitle" parent="MarginContainer/LeftPanel" parent_id_path=PackedInt32Array(1549813536) index="3" unique_id=1032767253]
+theme_override_font_sizes/font_size = 8
+
+[node name="AITitle" parent="MarginContainer/RightPanel" parent_id_path=PackedInt32Array(892930335) index="0" unique_id=1216232477]
+theme_override_font_sizes/font_size = 16
+
+[node name="AIScore" parent="MarginContainer/RightPanel" parent_id_path=PackedInt32Array(892930335) index="1" unique_id=978216441]
+theme_override_font_sizes/font_size = 8
+
+[node name="AITurns" parent="MarginContainer/RightPanel" parent_id_path=PackedInt32Array(892930335) index="2" unique_id=1153181058]
+theme_override_font_sizes/font_size = 8
+
+[node name="ChipCount" parent="MarginContainer/RightPanel" parent_id_path=PackedInt32Array(892930335) index="3" unique_id=941501561]
+theme_override_font_sizes/font_size = 8
+
+[node name="EnemyName" parent="MarginContainer/RightPanel" parent_id_path=PackedInt32Array(892930335) index="4" unique_id=1412658590]
+theme_override_font_sizes/font_size = 8
+
+[node name="EnemyGimmick" parent="MarginContainer/RightPanel" parent_id_path=PackedInt32Array(892930335) index="5" unique_id=1184147292]
+theme_override_font_sizes/font_size = 8
+
+[node name="TurnIndicator" parent="MarginContainer/BottomStrip" parent_id_path=PackedInt32Array(869220148) index="0" unique_id=1471655483]
+theme_override_font_sizes/font_size = 16
+
+[node name="MatchInfo" parent="MarginContainer/BottomStrip" parent_id_path=PackedInt32Array(869220148) index="1" unique_id=808579990]
+theme_override_font_sizes/font_size = 16

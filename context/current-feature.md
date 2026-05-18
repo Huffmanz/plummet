@@ -1,11 +1,42 @@
-# Current Feature
+# Current Feature — Feature 13: Additional Juice
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Gravity animation: pieces slide down visually after clears instead of snapping
+- Landing impact burst: 4–6 dots fly outward and fade on piece landing
+- AI drop preview: faint column highlight 300ms before AI drops
+- Column hover highlight: subtle vertical strip behind hovered column (~10% alpha)
+- Score counter tween: score label ticks up over ~20 frames instead of snapping
+- Piece trail while falling: 2–3 ghost copies behind falling piece at decreasing alpha
+- Column fill warning: column turns red/pulses when 1–2 cells from full
+- Piece lock flash: brief white flash on column when it becomes undroppable (full/frozen)
+- Clear line sweep: thin line traces matched cells just before they flash
+- Board idle breathe: very subtle scale pulse (0.999→1.001) when board is idle
+- Your turn indicator pop: "YOUR TURN" text bounces/scales in on player turn start
+- AI thinking dots: animated "..." in turn indicator during AI turn
+- Column rejection shake: frozen/full column shakes horizontally on failed click
+- Queue slide: next piece slides down into position when current piece is consumed
+- Incoming piece drop preview: queued piece subtly bounces to draw attention
+- Modifier badge pulse: modifier badges on queued pieces pulse gently
+- Multiplier escalation color: score popups shift yellow→orange→red with cascade depth
+- Match-end score comparison: scores count up dramatically side by side before winner reveal
+- Chip earn flash: "+1 chip" micro-popup near score on clear
+
 ## Notes
+
+Priority order (biggest feel win for least code):
+1. Gravity animation — cascades feel incomplete without it; snapshot positions before/after `apply_gravity()`, animate in AnimLayer
+2. Landing impact burst — fires on every player action; ~20 lines with `draw_circle` per dot
+3. Column rejection shake — no-feedback clicks feel broken
+4. AI drop preview — makes AI feel intentional
+5. Column hover highlight — pairs with existing ghost piece
+
+All additions extend existing `AnimLayer`, `BoardCanvas`, `GhostCanvas`, `QueueCanvas` — no new scene nodes required unless needed for score counter or queue slide.
+
+Not in scope: core animations already in Feature 11, sound, shop UI, run summary screen.
 
 ## History
 

@@ -5,6 +5,7 @@ var layout: LayoutManager.LayoutResult
 var hovered_col: int = -1
 var gravity_hidden_cells: Array[Vector2i] = []
 var idle_breathe_scale: float = 1.0
+var cascade_heat: float = 0.0
 
 
 func _init(p_theme: ThemeBase) -> void:
@@ -16,7 +17,14 @@ func render_board(state: RenderState, canvas: CanvasItem) -> void:
 		return
 
 	var board_rect := _board_rect()
-	canvas.draw_rect(board_rect, theme.color_bg)
+	# Board edge glow by turn
+	var glow_color := theme.color_player if state.active_player == CellState.Occupant.PLAYER else theme.color_ai
+	canvas.draw_rect(board_rect.grow(6.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.10), false, 2.0)
+	canvas.draw_rect(board_rect.grow(4.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.22), false, 2.0)
+	canvas.draw_rect(board_rect.grow(2.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.45), false, 2.0)
+	# Background with cascade heat tint
+	var heat_bg := theme.color_bg.lerp(Color(0.25, 0.08, 0.03), cascade_heat)
+	canvas.draw_rect(board_rect, heat_bg)
 
 	for fc in state.frozen_columns:
 		theme.draw_frozen_overlay(canvas, _column_rect(fc.col), fc.turns_remaining)

@@ -1,15 +1,33 @@
-# Current Feature
+# Current Feature: Moar Juice (Feature 14)
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Add goals here -->
+**Board atmosphere:**
+- Board edge glow by turn — board border glows player color on your turn, AI color on theirs
+- Cascade heat — board background shifts warmer (orange/red) as cascade depth increases, cools after
+- Frozen column frost overlay — faint blue-tinted hatching over frozen columns for instant readability
+
+**Piece feedback:**
+- Drop shadow under falling piece — soft ellipse on landing cell that shrinks as piece approaches
+- Modifier trigger flash — piece briefly pulses accent color when a modifier activates
+- Piece glow on land — piece blooms to 120% color saturation on landing then settles
+
+**Score / cascade:**
+- Score milestone pop — crossing 500, 1000, 2000 etc. triggers a large centered text pop
+- Cascade counter badge — persistent "×N" badge in corner that ticks up each level, fades after chain
+
+**Meta / game state:**
+- Turn counter urgency — last 10 turns, turn counter label pulses red on each new turn
+- Enemy portrait reactions — AI face (shapes) that reacts: neutral / smug on big AI score / startled on player chain
 
 ## Notes
 
-<!-- Add notes here -->
+- Highest value / least redundancy: frozen column frost, cascade heat, modifier trigger flash (fill gaps that currently exist)
+- All effects build on existing AnimLayer, BoardCanvas, GhostCanvas, GameBoard
+- Reduced motion toggle (R key) must skip all new animations
 
 ## History
 

@@ -62,6 +62,30 @@ func draw_locked_cell(canvas: CanvasItem, rect: Rect2) -> void:
 
 func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int) -> void:
 	canvas.draw_rect(rect, color_frozen_overlay)
+	# Frost hatching — diagonal lines at 45°
+	var hatch_color := Color(0.65, 0.88, 1.0, 0.28)
+	var spacing := 10.0
+	var rx := rect.position.x
+	var ry := rect.position.y
+	var rw := rect.size.x
+	var rh := rect.size.y
+	var d := rx - rh
+	while d <= rx + rw:
+		var x1 := d
+		var y1 := ry
+		var x2 := d + rh
+		var y2 := ry + rh
+		if x1 < rx:
+			var adj := rx - x1
+			x1 = rx
+			y1 += adj
+		if x2 > rx + rw:
+			var adj := x2 - (rx + rw)
+			x2 = rx + rw
+			y2 -= adj
+		if y1 < ry + rh and y2 > ry and x1 <= x2:
+			canvas.draw_line(Vector2(x1, y1), Vector2(x2, y2), hatch_color, 1.0)
+		d += spacing
 
 
 func draw_modifier_badge(canvas: CanvasItem, rect: Rect2, modifier_name: String, slot: int) -> void:

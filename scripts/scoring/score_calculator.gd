@@ -13,22 +13,24 @@ func calculate(result: CascadeResult, modifier_triggers: int) -> TurnScore:
 		depth_points[key] = depth_points.get(key, 0) + pts
 		depth_count[key] = depth_count.get(key, 0) + 1
 
-	var total: int = 0
+	# Each run's points go to the run's owner — both sides earn their own cascade multipliers.
 	for key: Vector2i in depth_points:
 		var pts: int = depth_points[key]
 		if depth_count[key] >= 2:
 			pts = pts * 3 / 2  # ×1.5 simultaneous bonus
-		total += pts
+		if key.x == Piece.Owner.PLAYER:
+			turn.player_points += pts
+		else:
+			turn.ai_points += pts
 
+	# Cross-color bonus and modifier triggers go to whoever engineered the chain.
+	var bonus: int = modifier_triggers * 25
 	if result.cross_color:
-		total += 150
-
-	total += modifier_triggers * 25
-
+		bonus += 150
 	if result.attribution == Piece.Owner.PLAYER:
-		turn.player_points = total
+		turn.player_points += bonus
 	else:
-		turn.ai_points = total
+		turn.ai_points += bonus
 
 	return turn
 

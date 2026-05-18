@@ -3,6 +3,8 @@ class_name BoardRenderer extends RefCounted
 var theme: ThemeBase
 var layout: LayoutManager.LayoutResult
 var hovered_col: int = -1
+var gravity_hidden_cells: Array[Vector2i] = []
+var idle_breathe_scale: float = 1.0
 
 
 func _init(p_theme: ThemeBase) -> void:
@@ -23,7 +25,9 @@ func render_board(state: RenderState, canvas: CanvasItem) -> void:
 		for r in RenderState.ROWS:
 			var cs: CellState = state.get_cell(c, r)
 			var rect := cell_rect(c, r, state.gravity_flipped)
-			if cs.locked:
+			if gravity_hidden_cells.has(Vector2i(c, r)):
+				theme.draw_empty_cell(canvas, rect)
+			elif cs.locked:
 				theme.draw_locked_cell(canvas, rect)
 			elif cs.occupant == CellState.Occupant.EMPTY:
 				theme.draw_empty_cell(canvas, rect)
@@ -34,6 +38,15 @@ func render_board(state: RenderState, canvas: CanvasItem) -> void:
 					theme.draw_ai_piece(canvas, rect, cs.piece_type)
 				for i in mini(cs.modifiers.size(), 3):
 					theme.draw_modifier_badge(canvas, rect, cs.modifiers[i], i)
+
+	# Column fill warnings
+	var t_ms := Time.get_ticks_msec() * 0.006
+	for c in RenderState.COLS:
+		var lr := state.landing_rows[c] if c < state.landing_rows.size() else -1
+		if lr >= RenderState.ROWS - 2 and lr >= 0:
+			var pulse := 0.5 + 0.5 * sin(t_ms)
+			var base_alpha := 0.35 if lr == RenderState.ROWS - 1 else 0.18
+			canvas.draw_rect(_column_rect(c), Color(1.0, 0.1, 0.1, base_alpha * pulse))
 
 
 func render_ghost(state: RenderState, canvas: CanvasItem) -> void:
@@ -48,6 +61,9 @@ func render_ghost(state: RenderState, canvas: CanvasItem) -> void:
 	var landing_row: int = state.landing_rows[hovered_col]
 	if landing_row < 0:
 		return
+	# Column hover highlight — subtle vertical strip
+	var col_rect := _column_rect(hovered_col)
+	canvas.draw_rect(col_rect, Color(1.0, 1.0, 1.0, 0.08))
 	theme.draw_ghost_piece(canvas, cell_rect(hovered_col, landing_row, state.gravity_flipped))
 
 

@@ -5,12 +5,15 @@
 [ext_resource type="Script" uid="uid://dt8p18ujv6rb0" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
 [ext_resource type="Script" uid="uid://rmame1hoea4x" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
 [ext_resource type="Script" uid="uid://b4d44rx2wjhhe" path="res://scripts/animation/anim_layer.gd" id="5_animlyr"]
+[ext_resource type="PackedScene" uid="uid://bf0ry22k4o0ey" path="res://scenes/game/match_end_overlay.tscn" id="6_matchend"]
 
 [node name="GameBoard" type="Control" unique_id=1723042778]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_gamebrd")
 
 [node name="Background" type="ColorRect" parent="." unique_id=2001824056]
@@ -50,22 +53,25 @@ size_flags_vertical = 0
 [node name="PlayerTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1080029853]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 16
 text = "PLAYER"
 
 [node name="PlayerScore" type="Label" parent="MarginContainer/LeftPanel" unique_id=1941758077]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Score: 0"
 
 [node name="PlayerTurns" type="Label" parent="MarginContainer/LeftPanel" unique_id=102212865]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Turns: 40"
 
 [node name="QueueTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1032767253]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Next:"
 
 [node name="QueueCanvas" type="Control" parent="MarginContainer/LeftPanel" unique_id=399047196]
@@ -85,36 +91,41 @@ size_flags_vertical = 0
 [node name="AITitle" type="Label" parent="MarginContainer/RightPanel" unique_id=1216232477]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 16
 text = "AI"
 horizontal_alignment = 2
 
 [node name="AIScore" type="Label" parent="MarginContainer/RightPanel" unique_id=978216441]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Score: 0"
 horizontal_alignment = 2
 
 [node name="AITurns" type="Label" parent="MarginContainer/RightPanel" unique_id=1153181058]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Turns: 40"
 horizontal_alignment = 2
 
 [node name="ChipCount" type="Label" parent="MarginContainer/RightPanel" unique_id=941501561]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 text = "Chips: 0"
 horizontal_alignment = 2
 
 [node name="EnemyName" type="Label" parent="MarginContainer/RightPanel" unique_id=1412658590]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 horizontal_alignment = 2
 
 [node name="EnemyGimmick" type="Label" parent="MarginContainer/RightPanel" unique_id=1184147292]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_font_sizes/font_size = 8
 horizontal_alignment = 2
 autowrap_mode = 2
 
@@ -146,6 +157,10 @@ offset_right = -1.0
 offset_bottom = -5.0
 text = "Act 1 · Match 1"
 horizontal_alignment = 2
+
+[node name="MatchEndOverlay" parent="." unique_id=1903911458 instance=ExtResource("6_matchend")]
+visible = false
+layout_mode = 1
 
 [node name="RotatePrompt" type="Label" parent="." unique_id=1117598531]
 visible = false

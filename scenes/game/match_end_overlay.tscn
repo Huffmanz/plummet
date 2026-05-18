@@ -1,0 +1,91 @@
+[gd_scene format=3 uid="uid://bf0ry22k4o0ey"]
+
+[ext_resource type="Script" uid="uid://chgmva2jjopm3" path="res://scripts/visual/match_end_overlay.gd" id="1_matchend"]
+
+[node name="MatchEndOverlay" type="Control" unique_id=904110880]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_matchend")
+
+[node name="Background" type="ColorRect" parent="." unique_id=1871626060]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.78)
+
+[node name="Center" type="CenterContainer" parent="." unique_id=1706499697]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center" unique_id=1587265983]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="WinnerLabel" type="Label" parent="Center/VBox" unique_id=916369662]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
+text = "PLAYER WINS!"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ScoreRow" type="HBoxContainer" parent="Center/VBox" unique_id=1548973616]
+layout_mode = 2
+theme_override_constants/separation = 40
+
+[node name="PlayerPanel" type="PanelContainer" parent="Center/VBox/ScoreRow" unique_id=360171534]
+custom_minimum_size = Vector2(150, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="PlayerBox" type="VBoxContainer" parent="Center/VBox/ScoreRow/PlayerPanel" unique_id=2065454715]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="PlayerTitle" type="Label" parent="Center/VBox/ScoreRow/PlayerPanel/PlayerBox" unique_id=268330501]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "YOU"
+horizontal_alignment = 1
+
+[node name="PlayerScoreDisplay" type="Label" parent="Center/VBox/ScoreRow/PlayerPanel/PlayerBox" unique_id=656378795]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "0"
+horizontal_alignment = 1
+
+[node name="AIPanel" type="PanelContainer" parent="Center/VBox/ScoreRow" unique_id=1365043091]
+custom_minimum_size = Vector2(150, 100)
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="AIBox" type="VBoxContainer" parent="Center/VBox/ScoreRow/AIPanel" unique_id=132047895]
+layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 8
+
+[node name="AITitle" type="Label" parent="Center/VBox/ScoreRow/AIPanel/AIBox" unique_id=1559200612]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "AI"
+horizontal_alignment = 1
+
+[node name="AIScoreDisplay" type="Label" parent="Center/VBox/ScoreRow/AIPanel/AIBox" unique_id=702720036]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "0"
+horizontal_alignment = 1

@@ -1,10 +1,10 @@
 class_name LayoutManager extends RefCounted
 
-const MIN_CELL_SIZE: float = 32.0
-const MAX_CELL_SIZE: float = 48.0
+const MIN_CELL_SIZE: float = 16.0
+const MAX_CELL_SIZE: float = 32.0
 const CELL_GAP: float = 4.0
 const PANEL_WIDTH: float = 160.0
-const BOTTOM_STRIP_HEIGHT: float = 44.0
+const BOTTOM_STRIP_HEIGHT: float = 8.0
 const DESKTOP_MIN_WIDTH: float = 700.0
 
 enum LayoutMode { DESKTOP, MOBILE, TOO_SMALL }
@@ -12,10 +12,10 @@ enum LayoutMode { DESKTOP, MOBILE, TOO_SMALL }
 
 class LayoutResult extends RefCounted:
 	var mode: LayoutManager.LayoutMode = LayoutManager.LayoutMode.DESKTOP
-	var cell_size: float = 48.0
+	var cell_size: float = MAX_CELL_SIZE
 	var board_origin: Vector2 = Vector2.ZERO
-	var panel_width: float = 160.0
-	var bottom_height: float = 44.0
+	var panel_width: float = PANEL_WIDTH
+	var bottom_height: float = BOTTOM_STRIP_HEIGHT
 	var viewport_size: Vector2 = Vector2.ZERO
 
 

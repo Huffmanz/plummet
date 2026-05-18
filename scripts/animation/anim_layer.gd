@@ -44,6 +44,8 @@ var _drop_phase_t: float = 0.0
 var _drop_scale_y: float = 1.0
 var _drop_burst_rect: Rect2 = Rect2()
 var _drop_burst_owner: CellState.Occupant = CellState.Occupant.PLAYER
+var _drop_trail: Array = []  # Vector2 center positions, oldest first
+const _TRAIL_LEN: int = 6
 signal _drop_done
 
 # --- Gravity animation ---
@@ -120,6 +122,30 @@ var _combo_text: String = ""
 var _combo_elapsed: float = 0.0
 var _combo_active: bool = false
 
+# --- Land glow bloom ---
+var _land_glow: float = 0.0
+
+# --- Modifier trigger flash ---
+class _ModFlash:
+	var rect: Rect2 = Rect2()
+	var color: Color = Color.WHITE
+	var elapsed: float = 0.0
+
+const _MOD_FLASH_DUR: float = 0.22
+var _mod_flashes: Array = []
+
+# --- Cascade counter badge ---
+const _CASCADE_BADGE_FADE: float = 0.4
+var _cascade_badge_depth: int = 0
+var _cascade_badge_elapsed: float = 0.0
+var _cascade_badge_active: bool = false
+var _cascade_badge_fading: bool = false
+
+# --- Score milestone text ---
+var _milestone_text: String = ""
+var _milestone_elapsed: float = 0.0
+var _milestone_active: bool = false
+
 
 
 func _process(delta: float) -> void:
@@ -186,6 +212,26 @@ func _process(delta: float) -> void:
 			_combo_active = false
 		dirty = true
 
+	if _land_glow > 0.0:
+		_land_glow = maxf(0.0, _land_glow - 5.0 * delta)
+		dirty = true
+
+	if not _mod_flashes.is_empty():
+		_tick_mod_flashes(delta)
+		dirty = true
+
+	if _cascade_badge_active:
+		_cascade_badge_elapsed += delta
+		if _cascade_badge_fading and _cascade_badge_elapsed >= _CASCADE_BADGE_FADE:
+			_cascade_badge_active = false
+		dirty = true
+
+	if _milestone_active:
+		_milestone_elapsed += delta
+		if _milestone_elapsed >= _COMBO_IN + _COMBO_HOLD + _COMBO_OUT:
+			_milestone_active = false
+		dirty = true
+
 	if dirty:
 		queue_redraw()
 
@@ -195,10 +241,15 @@ func _tick_drop(delta: float) -> void:
 		0:  # accelerating fall
 			_drop_vel += _DROP_ACCEL * delta
 			_drop_y += _drop_vel * delta
+			_drop_trail.append(Vector2(_drop_x + _drop_cs * 0.5, _drop_y + _drop_cs * 0.5))
+			if _drop_trail.size() > _TRAIL_LEN:
+				_drop_trail.pop_front()
 			if _drop_y >= _drop_target_y:
 				_drop_y = _drop_target_y
+				_drop_trail.clear()
 				_drop_phase = 1
 				_drop_phase_t = 0.0
+				_land_glow = 1.0
 				_spawn_landing_burst(_drop_burst_rect, _drop_burst_owner)
 		1:  # squash on impact
 			_drop_phase_t = minf(_drop_phase_t + delta / _SQUASH_DUR, 1.0)
@@ -315,12 +366,15 @@ func _draw() -> void:
 	_draw_ai_preview()
 	_draw_col_rejects()
 	_draw_col_flashes()
+	_draw_mod_flashes()
 	_draw_clear_anim()
 	_draw_grav()
 	_draw_drop_anim()
 	_draw_bursts()
 	_draw_score_particles()
 	_draw_popups()
+	_draw_cascade_badge()
+	_draw_milestone_text()
 	_draw_combo_text()
 
 
@@ -403,12 +457,31 @@ func _draw_drop_anim() -> void:
 	var center := Vector2(_drop_x + _drop_cs * 0.5, _drop_y + _drop_cs * 0.5) + shake_offset
 	var radius := _drop_cs * 0.42
 
-	# Piece trail during fall — spacing scales with velocity
 	if _drop_phase == 0 and not reduced_motion:
-		var trail_spacing := clampf(_drop_vel / 60.0, 8.0, 32.0)
-		for i in 2:
-			var trail_alpha := 0.45 - i * 0.2
-			draw_circle(center - Vector2(0.0, (i + 1) * trail_spacing), radius * 0.9, Color(color.r, color.g, color.b, trail_alpha))
+		# Drop shadow — ellipse at landing cell that shrinks as piece approaches
+		var cur_dist := maxf(0.0, _drop_target_y - _drop_y)
+		var dist_frac := clampf(cur_dist / (_drop_cs * 6.0), 0.0, 1.0)
+		var shadow_rx := _drop_cs * 0.38 * lerpf(0.9, 0.25, dist_frac)
+		var shadow_alpha := lerpf(0.45, 0.08, dist_frac)
+		var shadow_cx := _drop_x + _drop_cs * 0.5 + shake_offset.x
+		var shadow_cy := _drop_target_y + _drop_cs * 0.5 + shake_offset.y
+		draw_set_transform(Vector2(shadow_cx, shadow_cy), 0.0, Vector2(1.0, 0.25))
+		draw_circle(Vector2.ZERO, shadow_rx, Color(0.0, 0.0, 0.0, shadow_alpha))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		# Piece trail — draw historical positions, oldest = smallest/most faded
+		for i in _drop_trail.size():
+			var frac := float(i + 1) / float(_drop_trail.size() + 1)
+			var trail_alpha := frac * 0.6
+			var trail_r := radius * (0.35 + frac * 0.55)
+			draw_circle(_drop_trail[i] + shake_offset, trail_r, Color(color.r, color.g, color.b, trail_alpha))
+
+	# Land glow bloom — oversized circle fades out after impact
+	if _land_glow > 0.0 and not reduced_motion:
+		var glow_r := radius * (1.0 + _land_glow * 0.4)
+		draw_set_transform(center, 0.0, Vector2(1.0, _drop_scale_y))
+		draw_circle(Vector2.ZERO, glow_r, Color(color.r, color.g, color.b, _land_glow * 0.55))
+		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 	draw_set_transform(center, 0.0, Vector2(1.0, _drop_scale_y))
 	draw_circle(Vector2.ZERO, radius, color)
@@ -472,12 +545,84 @@ func _draw_combo_text() -> void:
 
 
 func _combo_alpha() -> float:
-	if _combo_elapsed < _COMBO_IN:
-		return _combo_elapsed / _COMBO_IN
+	return _combo_alpha_for(_combo_elapsed)
+
+
+func _combo_alpha_for(elapsed: float) -> float:
+	if elapsed < _COMBO_IN:
+		return elapsed / _COMBO_IN
 	var hold_end := _COMBO_IN + _COMBO_HOLD
-	if _combo_elapsed < hold_end:
+	if elapsed < hold_end:
 		return 1.0
-	return clampf(1.0 - (_combo_elapsed - hold_end) / _COMBO_OUT, 0.0, 1.0)
+	return clampf(1.0 - (elapsed - hold_end) / _COMBO_OUT, 0.0, 1.0)
+
+
+func _tick_mod_flashes(delta: float) -> void:
+	for i in range(_mod_flashes.size() - 1, -1, -1):
+		var f: _ModFlash = _mod_flashes[i]
+		f.elapsed += delta
+		if f.elapsed >= _MOD_FLASH_DUR:
+			_mod_flashes.remove_at(i)
+
+
+func _draw_mod_flashes() -> void:
+	for f: _ModFlash in _mod_flashes:
+		var t := f.elapsed / _MOD_FLASH_DUR
+		var alpha := sin(t * PI) * 0.75
+		var shifted := Rect2(f.rect.position + shake_offset, f.rect.size)
+		draw_rect(shifted, Color(f.color.r, f.color.g, f.color.b, alpha), false, 3.0)
+		draw_rect(shifted.grow(-2.0), Color(f.color.r, f.color.g, f.color.b, alpha * 0.35))
+
+
+func _draw_cascade_badge() -> void:
+	if not _cascade_badge_active or renderer == null or renderer.layout == null:
+		return
+	var alpha: float
+	if not _cascade_badge_fading:
+		alpha = clampf(_cascade_badge_elapsed / 0.1, 0.0, 1.0)
+	else:
+		alpha = clampf(1.0 - _cascade_badge_elapsed / _CASCADE_BADGE_FADE, 0.0, 1.0)
+	if alpha <= 0.0:
+		return
+	var step := renderer.layout.cell_size + LayoutManager.CELL_GAP
+	var board := renderer.layout.board_origin
+	var bw := (RenderState.COLS - 1) * step + renderer.layout.cell_size
+	var bh := (RenderState.ROWS - 1) * step + renderer.layout.cell_size
+	var font := ThemeDB.fallback_font
+	var font_size := int(renderer.layout.cell_size * 1.4)
+	var text := "×%d" % _cascade_badge_depth
+	var text_w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var pos := Vector2(board.x + bw - text_w - 4.0, board.y + bh - 4.0) + shake_offset
+	var badge_color: Color
+	if _cascade_badge_depth <= 2:
+		badge_color = Color(1.0, 0.95, 0.3, alpha)
+	elif _cascade_badge_depth == 3:
+		badge_color = Color(1.0, 0.6, 0.1, alpha)
+	else:
+		badge_color = Color(1.0, 0.2, 0.2, alpha)
+	draw_string(font, pos + Vector2(2.0, 2.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		font_size, Color(0.0, 0.0, 0.0, alpha * 0.7))
+	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, badge_color)
+
+
+func _draw_milestone_text() -> void:
+	if not _milestone_active or renderer == null or renderer.layout == null:
+		return
+	var alpha := _combo_alpha_for(_milestone_elapsed)
+	if alpha <= 0.0:
+		return
+	var font := ThemeDB.fallback_font
+	var font_size := int(renderer.layout.cell_size * 0.85)
+	var text_w := font.get_string_size(_milestone_text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var step := renderer.layout.cell_size + LayoutManager.CELL_GAP
+	var bx := renderer.layout.board_origin.x
+	var bw := (RenderState.COLS - 1) * step + renderer.layout.cell_size
+	var by := renderer.layout.board_origin.y
+	var pos := Vector2(bx + (bw - text_w) * 0.5, by + renderer.layout.cell_size) + shake_offset
+	draw_string(font, pos + Vector2(2.0, 2.0), _milestone_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		font_size, Color(0.0, 0.0, 0.0, alpha * 0.7))
+	draw_string(font, pos, _milestone_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
+		font_size, Color(0.88, 0.88, 1.0, alpha))
 
 
 # ---- Public API ----
@@ -500,6 +645,7 @@ func play_drop(col: int, landing_row: int, owner: CellState.Occupant, gravity_fl
 	_drop_phase = 0
 	_drop_phase_t = 0.0
 	_drop_scale_y = 1.0
+	_drop_trail.clear()
 	_drop_active = true
 	queue_redraw()
 	await _drop_done
@@ -621,6 +767,35 @@ func spawn_score_particles(world_pos: Vector2, owner: CellState.Occupant, target
 		p.color = color
 		p.target = target
 		_score_particles.append(p)
+
+
+func play_modifier_flash(col: int, row: int, gravity_flipped: bool, accent_color: Color) -> void:
+	if reduced_motion or renderer == null or renderer.layout == null:
+		return
+	var f := _ModFlash.new()
+	f.rect = renderer.cell_rect(col, row, gravity_flipped)
+	f.color = accent_color
+	f.elapsed = 0.0
+	_mod_flashes.append(f)
+
+
+func play_cascade_badge(depth: int) -> void:
+	_cascade_badge_depth = depth
+	_cascade_badge_elapsed = 0.0
+	_cascade_badge_active = true
+	_cascade_badge_fading = false
+
+
+func stop_cascade_badge() -> void:
+	if _cascade_badge_active:
+		_cascade_badge_fading = true
+		_cascade_badge_elapsed = 0.0
+
+
+func play_milestone(score: int) -> void:
+	_milestone_text = "%d!" % score
+	_milestone_elapsed = 0.0
+	_milestone_active = true
 
 
 func _spawn_landing_burst(rect: Rect2, owner: CellState.Occupant) -> void:

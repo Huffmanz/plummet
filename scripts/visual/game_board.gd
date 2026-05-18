@@ -48,6 +48,12 @@ var _disp_ai_score: float = 0.0
 # Idle breathe
 var _idle_t: float = 0.0
 
+# Score milestone tracking
+var _score_milestone: int = 0
+
+# Enemy portrait
+var _enemy_portrait: EnemyPortrait
+
 
 func _ready() -> void:
 	_theme = ThemeJam.new()
@@ -58,6 +64,9 @@ func _ready() -> void:
 	_ghost_canvas.renderer = _renderer
 	_queue_canvas.renderer = _renderer
 	_anim_layer.renderer = _renderer
+
+	_enemy_portrait = EnemyPortrait.new()
+	add_child(_enemy_portrait)
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	_on_viewport_resized()
@@ -91,6 +100,20 @@ func _process(delta: float) -> void:
 	elif _renderer != null:
 		_renderer.idle_breathe_scale = 1.0
 
+	# Cascade heat cools after cascade ends
+	if _renderer != null and _renderer.cascade_heat > 0.0:
+		_renderer.cascade_heat = move_toward(_renderer.cascade_heat, 0.0, delta * 1.5)
+		_board_canvas.queue_redraw()
+
+	# Turn counter urgency — pulse red in last 10 turns
+	if _state != null and _match_active:
+		var p_turns := _state.player_turns_remaining
+		if p_turns <= 10 and p_turns > 0:
+			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.009)
+			_player_turns_label.modulate = Color(1.0, pulse * 0.4 + 0.6, pulse * 0.4 + 0.6)
+		else:
+			_player_turns_label.modulate = Color.WHITE
+
 	# Keep score labels updating during tween
 	if _state != null and (_disp_player_score != float(_state.player_score) or _disp_ai_score != float(_state.ai_score)):
 		_update_labels()
@@ -109,6 +132,9 @@ func _init_game() -> void:
 	_chip_count = 0
 	_disp_player_score = 0.0
 	_disp_ai_score = 0.0
+	_score_milestone = 0
+	if _renderer != null:
+		_renderer.cascade_heat = 0.0
 
 	_turn_manager.match_ended.connect(_on_match_ended)
 	_turn_manager.start()
@@ -137,6 +163,8 @@ func _on_column_selected(col: int) -> void:
 		return
 
 	_animating = true
+	_renderer.hovered_col = -1
+	_ghost_canvas.queue_redraw()
 
 	# Player turn — drop and animate
 	var p_piece := Piece.new(Piece.Owner.PLAYER)
@@ -145,6 +173,8 @@ func _on_column_selected(col: int) -> void:
 	_board.drop_piece(col, p_piece)
 	await _anim_layer.play_drop(col, landing_row, CellState.Occupant.PLAYER, gf)
 	_check_col_fill_flash(col)
+	if _is_block_move(col, landing_row, Piece.Owner.PLAYER):
+		_spawn_blocked_popup(col, landing_row, gf)
 	_state = _build_state()
 	_refresh_all()
 
@@ -152,6 +182,7 @@ func _on_column_selected(col: int) -> void:
 	var chips_before := _chip_count
 	_award_chips(p_result, Piece.Owner.PLAYER)
 	_score_tracker.add_turn(_score_calc.calculate(p_result, 0))
+	_check_score_milestone()
 	_turn_manager.advance(_board)
 	if _chip_count > chips_before:
 		_spawn_chip_popups(_chip_count - chips_before)
@@ -168,6 +199,7 @@ func _on_column_selected(col: int) -> void:
 		await _run_ai_turn_animated()
 
 	_animating = false
+	_renderer.hovered_col = _renderer.col_from_position(get_local_mouse_position().x)
 	_state = _build_state()
 	_refresh_all()
 	_pop_turn_indicator()
@@ -193,10 +225,14 @@ func _run_ai_turn_animated() -> void:
 	_board.drop_piece(ai_col, _ai.current_piece)
 	await _anim_layer.play_drop(ai_col, ai_landing_row, CellState.Occupant.AI, gf)
 	_check_col_fill_flash(ai_col)
+	if _is_block_move(ai_col, ai_landing_row, Piece.Owner.AI):
+		_spawn_blocked_popup(ai_col, ai_landing_row, gf)
 	_state = _build_state()
 	_refresh_all()
 
 	var ai_result := await _run_cascade_animated(_board, Piece.Owner.AI)
+	if ai_result.max_depth >= 1:
+		_enemy_portrait.react(EnemyPortrait.Emotion.SMUG)
 	_score_tracker.add_turn(_score_calc.calculate(ai_result, 0))
 	_ai.advance_queue()
 	_turn_manager.advance(_board)
@@ -245,6 +281,11 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			if has_ai:
 				ai_cleared = true
 
+		# Cascade heat + badge — escalate with depth
+		_renderer.cascade_heat = clampf(float(depth) / 3.0, 0.0, 1.0)
+		if depth >= 1:
+			_anim_layer.play_cascade_badge(depth + 1)
+
 		# Combo text + shake trigger once per depth level, before individual clears
 		if depth >= 1:
 			_anim_layer.play_combo_text(depth + 1)
@@ -270,6 +311,7 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			for run in runs:
 				chain_cells.append_array(run.cells)
 			_anim_layer.spawn_popup(_popup_pos(chain_cells) - Vector2(0.0, 28.0), "+150 CHAIN")
+			_enemy_portrait.react(EnemyPortrait.Emotion.STARTLED)
 
 		# Remove all cleared pieces, then let pieces fall
 		board.remove_clears(runs)
@@ -305,6 +347,7 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			ai_clear_count += 1
 		depth += 1
 
+	_anim_layer.stop_cascade_badge()
 	result.max_depth = maxi(0, depth - 1)
 	return result
 
@@ -447,6 +490,13 @@ func _pop_turn_indicator() -> void:
 	tw.tween_property(_turn_indicator_label, "scale", Vector2(1.0, 1.0), 0.14).set_trans(Tween.TRANS_BACK)
 
 
+func _check_score_milestone() -> void:
+	for m: int in [500, 1000, 2000, 4000]:
+		if _score_tracker.player_score >= m and _score_milestone < m:
+			_score_milestone = m
+			_anim_layer.play_milestone(m)
+
+
 func _on_viewport_resized() -> void:
 	_layout = _layout_mgr.compute(get_viewport().get_visible_rect().size)
 	_renderer.layout = _layout
@@ -464,6 +514,8 @@ func _on_viewport_resized() -> void:
 		_left_panel.size = Vector2(pw, board_area_h)
 		_right_panel.position = Vector2(vp.x - pw, 0.0)
 		_right_panel.size = Vector2(pw, board_area_h)
+		_enemy_portrait.visible = true
+		_enemy_portrait.position = Vector2(vp.x - pw * 0.5, board_area_h * 0.28)
 	else:
 		_left_panel.visible = true
 		_right_panel.visible = true
@@ -471,6 +523,7 @@ func _on_viewport_resized() -> void:
 		_left_panel.size = Vector2(vp.x, 36.0)
 		_right_panel.position = Vector2(0.0, 36.0)
 		_right_panel.size = Vector2(vp.x, 36.0)
+		_enemy_portrait.visible = false
 
 	_bottom_strip.position = Vector2(0.0, vp.y - bh)
 	_bottom_strip.size = Vector2(vp.x, bh)
@@ -481,6 +534,44 @@ func _on_viewport_resized() -> void:
 
 	if _state != null:
 		_refresh_all()
+
+
+func _is_block_move(col: int, row: int, my_owner: Piece.Owner) -> bool:
+	var opponent := Piece.Owner.AI if my_owner == Piece.Owner.PLAYER else Piece.Owner.PLAYER
+	var axes: Array[Vector2i] = [Vector2i(1, 0), Vector2i(0, 1), Vector2i(1, 1), Vector2i(1, -1)]
+	for axis: Vector2i in axes:
+		var count: int = 0
+		var c: int = col + axis.x
+		var r: int = row + axis.y
+		while c >= 0 and c < BoardEngine.COLS and r >= 0 and r < BoardEngine.ROWS:
+			var cell := _board.get_cell(c, r)
+			if cell != null and cell.owner == opponent:
+				count += 1
+				c += axis.x
+				r += axis.y
+			else:
+				break
+		c = col - axis.x
+		r = row - axis.y
+		while c >= 0 and c < BoardEngine.COLS and r >= 0 and r < BoardEngine.ROWS:
+			var cell := _board.get_cell(c, r)
+			if cell != null and cell.owner == opponent:
+				count += 1
+				c -= axis.x
+				r -= axis.y
+			else:
+				break
+		if count >= 3:
+			return true
+	return false
+
+
+func _spawn_blocked_popup(col: int, row: int, gf: bool) -> void:
+	if _renderer == null or _renderer.layout == null:
+		return
+	var cell_center := _renderer.cell_rect(col, row, gf).get_center()
+	var pos := cell_center - Vector2(0.0, _renderer.layout.cell_size)
+	_anim_layer.spawn_popup(pos, "BLOCKED!", Color(1.0, 0.55, 0.1))
 
 
 func _input(event: InputEvent) -> void:

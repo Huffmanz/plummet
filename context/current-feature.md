@@ -1,35 +1,11 @@
-# Current Feature — Feature 06: Piece Types
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Weighted piece displaces the piece below it by one row on landing; chains when stacked Weighted pieces push each other
-- Ghost piece lands one row below the first piece it encounters; behaves identically to Normal in an empty column
-- Volatile piece type (distinct from modifier) removes all 8 surrounding cells (Moore neighborhood) on clear
-- Volatile piece type + Volatile modifier removes combined 3×3 area plus orthogonal cross
-- Ghost drop into a column where the topmost occupied cell is row 11 is rejected as invalid
-- All 4 piece types (Normal, Weighted, Ghost, Volatile) coexist in `PieceBag` and are tracked per-piece
-
 ## Notes
-
-### Piece Types
-- **Normal** — baseline, no special behavior (all starting bag pieces)
-- **Weighted** — on landing, pushes piece directly below down one row; if no room to push, does nothing; chains with other Weighted pieces
-- **Ghost** — passes through exactly one piece on the way down, landing beneath it; if the first piece it would pass is at row 11, the drop is invalid
-- **Volatile (type)** — on clear, removes all 8 Moore-neighborhood cells (vs. Volatile modifier which removes 4 orthogonal); locked cells (Gravedigger) are immune; bonus cells removed don't award points
-
-### Modifier Interactions
-- Weighted + Heavy: both push effects apply (type pushes during drop, modifier pushes on landing)
-- Weighted + Anchor: Anchor resists displacement by another Weighted piece landing on top
-- Ghost + Magnet: Magnet fires from Ghost's final landed position, not pass-through position
-- Ghost + Echo: Echo copy is a Normal piece, not a Ghost
-- Volatile (type) + Volatile (modifier): combined explosion = 3×3 area + orthogonal cross
-
-### Out of Scope
-- Shop upgrade UI (feature 07)
-- Modifier attachment (already done in feature 05)
 
 ## History
 
@@ -62,3 +38,6 @@ Extended `AnimLayer`, `BoardRenderer`, `GameBoard`, `ThemeJam`, and added `Enemy
 
 ### Feature 05 — Piece Bag + Modifiers
 Implemented `PieceBag` (7-slot cycling array with `current()`/`peek(offset)`/`advance()`), `ModifierResolver` (stateful hook handler for all 6 modifiers), and added an `on_pre_gravity` hook to `CascadeLoop` (fires between `remove_clears` and `apply_gravity` for Anchor). Heavy pushes the piece below down one row on landing. Magnet scans left/right for the closest same-color piece and slides it one step toward the magnet. Catalyst sets a flag so the next piece's landing modifiers fire twice. Echo queues a copy of the player's piece to drop into the column with the most AI pieces, fired in `on_gravity`. Volatile removes 4 orthogonal neighbors in `on_clear`. Anchor saves its board position before gravity and restores it after, keeping it immune to compaction. `GameBoard` draws the current piece from the bag (advancing after each drop), fires modifier hooks at the correct points in `_on_column_selected` and `_run_cascade_animated`, and passes the next 2 upcoming pieces to `_build_state()` for queue display.
+
+### Feature 06 — Piece Types
+Expanded `Piece.Type` enum to `NORMAL`, `WEIGHTED`, `GHOST`, `VOLATILE`. Weighted: on landing pushes the piece directly below down one row then settles into the vacated slot; `_try_push_down` is recursive so stacked Weighted pieces chain their push, and Anchor-modified pieces resist displacement. Ghost: `BoardEngine.get_ghost_landing_row()` finds the first empty slot below the topmost occupied cell (returns -1 for packed stacks or a piece at row 0); `drop_ghost_piece()` places the piece there and emits `piece_placed`; `GameBoard` uses this path when the current piece is Ghost and shows a column-reject shake for invalid drops. Volatile type: `ModifierResolver.on_clear` fires `_apply_volatile_type` which removes all 8 Moore-neighborhood cells; when the piece also carries the Volatile modifier, 4 orthogonal cells at distance 2 are additionally removed (combined 3×3 + cross effect); the modifier's own 4-orthogonal path is skipped to avoid double-removal. `RenderStateBuilder._map_piece_type` now maps all four types to `CellState.PieceType`. 18 acceptance tests in `piece_type_test.gd` cover all spec criteria.

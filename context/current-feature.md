@@ -1,21 +1,11 @@
 # Current Feature
 
-## Feature 15 — Pixel Art Sprites
-
 ## Status
-In Progress
+Not Started
 
 ## Goals
-- Replace programmatic `draw_circle`/`draw_rect` calls in `ThemeJam` with a spritesheet
-- Grid cell tile drawn from sprite 0 (0,0 region), tinted per state (empty, locked, frozen)
-- Game piece drawn from sprite 1 (16,0 region), tinted per player color; type overlays (arcs, spikes) remain on top
-- Canvas nodes set to `TEXTURE_FILTER_NEAREST` for crisp pixel art at all cell sizes
 
 ## Notes
-- Spritesheet: `res://assets/assets.png` — 256×256, 16×16 sprites, grayscale for tinting
-- Sprite 0: tileable grid cell
-- Sprite 1: game piece
-- Cell size is dynamic (16–32px); `draw_texture_rect_region` scales sprite to fit
 
 ## History
 
@@ -40,5 +30,11 @@ Implemented `AIOpponent` with a one-ply column-scoring heuristic (AI clear +1000
 ### Feature 13 — Additional Juice
 Extended `AnimLayer`, `BoardCanvas`, `GhostCanvas`, `QueueCanvas`, and `GameBoard` with 19 polish effects: gravity animation (pieces slide to new rows after clears), landing impact burst (4–6 dots fly outward on piece landing), AI drop preview (faint column highlight 300ms before AI drops), column hover highlight (subtle vertical strip ~10% alpha), score counter tween (score ticks up over ~20 frames), piece trail while falling (2–3 ghost copies at decreasing alpha), column fill warning (column pulses red when 1–2 cells from full), piece lock flash (white flash on undroppable column), clear line sweep (thin line traces matched cells before flash), board idle breathe (0.999→1.001 scale pulse), your-turn indicator pop (bounces/scales in on player turn), AI thinking dots (animated "..." during AI turn), column rejection shake (horizontal shake on failed click), queue slide (next piece slides down into position), incoming piece drop preview (queued piece bounces), modifier badge pulse (badges pulse gently), multiplier escalation color (score popups shift yellow→orange→red with cascade depth), match-end score comparison (dramatic count-up side by side before winner reveal), and chip earn flash ("+1 chip" micro-popup near score). Added `MatchEndOverlay` scene and `JuiceTest` scene for isolated testing.
 
+### Feature 15 — Pixel Art Sprites
+Replaced all programmatic `draw_circle`/`draw_rect` piece and cell rendering in `ThemeJam` with a 256×256 grayscale spritesheet (`assets/assets.png`). Grid tile (sprite 0) always renders on top of pieces via a split `render_board_under`/`render_board_tiles` pass in `BoardRenderer`; piece sprite (sprite 1) tinted per player/AI color with type overlays (arcs, spikes) drawn on top. Falling and gravity pieces draw into `BoardCanvas` behind the grid overlay via `AnimLayer.draw_pieces_to()`. `CELL_GAP` set to 0 for seamless tiling. `TEXTURE_FILTER_NEAREST` applied to all canvas nodes and `AnimLayer`. New palette applied to background, pieces, particles, and popups. AI center dot removed.
+
 ### Feature 14 — Moar Juice
 Extended `AnimLayer`, `BoardRenderer`, `GameBoard`, `ThemeJam`, and added `EnemyPortrait` with 11 polish effects: board edge glow pulses player/AI color on active turn, cascade heat shifts board background warmer as chain depth increases, frozen column frost overlay draws blue hatching over locked columns, drop shadow ellipse shrinks toward landing cell as piece falls, piece blooms to 120% saturation on landing then settles, modifier trigger flash pulses accent color on activation, score milestone pop fires large centered text at 500/1000/2000+, cascade counter badge shows ×N depth in corner during chains and fades after, turn counter pulses red in last 10 turns, EnemyPortrait (shape-based face) reacts neutral/smug/startled based on game events, and BLOCKED! popup fires when a placement cuts across 3+ consecutive opponent pieces.
+
+### Feature 05 — Piece Bag + Modifiers
+Implemented `PieceBag` (7-slot cycling array with `current()`/`peek(offset)`/`advance()`), `ModifierResolver` (stateful hook handler for all 6 modifiers), and added an `on_pre_gravity` hook to `CascadeLoop` (fires between `remove_clears` and `apply_gravity` for Anchor). Heavy pushes the piece below down one row on landing. Magnet scans left/right for the closest same-color piece and slides it one step toward the magnet. Catalyst sets a flag so the next piece's landing modifiers fire twice. Echo queues a copy of the player's piece to drop into the column with the most AI pieces, fired in `on_gravity`. Volatile removes 4 orthogonal neighbors in `on_clear`. Anchor saves its board position before gravity and restores it after, keeping it immune to compaction. `GameBoard` draws the current piece from the bag (advancing after each drop), fires modifier hooks at the correct points in `_on_column_selected` and `_run_cascade_animated`, and passes the next 2 upcoming pieces to `_build_state()` for queue display.

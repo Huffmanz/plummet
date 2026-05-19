@@ -71,7 +71,7 @@ var _match_cross_color_count: int = 0
 
 
 func _ready() -> void:
-	_theme = ThemeJam.new()
+	_theme = ThemeCozy.new()
 	_renderer = BoardRenderer.new(_theme)
 	_layout_mgr = LayoutManager.new()
 
@@ -596,23 +596,14 @@ func _on_viewport_resized() -> void:
 	var bh: float = _layout.bottom_height
 	var board_area_h: float = vp.y - bh
 
-	if _layout.mode == LayoutManager.LayoutMode.DESKTOP:
-		_left_panel.visible = true
-		_right_panel.visible = true
-		_left_panel.position = Vector2(0.0, 0.0)
-		_left_panel.size = Vector2(pw, board_area_h)
-		_right_panel.position = Vector2(vp.x - pw, 0.0)
-		_right_panel.size = Vector2(pw, board_area_h)
-		_enemy_portrait.visible = true
-		_enemy_portrait.position = Vector2(vp.x - pw * 0.5, board_area_h * 0.28)
-	else:
-		_left_panel.visible = true
-		_right_panel.visible = true
-		_left_panel.position = Vector2(0.0, 0.0)
-		_left_panel.size = Vector2(vp.x, 36.0)
-		_right_panel.position = Vector2(0.0, 36.0)
-		_right_panel.size = Vector2(vp.x, 36.0)
-		_enemy_portrait.visible = false
+	_left_panel.visible = true
+	_right_panel.visible = true
+	_left_panel.position = Vector2(0.0, 0.0)
+	_left_panel.size = Vector2(pw, board_area_h)
+	_right_panel.position = Vector2(vp.x - pw, 0.0)
+	_right_panel.size = Vector2(pw, board_area_h)
+	_enemy_portrait.visible = true
+	_enemy_portrait.position = Vector2(vp.x - pw * 0.5, board_area_h * 0.28)
 
 	_bottom_strip.position = Vector2(0.0, vp.y - bh)
 	_bottom_strip.size = Vector2(vp.x, bh)

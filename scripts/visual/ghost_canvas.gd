@@ -6,7 +6,7 @@ var shake_offset: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func refresh(new_state: RenderState) -> void:

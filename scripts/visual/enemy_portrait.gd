@@ -2,7 +2,6 @@ class_name EnemyPortrait extends Node2D
 
 enum Emotion { NEUTRAL, SMUG, STARTLED }
 
-const _FACE_COLOR := Color(0.1, 0.70, 0.60)
 const _FACE_RADIUS := 28.0
 const _RETURN_DELAY := 2.5
 
@@ -25,10 +24,12 @@ func _process(delta: float) -> void:
 
 func _draw() -> void:
 	var r := _FACE_RADIUS
+	var fill := UITheme.SURFACE
+	var border := UITheme.SURFACE_BORDER
 
-	# Head
-	draw_circle(Vector2.ZERO, r, _FACE_COLOR)
-	draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(1.0, 1.0, 1.0, 0.18), 1.5)
+	draw_circle(Vector2.ZERO, r, fill)
+	draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, border, 2.5)
+	draw_arc(Vector2.ZERO, r, 0.0, TAU, 32, Color(UITheme.AI.r, UITheme.AI.g, UITheme.AI.b, 0.25), 1.5)
 
 	var eye_y := -r * 0.22
 	var eye_x := r * 0.35
@@ -38,25 +39,22 @@ func _draw() -> void:
 		Emotion.NEUTRAL:
 			_draw_eye(Vector2(-eye_x, eye_y), eye_r, false)
 			_draw_eye(Vector2(eye_x, eye_y), eye_r, false)
-			draw_line(Vector2(-r * 0.28, r * 0.42), Vector2(r * 0.28, r * 0.42), Color.WHITE, 2.0)
+			draw_line(Vector2(-r * 0.28, r * 0.42), Vector2(r * 0.28, r * 0.42), UITheme.TEXT_ON_SURFACE, 2.0)
 
 		Emotion.SMUG:
 			_draw_eye(Vector2(-eye_x, eye_y), eye_r, true)
 			_draw_eye(Vector2(eye_x, eye_y), eye_r, true)
-			# Smirk — arc offset to one side
-			draw_arc(Vector2(r * 0.08, r * 0.35), r * 0.24, PI * 0.08, PI * 0.88, 12, Color.WHITE, 2.0)
+			draw_arc(Vector2(r * 0.08, r * 0.35), r * 0.24, PI * 0.08, PI * 0.88, 12, UITheme.TEXT_ON_SURFACE, 2.0)
 
 		Emotion.STARTLED:
 			_draw_eye(Vector2(-eye_x, eye_y - 3.0), eye_r * 1.3, false)
 			_draw_eye(Vector2(eye_x, eye_y - 3.0), eye_r * 1.3, false)
-			# Open O mouth
-			draw_circle(Vector2(0.0, r * 0.46), r * 0.18, Color(0.04, 0.08, 0.08))
-			draw_arc(Vector2(0.0, r * 0.46), r * 0.18, 0.0, TAU, 16, Color.WHITE, 2.0)
+			draw_circle(Vector2(0.0, r * 0.46), r * 0.18, UITheme.SURFACE_LIGHT)
+			draw_arc(Vector2(0.0, r * 0.46), r * 0.18, 0.0, TAU, 16, UITheme.TEXT_ON_SURFACE, 2.0)
 
 
 func _draw_eye(pos: Vector2, r: float, half_lidded: bool) -> void:
-	draw_circle(pos, r, Color.WHITE)
-	draw_circle(pos + Vector2(0.0, r * 0.15), r * 0.52, Color(0.04, 0.08, 0.08))
+	draw_circle(pos, r, UITheme.TEXT_ON_SURFACE)
+	draw_circle(pos + Vector2(0.0, r * 0.15), r * 0.52, UITheme.SURFACE)
 	if half_lidded:
-		# Filled rect over top half simulates a drooping lid
-		draw_rect(Rect2(pos - Vector2(r + 1.0, r + 1.0), Vector2((r + 1.0) * 2.0, r + 1.0)), _FACE_COLOR)
+		draw_rect(Rect2(pos - Vector2(r + 1.0, r + 1.0), Vector2((r + 1.0) * 2.0, r + 1.0)), UITheme.SURFACE)

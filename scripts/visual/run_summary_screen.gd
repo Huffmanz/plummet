@@ -3,19 +3,10 @@ extends Control
 signal new_run_pressed
 signal main_menu_pressed
 
-const _BG := Color(0.06, 0.04, 0.10)
-const _VICTORY_COLOR := Color(0.4, 1.0, 0.6)
-const _DEFEAT_COLOR := Color(1.0, 0.35, 0.35)
-const _LABEL_COLOR := Color(0.7, 0.65, 0.8)
-const _VALUE_COLOR := Color(1.0, 0.95, 1.0)
-const _BAG_COLOR := Color(0.55, 0.45, 0.7)
-const _BTN_NORMAL := Color(0.35, 0.18, 0.55)
-const _BTN_HOVER := Color(0.50, 0.28, 0.72)
-const _BTN_TEXT := Color(1.0, 1.0, 1.0)
-
 const _MODIFIER_NAMES: Dictionary = {
 	"echo": "Echo", "magnet": "Magnet", "heavy": "Heavy",
 	"anchor": "Anchor", "catalyst": "Catalyst", "double_drop": "Dbl Drop",
+	"volatile": "Volatile",
 }
 const _TYPE_NAMES: Dictionary = {
 	0: "Normal", 1: "Weighted", 2: "Ghost", 3: "Volatile",
@@ -30,28 +21,38 @@ func show_summary(state: RunState, victory: bool) -> void:
 func _build_ui(state: RunState, victory: bool) -> void:
 	var bg := ColorRect.new()
 	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.color = _BG
+	bg.set_script(load("res://scripts/visual/cozy_screen_background.gd"))
+	bg.color = UITheme.CANVAS
 	add_child(bg)
 
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	scroll.offset_top = 0.0
-	scroll.offset_bottom = 0.0
 	add_child(scroll)
 
-	var vbox := VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(320.0, 0.0)
-	vbox.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	vbox.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
-	vbox.add_theme_constant_override("separation", 10)
-	scroll.add_child(vbox)
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 24)
+	margin.add_theme_constant_override("margin_right", 24)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 20)
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(margin)
 
-	# Result header
+	var card := PanelContainer.new()
+	card.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	card.add_theme_stylebox_override("panel", UITheme.make_surface_style())
+	margin.add_child(card)
+
+	var vbox := VBoxContainer.new()
+	vbox.add_theme_constant_override("separation", 10)
+	card.add_child(vbox)
+
 	var result_label := Label.new()
 	result_label.text = "VICTORY" if victory else "DEFEAT"
 	result_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	result_label.add_theme_font_size_override("font_size", 40)
-	result_label.add_theme_color_override("font_color", _VICTORY_COLOR if victory else _DEFEAT_COLOR)
+	result_label.add_theme_color_override(
+		"font_color", UITheme.VICTORY if victory else UITheme.DEFEAT
+	)
 	vbox.add_child(result_label)
 
 	var acts_text: String
@@ -77,7 +78,7 @@ func _build_ui(state: RunState, victory: bool) -> void:
 	bag_header.text = "YOUR BAG"
 	bag_header.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	bag_header.add_theme_font_size_override("font_size", 13)
-	bag_header.add_theme_color_override("font_color", _LABEL_COLOR)
+	bag_header.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	vbox.add_child(bag_header)
 
 	if state.player_bag != null:
@@ -95,7 +96,7 @@ func _build_ui(state: RunState, victory: bool) -> void:
 			var row_label := Label.new()
 			row_label.text = "  %d. %s%s" % [i + 1, type_name, mods_text]
 			row_label.add_theme_font_size_override("font_size", 12)
-			row_label.add_theme_color_override("font_color", _BAG_COLOR)
+			row_label.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 			vbox.add_child(row_label)
 
 	_add_spacer(vbox, 12.0)
@@ -123,14 +124,14 @@ func _add_stat(parent: Control, label_text: String, value_text: String) -> void:
 	lbl.text = label_text
 	lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	lbl.add_theme_font_size_override("font_size", 13)
-	lbl.add_theme_color_override("font_color", _LABEL_COLOR)
+	lbl.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	row.add_child(lbl)
 
 	var val := Label.new()
 	val.text = value_text
 	val.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	val.add_theme_font_size_override("font_size", 13)
-	val.add_theme_color_override("font_color", _VALUE_COLOR)
+	val.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	row.add_child(val)
 
 
@@ -145,27 +146,5 @@ func _make_button(label_text: String) -> Button:
 	btn.text = label_text
 	btn.custom_minimum_size = Vector2(130.0, 40.0)
 	btn.add_theme_font_size_override("font_size", 14)
-	btn.add_theme_color_override("font_color", _BTN_TEXT)
-	btn.add_theme_color_override("font_hover_color", _BTN_TEXT)
-	btn.add_theme_color_override("font_pressed_color", _BTN_TEXT)
-	var normal_sb := _make_stylebox(_BTN_NORMAL)
-	var hover_sb := _make_stylebox(_BTN_HOVER)
-	btn.add_theme_stylebox_override("normal", normal_sb)
-	btn.add_theme_stylebox_override("hover", hover_sb)
-	btn.add_theme_stylebox_override("pressed", hover_sb)
-	btn.add_theme_stylebox_override("focus", normal_sb)
+	UITheme.style_button(btn)
 	return btn
-
-
-func _make_stylebox(color: Color) -> StyleBoxFlat:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = color
-	sb.corner_radius_top_left = 6
-	sb.corner_radius_top_right = 6
-	sb.corner_radius_bottom_left = 6
-	sb.corner_radius_bottom_right = 6
-	sb.content_margin_left = 12.0
-	sb.content_margin_right = 12.0
-	sb.content_margin_top = 8.0
-	sb.content_margin_bottom = 8.0
-	return sb

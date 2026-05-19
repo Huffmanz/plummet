@@ -69,7 +69,8 @@ func _build_ui() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
 	var bg := ColorRect.new()
-	bg.color = Color(0.07, 0.07, 0.09, 0.97)
+	bg.set_script(load("res://scripts/visual/cozy_screen_background.gd"))
+	bg.color = UITheme.CANVAS
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	bg.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -102,30 +103,32 @@ func _build_ui() -> void:
 	var title_lbl := Label.new()
 	title_lbl.text = "SHOP"
 	title_lbl.add_theme_font_size_override("font_size", 22)
+	title_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_CANVAS)
 	title_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_row.add_child(title_lbl)
 
 	_chip_label = Label.new()
 	_chip_label.text = "Chips: 0"
 	_chip_label.add_theme_font_size_override("font_size", 16)
+	_chip_label.add_theme_color_override("font_color", UITheme.ACCENT)
 	_chip_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	title_row.add_child(_chip_label)
 
-	# Phase instruction
 	_phase_label = Label.new()
 	_phase_label.text = ""
-	_phase_label.add_theme_color_override("font_color", Color(1.0, 0.85, 0.3))
+	_phase_label.add_theme_color_override("font_color", UITheme.TEXT_ON_CANVAS)
 	_phase_label.add_theme_font_size_override("font_size", 13)
 	root_vbox.add_child(_phase_label)
 
 	_cancel_btn = Button.new()
 	_cancel_btn.text = "← Cancel"
 	_cancel_btn.visible = false
+	UITheme.style_button(_cancel_btn, UITheme.SURFACE_LIGHT, UITheme.SURFACE)
 	_cancel_btn.pressed.connect(_on_cancel)
 	root_vbox.add_child(_cancel_btn)
 
-	# Offers section
 	var offers_panel := PanelContainer.new()
+	offers_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
 	root_vbox.add_child(offers_panel)
 
 	var offers_margin := MarginContainer.new()
@@ -142,7 +145,7 @@ func _build_ui() -> void:
 	var offers_title := Label.new()
 	offers_title.text = "MODIFIER OFFERS  (10 chips each)"
 	offers_title.add_theme_font_size_override("font_size", 11)
-	offers_title.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	offers_title.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	offers_vbox.add_child(offers_title)
 
 	var offers_row := HBoxContainer.new()
@@ -160,11 +163,12 @@ func _build_ui() -> void:
 
 	_reroll_btn = Button.new()
 	_reroll_btn.text = "Reroll (5)"
+	UITheme.style_button(_reroll_btn, UITheme.SURFACE_LIGHT, UITheme.SURFACE)
 	_reroll_btn.pressed.connect(_on_reroll)
 	offers_row.add_child(_reroll_btn)
 
-	# Bag section
 	var bag_panel := PanelContainer.new()
+	bag_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
 	root_vbox.add_child(bag_panel)
 
 	var bag_margin := MarginContainer.new()
@@ -181,7 +185,7 @@ func _build_ui() -> void:
 	var bag_title := Label.new()
 	bag_title.text = "YOUR BAG"
 	bag_title.add_theme_font_size_override("font_size", 11)
-	bag_title.add_theme_color_override("font_color", Color(0.65, 0.65, 0.65))
+	bag_title.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	bag_vbox.add_child(bag_title)
 
 	_pieces_vbox = VBoxContainer.new()
@@ -200,6 +204,7 @@ func _build_ui() -> void:
 	_done_btn = Button.new()
 	_done_btn.text = "Done →"
 	_done_btn.add_theme_font_size_override("font_size", 16)
+	UITheme.style_button(_done_btn)
 	_done_btn.pressed.connect(_on_done)
 	bottom_row.add_child(_done_btn)
 
@@ -229,9 +234,11 @@ func _refresh() -> void:
 		var used: bool = _offer_used[i]
 		btn.text = "—" if used else _offers[i]
 		btn.disabled = used or _chips < COST_ATTACH or _phase != Phase.IDLE
-		btn.modulate = Color(1.0, 0.75, 0.1) \
+		btn.modulate = UITheme.ACCENT_POP \
 			if (_phase == Phase.ATTACH_PICK_PIECE and _selected_offer == i) \
 			else Color.WHITE
+		if not btn.has_theme_stylebox_override("normal"):
+			UITheme.style_button(btn, UITheme.SURFACE_LIGHT, UITheme.SURFACE)
 
 	_reroll_btn.disabled = _rerolled or _chips < COST_REROLL or _phase != Phase.IDLE
 	_reroll_btn.text = "Rerolled" if _rerolled else "Reroll (5)"
@@ -254,6 +261,7 @@ func _rebuild_piece_rows() -> void:
 
 func _build_piece_row(idx: int, piece: Piece) -> Control:
 	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UITheme.make_surface_style(8, UITheme.SURFACE_LIGHT))
 	panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 	var inner := MarginContainer.new()
@@ -272,14 +280,16 @@ func _build_piece_row(idx: int, piece: Piece) -> Control:
 	type_lbl.text = "%d. %s" % [idx + 1, _type_name(piece.type)]
 	type_lbl.custom_minimum_size = Vector2(115, 0)
 	type_lbl.add_theme_font_size_override("font_size", 12)
+	type_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	hbox.add_child(type_lbl)
 
 	var mods_lbl := Label.new()
 	if piece.modifiers.is_empty():
 		mods_lbl.text = "(none)"
-		mods_lbl.add_theme_color_override("font_color", Color(0.4, 0.4, 0.4))
+		mods_lbl.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	else:
 		mods_lbl.text = " · ".join(PackedStringArray(piece.modifiers))
+		mods_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	mods_lbl.add_theme_font_size_override("font_size", 11)
 	mods_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(mods_lbl)
@@ -314,7 +324,7 @@ func _build_piece_row(idx: int, piece: Piece) -> Control:
 			else:
 				var full_lbl := Label.new()
 				full_lbl.text = "(full)"
-				full_lbl.add_theme_color_override("font_color", Color(0.45, 0.45, 0.45))
+				full_lbl.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 				full_lbl.add_theme_font_size_override("font_size", 11)
 				hbox.add_child(full_lbl)
 

@@ -11,21 +11,21 @@ config_version=5
 [application]
 
 config/name="Plummet"
+run/main_scene="res://scenes/run/run_controller.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
-run/main_scene="res://scenes/run/run_controller.tscn"
 
 [display]
 
-window/size/viewport_width=480
-window/size/viewport_height=270
+window/size/viewport_width=640
+window/size/viewport_height=360
 window/size/window_width_override=3840
 window/size/window_height_override=2160
 window/stretch/mode="canvas_items"
 
 [gui]
 
-theme/custom_font="uid://b7w5yni1qxg8n"
+theme/custom_font="uid://edpcy4cdwgv"
 
 [physics]
 

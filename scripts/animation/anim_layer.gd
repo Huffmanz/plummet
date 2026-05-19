@@ -32,7 +32,7 @@ var shake_offset: Vector2 = Vector2.ZERO
 
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 # --- Drop animation ---
 var _drop_active: bool = false
@@ -80,7 +80,7 @@ class _Popup:
 	var text: String = ""
 	var pos: Vector2 = Vector2.ZERO
 	var elapsed: float = 0.0
-	var color: Color = Color("#f6e455")
+	var color: Color = UITheme.ACCENT_POP
 
 var _popups: Array = []
 
@@ -400,7 +400,7 @@ func _draw_ai_preview() -> void:
 	var col_x := board.x + _ai_preview_col * step
 	var pulse := 0.5 + 0.5 * sin(_ai_preview_elapsed * _AI_PREVIEW_PULSE)
 	var rect := Rect2(col_x + shake_offset.x, board.y + shake_offset.y, renderer.layout.cell_size, h)
-	draw_rect(rect, Color(0.965, 0.894, 0.333, 0.18 * pulse))
+	draw_rect(rect, Color(UITheme.ACCENT_POP.r, UITheme.ACCENT_POP.g, UITheme.ACCENT_POP.b, 0.18 * pulse))
 
 
 func _draw_col_rejects() -> void:
@@ -610,7 +610,7 @@ func _draw_combo_text() -> void:
 	draw_string(font, pos + Vector2(2.0, 2.0), _combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		font_size, Color(0.0, 0.0, 0.0, alpha * 0.7))
 	draw_string(font, pos, _combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
-		font_size, Color(0.965, 0.894, 0.333, alpha))
+		font_size, Color(UITheme.ACCENT_POP.r, UITheme.ACCENT_POP.g, UITheme.ACCENT_POP.b, alpha))
 
 
 func _combo_alpha() -> float:
@@ -664,7 +664,7 @@ func _draw_cascade_badge() -> void:
 	var pos := Vector2(board.x + bw - text_w - 4.0, board.y + bh - 4.0) + shake_offset
 	var badge_color: Color
 	if _cascade_badge_depth <= 2:
-		badge_color = Color(0.965, 0.894, 0.333, alpha)
+		badge_color = Color(UITheme.ACCENT_POP.r, UITheme.ACCENT_POP.g, UITheme.ACCENT_POP.b, alpha)
 	elif _cascade_badge_depth == 3:
 		badge_color = Color(0.922, 0.616, 0.271, alpha)
 	else:
@@ -766,7 +766,7 @@ func play_clear(cells: Array[Vector2i], gravity_flipped: bool) -> void:
 	await _clear_done
 
 
-func spawn_popup(pos: Vector2, text: String, color: Color = Color("#f6e455")) -> void:
+func spawn_popup(pos: Vector2, text: String, color: Color = UITheme.ACCENT_POP) -> void:
 	var p := _Popup.new()
 	p.text = text
 	p.pos = pos
@@ -776,7 +776,7 @@ func spawn_popup(pos: Vector2, text: String, color: Color = Color("#f6e455")) ->
 
 
 func spawn_chip_popup(pos: Vector2) -> void:
-	spawn_popup(pos, "+1 chip", Color("#8fcb62"))
+	spawn_popup(pos, "+1 chip", UITheme.ACCENT)
 
 
 func play_shake(intensity_px: float, duration_frames: int) -> void:

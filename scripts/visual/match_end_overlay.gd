@@ -19,9 +19,26 @@ var _running: bool = false
 
 func _ready() -> void:
 	hide()
-	# Preview mode when scene is run standalone
+	_apply_cozy_ui()
 	if get_parent() == get_tree().root:
 		show_result.call_deferred(1250, 980)
+
+
+func _apply_cozy_ui() -> void:
+	_bg.color = Color(UITheme.CANVAS.r, UITheme.CANVAS.g, UITheme.CANVAS.b, 0.92)
+	_winner_label.add_theme_color_override("font_color", UITheme.TEXT_ON_CANVAS)
+	var player_panel: PanelContainer = $Center/VBox/ScoreRow/PlayerPanel
+	var ai_panel: PanelContainer = $Center/VBox/ScoreRow/AIPanel
+	player_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
+	ai_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
+	for lbl: Label in [$Center/VBox/ScoreRow/PlayerPanel/PlayerBox/PlayerTitle, %PlayerScoreDisplay]:
+		lbl.add_theme_color_override("font_color", UITheme.PLAYER if lbl != %PlayerScoreDisplay else UITheme.TEXT_ON_SURFACE)
+		if lbl == %PlayerScoreDisplay:
+			lbl.add_theme_font_size_override("font_size", 28)
+	for lbl: Label in [$Center/VBox/ScoreRow/AIPanel/AIBox/AITitle, %AIScoreDisplay]:
+		lbl.add_theme_color_override("font_color", UITheme.AI if lbl != %AIScoreDisplay else UITheme.TEXT_ON_SURFACE)
+		if lbl == %AIScoreDisplay:
+			lbl.add_theme_font_size_override("font_size", 28)
 
 
 func _process(delta: float) -> void:

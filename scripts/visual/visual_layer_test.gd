@@ -4,7 +4,7 @@ var _passed: int = 0
 var _failed: int = 0
 
 const MODIFIER_NAMES: Array[String] = [
-	"Echo", "Magnet", "Heavy", "Anchor", "Catalyst", "Double Drop"
+	"Echo", "Magnet", "Heavy", "Anchor", "Catalyst", "Volatile", "Double Drop"
 ]
 
 
@@ -24,7 +24,6 @@ func _ready() -> void:
 	test_board_renderer_is_col_valid_frozen_column()
 	test_board_renderer_is_col_valid_full_column()
 	test_layout_manager_desktop_mode()
-	test_layout_manager_mobile_mode()
 	test_layout_manager_too_small()
 	test_layout_manager_cell_size_clamped()
 	test_cell_state_defaults_empty()
@@ -50,7 +49,7 @@ func _assert(label: String, condition: bool) -> void:
 
 
 func _make_renderer() -> BoardRenderer:
-	var r := BoardRenderer.new(ThemeJam.new())
+	var r := BoardRenderer.new(ThemeCozy.new())
 	var layout := LayoutManager.new().compute(Vector2(1280.0, 720.0))
 	r.layout = layout
 	return r
@@ -97,33 +96,33 @@ func test_render_state_landing_rows_initialized() -> void:
 	_assert("landing_rows has 7 entries", rs.landing_rows.size() == RenderState.COLS)
 
 
-# --- ThemeJam ---
+# --- ThemeCozy ---
 
-func test_jam_theme_player_color_distinct_from_ai() -> void:
-	var t := ThemeJam.new()
+func test_cozy_theme_player_color_distinct_from_ai() -> void:
+	var t := ThemeCozy.new()
 	_assert("Player and AI colors are distinct", t.color_player != t.color_ai)
 
 
-func test_jam_theme_all_modifier_abbrevs_are_two_chars() -> void:
-	var t := ThemeJam.new()
+func test_cozy_theme_all_modifier_abbrevs_are_two_chars() -> void:
+	var t := ThemeCozy.new()
 	var all_ok := true
 	for name in MODIFIER_NAMES:
 		if t.get_modifier_abbrev(name).length() != 2:
 			all_ok = false
-	_assert("All 6 modifier abbreviations are 2 characters", all_ok)
+	_assert("All modifier abbreviations are 2 characters", all_ok)
 
 
-func test_jam_theme_modifier_colors_all_defined() -> void:
-	var t := ThemeJam.new()
+func test_cozy_theme_modifier_colors_all_defined() -> void:
+	var t := ThemeCozy.new()
 	var all_defined := true
 	for name in MODIFIER_NAMES:
-		if not t.MODIFIER_DATA.has(name):
+		if not ThemeCozy.MODIFIER_DATA.has(name):
 			all_defined = false
-	_assert("All 6 modifiers have entries in MODIFIER_DATA", all_defined)
+	_assert("All modifiers have entries in MODIFIER_DATA", all_defined)
 
 
-func test_jam_theme_piece_types_have_distinct_border_styles() -> void:
-	var t := ThemeJam.new()
+func test_cozy_theme_piece_types_have_distinct_border_styles() -> void:
+	var t := ThemeCozy.new()
 	var styles: Array[int] = []
 	for pt in [CellState.PieceType.NORMAL, CellState.PieceType.WEIGHTED,
 			CellState.PieceType.GHOST, CellState.PieceType.VOLATILE]:
@@ -175,12 +174,6 @@ func test_layout_manager_desktop_mode() -> void:
 	var lm := LayoutManager.new()
 	var result := lm.compute(Vector2(1280.0, 720.0))
 	_assert("1280×720 → DESKTOP mode", result.mode == LayoutManager.LayoutMode.DESKTOP)
-
-
-func test_layout_manager_mobile_mode() -> void:
-	var lm := LayoutManager.new()
-	var result := lm.compute(Vector2(400.0, 700.0))
-	_assert("400×700 → MOBILE mode", result.mode == LayoutManager.LayoutMode.MOBILE)
 
 
 func test_layout_manager_too_small() -> void:

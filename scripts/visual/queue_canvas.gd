@@ -8,7 +8,7 @@ var _slide_offset: float = 0.0  # pixels: slides in when queue consumes a piece
 
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func refresh(new_state: RenderState) -> void:

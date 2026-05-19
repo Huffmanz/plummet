@@ -22,11 +22,12 @@ func render_board_under(state: RenderState, canvas: CanvasItem) -> void:
 		return
 	var board_rect := _board_rect()
 	var glow_color := theme.color_player if state.active_player == CellState.Occupant.PLAYER else theme.color_ai
-	canvas.draw_rect(board_rect.grow(6.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.10), false, 2.0)
-	canvas.draw_rect(board_rect.grow(4.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.22), false, 2.0)
-	canvas.draw_rect(board_rect.grow(2.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.45), false, 2.0)
-	var heat_bg := theme.color_bg.lerp(Color("#682d2c"), cascade_heat)
-	canvas.draw_rect(board_rect, heat_bg)
+	canvas.draw_rect(board_rect.grow(8.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.06), false, 2.0)
+	canvas.draw_rect(board_rect.grow(5.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.12), false, 2.0)
+	var heat_bg := theme.color_bg.lerp(UITheme.BOARD_HEAT, cascade_heat)
+	var tray := board_rect.grow(4.0)
+	canvas.draw_rect(tray, heat_bg)
+	canvas.draw_rect(tray, UITheme.SURFACE_BORDER_MUTED, false, 3.0)
 	for fc in state.frozen_columns:
 		theme.draw_frozen_overlay(canvas, _column_rect(fc.col), fc.turns_remaining)
 	for c in RenderState.COLS:
@@ -48,10 +49,13 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 		for r in RenderState.ROWS:
 			var cs: CellState = state.get_cell(c, r)
 			var rect := cell_rect(c, r, state.gravity_flipped)
-			if gravity_hidden_cells.has(Vector2i(c, r)) or cs.locked:
-				theme.draw_locked_cell(canvas, rect) if cs.locked else theme.draw_empty_cell(canvas, rect)
+			if gravity_hidden_cells.has(Vector2i(c, r)):
 				continue
-			theme.draw_empty_cell(canvas, rect)
+			if cs.locked:
+				theme.draw_locked_cell(canvas, rect)
+				continue
+			if cs.occupant == CellState.Occupant.EMPTY:
+				theme.draw_empty_cell(canvas, rect)
 			for i in mini(cs.modifiers.size(), 3):
 				theme.draw_modifier_badge(canvas, rect, cs.modifiers[i], i)
 	var t_ms := Time.get_ticks_msec() * 0.006
@@ -60,7 +64,7 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 		if lr >= RenderState.ROWS - 2 and lr >= 0:
 			var pulse := 0.5 + 0.5 * sin(t_ms)
 			var base_alpha := 0.35 if lr == RenderState.ROWS - 1 else 0.18
-			canvas.draw_rect(_column_rect(c), Color(0.843, 0.302, 0.298, base_alpha * pulse))
+			canvas.draw_rect(_column_rect(c), Color(UITheme.DANGER.r, UITheme.DANGER.g, UITheme.DANGER.b, base_alpha * pulse))
 
 
 func render_ghost(state: RenderState, canvas: CanvasItem) -> void:
@@ -77,7 +81,7 @@ func render_ghost(state: RenderState, canvas: CanvasItem) -> void:
 		return
 	# Column hover highlight — subtle vertical strip
 	var col_rect := _column_rect(hovered_col)
-	canvas.draw_rect(col_rect, Color(1.0, 1.0, 1.0, 0.08))
+	canvas.draw_rect(col_rect, Color(UITheme.ACCENT.r, UITheme.ACCENT.g, UITheme.ACCENT.b, 0.14))
 	theme.draw_ghost_piece(canvas, cell_rect(hovered_col, landing_row, state.gravity_flipped))
 
 

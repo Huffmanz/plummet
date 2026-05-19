@@ -1,11 +1,52 @@
 [gd_scene format=3 uid="uid://bnxkfv3qm0t4p"]
 
 [ext_resource type="Script" uid="uid://ddkojelartdav" path="res://scripts/visual/game_board.gd" id="1_gamebrd"]
+[ext_resource type="Shader" uid="uid://1tkgcbcxpqvt" path="res://shaders/connected_dots.gdshader" id="2_64pfw"]
 [ext_resource type="Script" uid="uid://rc02r6wdhkry" path="res://scripts/visual/board_canvas.gd" id="2_boardcvs"]
 [ext_resource type="Script" uid="uid://dt8p18ujv6rb0" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
 [ext_resource type="Script" uid="uid://rmame1hoea4x" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
 [ext_resource type="Script" uid="uid://b4d44rx2wjhhe" path="res://scripts/animation/anim_layer.gd" id="5_animlyr"]
 [ext_resource type="PackedScene" uid="uid://bf0ry22k4o0ey" path="res://scenes/game/match_end_overlay.tscn" id="6_matchend"]
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_1idxs"]
+frequency = 0.062
+
+[sub_resource type="NoiseTexture2D" id="NoiseTexture2D_v0gxk"]
+noise = SubResource("FastNoiseLite_1idxs")
+seamless = true
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_1shy7"]
+shader = ExtResource("2_64pfw")
+shader_parameter/separation = 0.08800000418
+shader_parameter/radius = 0.0350000016625
+shader_parameter/min_thick = 0.194000009215
+shader_parameter/speed = 0.0170000008075
+shader_parameter/tilt_45 = true
+shader_parameter/direction = -45.0
+shader_parameter/noise_texture = SubResource("NoiseTexture2D_v0gxk")
+shader_parameter/color1 = Color(1, 1, 1, 1)
+shader_parameter/color2 = Color(0.7, 0.7, 0.7, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_8sfkx"]
+bg_color = Color(0.9490196, 0.92156863, 0.8784314, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_64pfw"]
+bg_color = Color(0.84314954, 0.7693206, 0.6522286, 1)
+border_width_bottom = 2
+border_color = Color(0, 0, 0, 1)
+corner_radius_top_left = 18
+corner_radius_top_right = 18
+corner_detail = 20
+shadow_size = 2
 
 [node name="GameBoard" type="Control" unique_id=1723042778]
 layout_mode = 3
@@ -17,10 +58,11 @@ grow_vertical = 2
 script = ExtResource("1_gamebrd")
 
 [node name="Background" type="ColorRect" parent="." unique_id=2001824056]
+material = SubResource("ShaderMaterial_1shy7")
 layout_mode = 0
 anchor_right = 1.0
 anchor_bottom = 1.0
-color = Color(0.12, 0.12, 0.15, 1)
+color = Color(0.94902, 0.921569, 0.878431, 1)
 
 [node name="BoardCanvas" type="Node2D" parent="." unique_id=697475631]
 script = ExtResource("2_boardcvs")
@@ -43,127 +85,187 @@ theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
 
-[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer" unique_id=1549813536]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 0)
+[node name="PlayerPanel" type="PanelContainer" parent="MarginContainer" unique_id=515973347]
 layout_mode = 2
 size_flags_horizontal = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_8sfkx")
+
+[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer/PlayerPanel" unique_id=1549813536]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 200)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Panel" type="PanelContainer" parent="MarginContainer/PlayerPanel/LeftPanel" unique_id=449531608]
+layout_mode = 2
 size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
 
-[node name="PlayerTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1080029853]
+[node name="PlayerTitle" type="RichTextLabel" parent="MarginContainer/PlayerPanel/LeftPanel/Panel" unique_id=1823059932]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.6313726, 0.27450982, 0.6666667, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_offset_x = 1
-theme_override_constants/shadow_offset_y = 1
 theme_override_constants/shadow_outline_size = 2
-theme_override_font_sizes/font_size = 16
-text = "PLAYER"
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/bold_font_size = 16
+bbcode_enabled = true
+text = "[wave][center]PLAYER[/center][/wave]"
+fit_content = true
 
-[node name="PlayerScore" type="Label" parent="MarginContainer/LeftPanel" unique_id=1941758077]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PlayerPanel/LeftPanel" unique_id=522896556]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer" unique_id=734774851]
+layout_mode = 2
+
+[node name="PlayerScore" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=1941758077]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 text = "Score: 0"
 
-[node name="PlayerTurns" type="Label" parent="MarginContainer/LeftPanel" unique_id=102212865]
+[node name="PlayerTurns" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=102212865]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 text = "Turns: 40"
 
-[node name="ChipCount" type="Label" parent="MarginContainer/LeftPanel" unique_id=1364442066]
+[node name="ChipCount" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=1364442066]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 text = "Chips: 0"
 
-[node name="QueueTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1032767253]
+[node name="QueueTitle" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=1032767253]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 text = "Next:"
 
-[node name="QueueCanvas" type="Control" parent="MarginContainer/LeftPanel" unique_id=399047196]
+[node name="QueueCanvas" type="Control" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=399047196]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(112, 112)
 layout_mode = 2
 size_flags_horizontal = 3
 script = ExtResource("4_queuecvs")
 
-[node name="RightPanel" type="VBoxContainer" parent="MarginContainer" unique_id=892930335]
+[node name="BottomStrip" type="Control" parent="MarginContainer/PlayerPanel/LeftPanel" unique_id=869220148]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(160, 0)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 10
+
+[node name="TurnIndicator" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/BottomStrip" unique_id=1471655483]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -21.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
+text = "YOUR TURN"
+horizontal_alignment = 1
+
+[node name="AIPanel" type="PanelContainer" parent="MarginContainer" unique_id=2030132308]
 layout_mode = 2
 size_flags_horizontal = 8
-size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_8sfkx")
 
-[node name="AITitle" type="Label" parent="MarginContainer/RightPanel" unique_id=1216232477]
+[node name="RightPanel" type="VBoxContainer" parent="MarginContainer/AIPanel" unique_id=1568970079]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 200)
+layout_mode = 2
+size_flags_horizontal = 8
+
+[node name="Panel" type="PanelContainer" parent="MarginContainer/AIPanel/RightPanel" unique_id=783438694]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
+
+[node name="AITitle" type="RichTextLabel" parent="MarginContainer/AIPanel/RightPanel/Panel" unique_id=1218586424]
 unique_name_in_owner = true
 layout_mode = 2
-theme_override_colors/font_color = Color(0.52156866, 0.8745098, 0.92156863, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_outline_size = 2
 theme_override_constants/shadow_offset_x = 1
 theme_override_constants/shadow_offset_y = 1
-theme_override_constants/shadow_outline_size = 2
-theme_override_font_sizes/font_size = 16
-text = "AI"
-horizontal_alignment = 2
+bbcode_enabled = true
+text = "[wave][center]AI[/center][/wave]
+"
+fit_content = true
+horizontal_alignment = 1
 
-[node name="AIScore" type="Label" parent="MarginContainer/RightPanel" unique_id=978216441]
+[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/AIPanel/RightPanel" unique_id=1566004012]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/AIPanel/RightPanel/MarginContainer" unique_id=1182850635]
+layout_mode = 2
+
+[node name="AIScore" type="Label" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer" unique_id=1200659688]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 text = "Score: 0"
 horizontal_alignment = 2
 
-[node name="AITurns" type="Label" parent="MarginContainer/RightPanel" unique_id=1153181058]
+[node name="AITurns" type="Label" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer" unique_id=1828722539]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 text = "Turns: 40"
 horizontal_alignment = 2
 
-[node name="EnemyName" type="Label" parent="MarginContainer/RightPanel" unique_id=1412658590]
+[node name="EnemyName" type="Label" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer" unique_id=686609498]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 horizontal_alignment = 2
 
-[node name="EnemyGimmick" type="Label" parent="MarginContainer/RightPanel" unique_id=1184147292]
+[node name="EnemyGimmick" type="Label" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer" unique_id=607792338]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_constants/outline_size = 2
 theme_override_font_sizes/font_size = 8
 horizontal_alignment = 2
 autowrap_mode = 2
 
-[node name="BottomStrip" type="Control" parent="MarginContainer" unique_id=869220148]
-unique_name_in_owner = true
+[node name="BottomStrip" type="Control" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer" unique_id=1792540380]
 layout_mode = 2
-size_flags_vertical = 8
+size_flags_horizontal = 4
+size_flags_vertical = 10
 
-[node name="TurnIndicator" type="Label" parent="MarginContainer/BottomStrip" unique_id=1471655483]
+[node name="MatchInfo" type="Label" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer/BottomStrip" unique_id=1745543183]
 unique_name_in_owner = true
 layout_mode = 1
-offset_left = -1.0
-offset_top = -28.0
-offset_right = 92.0
-offset_bottom = -5.0
-text = "YOUR TURN"
-horizontal_alignment = 1
-
-[node name="MatchInfo" type="Label" parent="MarginContainer/BottomStrip" unique_id=808579990]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = -1
-anchor_left = 0.5
+anchors_preset = 12
+anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -1.0
-offset_top = -28.0
-offset_right = -1.0
-offset_bottom = -5.0
+offset_top = -16.0
+grow_horizontal = 2
+grow_vertical = 0
+size_flags_horizontal = 4
+size_flags_vertical = 10
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 12
 text = "Act 1 · Match 1"
 horizontal_alignment = 2
 

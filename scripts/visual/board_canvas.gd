@@ -7,7 +7,7 @@ var anim_layer: AnimLayer = null
 
 
 func _ready() -> void:
-	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 
 
 func refresh(new_state: RenderState) -> void:
@@ -40,7 +40,7 @@ func _draw() -> void:
 	else:
 		draw_set_transform(shake_offset)
 	renderer.render_board_under(state, self)
+	renderer.render_board_tiles(state, self)
 	if anim_layer != null:
 		anim_layer.draw_pieces_to(self)
-	renderer.render_board_tiles(state, self)
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)

@@ -1,7 +1,7 @@
 class_name RenderState extends RefCounted
 
 const COLS: int = 7
-const ROWS: int = 12
+const ROWS: int = BoardEngine.ROWS
 
 var cells: Array[CellState] = []
 var player_queue: Array[QueueEntry] = []

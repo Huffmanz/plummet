@@ -1,6 +1,7 @@
 extends Control
 
 signal column_selected(col: int)
+signal match_complete(player_won: bool, player_score: int, ai_score: int, chips: int, win_streak: int, max_cascade: int, cross_color_count: int)
 
 @onready var _board_canvas: BoardCanvas = $BoardCanvas
 @onready var _ghost_canvas: GhostCanvas = $GhostCanvas
@@ -58,6 +59,16 @@ var _score_milestone: int = 0
 # Enemy portrait
 var _enemy_portrait: EnemyPortrait
 
+# Match metadata (injected by RunController in run mode)
+var standalone: bool = true
+var _match_act: int = 1
+var _match_num: int = 1
+var _match_enemy_name: String = "The Stoic"
+var _match_enemy_gimmick: String = "No gimmick"
+var _match_is_boss: bool = false
+var _match_max_cascade: int = 0
+var _match_cross_color_count: int = 0
+
 
 func _ready() -> void:
 	_theme = ThemeJam.new()
@@ -80,7 +91,8 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	_on_viewport_resized()
 
-	_init_game()
+	if standalone:
+		_init_game()
 	column_selected.connect(_on_column_selected)
 
 
@@ -128,6 +140,27 @@ func _process(delta: float) -> void:
 		_update_labels()
 
 
+func setup_match(
+	bag: PieceBag,
+	chips: int,
+	win_streak: int,
+	act: int,
+	match_num: int,
+	enemy_name: String,
+	enemy_gimmick: String,
+	is_boss: bool = false
+) -> void:
+	_player_bag = bag
+	_chip_count = chips
+	_win_streak = win_streak
+	_match_act = act
+	_match_num = match_num
+	_match_enemy_name = enemy_name
+	_match_enemy_gimmick = enemy_gimmick
+	_match_is_boss = is_boss
+	_init_game()
+
+
 func _init_game() -> void:
 	_board = BoardEngine.new()
 	_score_calc = ScoreCalculator.new()
@@ -144,6 +177,8 @@ func _init_game() -> void:
 	_disp_player_score = 0.0
 	_disp_ai_score = 0.0
 	_score_milestone = 0
+	_match_max_cascade = 0
+	_match_cross_color_count = 0
 	if _renderer != null:
 		_renderer.cascade_heat = 0.0
 
@@ -164,7 +199,7 @@ func _build_state() -> RenderState:
 	return _builder.build(
 		_board, _score_tracker, _turn_manager,
 		_player_bag.get_queue_pieces(2), [], [], false,
-		1, 1, "The Stoic", "No gimmick",
+		_match_act, _match_num, _match_enemy_name, _match_enemy_gimmick,
 		_chip_count, _animating
 	)
 
@@ -197,6 +232,9 @@ func _on_column_selected(col: int) -> void:
 	_refresh_all()
 
 	var p_result := await _run_cascade_animated(_board, Piece.Owner.PLAYER)
+	_match_max_cascade = maxi(_match_max_cascade, p_result.max_depth)
+	if p_result.cross_color:
+		_match_cross_color_count += 1
 	var chips_before := _chip_count
 	_award_chips(p_result, Piece.Owner.PLAYER)
 	_score_tracker.add_turn(_score_calc.calculate(p_result, 0))
@@ -249,6 +287,7 @@ func _run_ai_turn_animated() -> void:
 	_refresh_all()
 
 	var ai_result := await _run_cascade_animated(_board, Piece.Owner.AI)
+	_match_max_cascade = maxi(_match_max_cascade, ai_result.max_depth)
 	if ai_result.max_depth >= 1:
 		_enemy_portrait.react(EnemyPortrait.Emotion.SMUG)
 	_score_tracker.add_turn(_score_calc.calculate(ai_result, 0))
@@ -439,15 +478,26 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 		_chip_count += 15
 		if _win_streak >= 2:
 			_chip_count += (_win_streak - 1) * 5
-		_shop_screen.open(_player_bag, _chip_count)
+		if not _match_is_boss and not standalone:
+			_shop_screen.open(_player_bag, _chip_count)
+		elif standalone:
+			_shop_screen.open(_player_bag, _chip_count)
+		else:
+			match_complete.emit(true, _score_tracker.player_score, _score_tracker.ai_score, _chip_count, _win_streak, _match_max_cascade, _match_cross_color_count)
 	else:
 		_win_streak = 0
-		_init_game()
+		if standalone:
+			_init_game()
+		else:
+			match_complete.emit(false, _score_tracker.player_score, _score_tracker.ai_score, _chip_count, _win_streak, _match_max_cascade, _match_cross_color_count)
 
 
 func _on_shop_closed(chips_remaining: int) -> void:
 	_chip_count = chips_remaining
-	_init_game()
+	if standalone:
+		_init_game()
+	else:
+		match_complete.emit(true, _score_tracker.player_score, _score_tracker.ai_score, _chip_count, _win_streak, _match_max_cascade, _match_cross_color_count)
 
 
 func _refresh_all() -> void:

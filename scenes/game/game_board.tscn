@@ -73,6 +73,12 @@ layout_mode = 2
 theme_override_font_sizes/font_size = 8
 text = "Turns: 40"
 
+[node name="ChipCount" type="Label" parent="MarginContainer/LeftPanel" unique_id=1364442066]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "Chips: 0"
+
 [node name="QueueTitle" type="Label" parent="MarginContainer/LeftPanel" unique_id=1032767253]
 unique_name_in_owner = true
 layout_mode = 2
@@ -117,13 +123,6 @@ unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 8
 text = "Turns: 40"
-horizontal_alignment = 2
-
-[node name="ChipCount" type="Label" parent="MarginContainer/RightPanel" unique_id=941501561]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 8
-text = "Chips: 0"
 horizontal_alignment = 2
 
 [node name="EnemyName" type="Label" parent="MarginContainer/RightPanel" unique_id=1412658590]

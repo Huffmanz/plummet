@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://btjrv5f8k1yvs" path="res://scripts/visual/main_menu.gd" id="1_script"]
 [ext_resource type="PackedScene" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_bg"]
 [ext_resource type="PackedScene" path="res://scenes/ui/title_letter_ball.tscn" id="3_ball"]
-[ext_resource type="PackedScene" path="res://scenes/ui/juicy_sfx_button.tscn" id="4_juicy_btn"]
+[ext_resource type="PackedScene" uid="uid://wqifynfc6cvj" path="res://scenes/ui/juicy_sfx_button.tscn" id="4_juicy_btn"]
 
 [node name="MainMenu" type="Control" unique_id=1914713113]
 layout_mode = 3
@@ -168,6 +168,7 @@ custom_minimum_size = Vector2(150, 44)
 layout_mode = 2
 size_flags_horizontal = 4
 size_flags_vertical = 4
+normal_bg_color = Color(0.8970386, 0.5830989, 0.5613282, 1)
 hover_bg_color = Color(0.831373, 0.45098, 0.431373, 1)
 button_text = "QUIT"
 

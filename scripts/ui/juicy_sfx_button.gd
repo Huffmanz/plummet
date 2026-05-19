@@ -1,9 +1,16 @@
 class_name JuicySfxButton extends Button
 
-@export var hover_sounds: Array[AudioStream] = []
+@export var hover_sounds: Array[AudioStream] = []:
+	set(value):
+		hover_sounds = value
+		_sync_hover_sounds()
 @export var hover_volume_db: float = 0.0
 
 @export var hover_scale: Vector2 = Vector2(1.08, 1.08)
+@export var normal_bg_color: Color = Color(0.482353, 0.682353, 0.498039, 1.0):
+	set(value):
+		normal_bg_color = value
+		_apply_normal_bg_color()
 @export var hover_bg_color: Color = Color(0.56, 0.76, 0.58, 1.0)
 @export var hover_label_color: Color = Color(1.0, 1.0, 1.0, 1.0)
 ## High-contrast rim — stays independent of hover_bg_color so it reads on any fill.
@@ -18,7 +25,7 @@ class_name JuicySfxButton extends Button
 		if is_node_ready():
 			_sync_label()
 
-@onready var _audio: AudioStreamPlayer = $AudioStreamPlayer
+@onready var _audio: RandomAudioPlayer = $RandomAudioPlayer
 @onready var _visual: Control = $VisualPivot
 @onready var _panel: Panel = $VisualPivot/Panel
 @onready var _label: Label = $VisualPivot/Label
@@ -40,6 +47,7 @@ func _ready() -> void:
 	action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	focus_mode = FOCUS_ALL
 	_audio.volume_db = hover_volume_db
+	_sync_hover_sounds()
 	_cache_rest_state()
 	_sync_label()
 	_sync_pivot()
@@ -74,20 +82,25 @@ func _on_button_up() -> void:
 		_set_highlighted(false)
 
 
+func _apply_normal_bg_color() -> void:
+	_rest_bg_color = normal_bg_color
+	if _panel_style != null:
+		_panel_style.bg_color = normal_bg_color
+
+
 func _cache_rest_state() -> void:
 	var panel_style := _panel.get_theme_stylebox("panel")
 	if panel_style is StyleBoxFlat:
 		_panel_style = panel_style.duplicate() as StyleBoxFlat
 		_panel.add_theme_stylebox_override("panel", _panel_style)
-		_rest_bg_color = _panel_style.bg_color
 		_rest_border_color = _panel_style.border_color
 		_rest_border_width = _panel_style.border_width_left
 	else:
 		_panel_style = StyleBoxFlat.new()
-		_rest_bg_color = UITheme.ACCENT
 		_rest_border_color = UITheme.SURFACE_BORDER
 		_rest_border_width = 2
 
+	_apply_normal_bg_color()
 	_rest_label_color = _label.get_theme_color("font_color")
 	var target := _animation_target()
 	target.rotation = 0.0
@@ -129,27 +142,19 @@ func _on_focus_exited() -> void:
 		_set_highlighted(false)
 
 
+func _sync_hover_sounds() -> void:
+	if _audio != null:
+		_audio.streams = hover_sounds
+
+
 func play_random_from(streams: Array[AudioStream]) -> void:
-	_play_random_from(streams)
+	if _audio != null:
+		_audio.play_random_from(streams)
 
 
 func _play_random_from(streams: Array[AudioStream]) -> void:
-	if streams == null or streams.is_empty():
-		return
-
-	var candidates: Array[AudioStream] = []
-	for stream in streams:
-		if stream != null:
-			candidates.append(stream)
-	if candidates.is_empty():
-		return
-
-	var picked: AudioStream = candidates[randi() % candidates.size()]
-	if picked == null:
-		return
-
-	_audio.stream = picked
-	_audio.play()
+	if _audio != null:
+		_audio.play_random_from(streams)
 
 
 func _set_highlighted(active: bool) -> void:

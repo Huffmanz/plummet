@@ -56,9 +56,6 @@ var _idle_t: float = 0.0
 # Score milestone tracking
 var _score_milestone: int = 0
 
-# Enemy portrait
-var _enemy_portrait: EnemyPortrait
-
 # Match metadata (injected by RunController in run mode)
 var standalone: bool = true
 var _match_act: int = 1
@@ -80,9 +77,6 @@ func _ready() -> void:
 	_ghost_canvas.renderer = _renderer
 	_queue_canvas.renderer = _renderer
 	_anim_layer.renderer = _renderer
-
-	_enemy_portrait = EnemyPortrait.new()
-	add_child(_enemy_portrait)
 
 	_shop_screen = preload("res://scenes/game/shop_screen.tscn").instantiate()
 	add_child(_shop_screen)
@@ -288,8 +282,6 @@ func _run_ai_turn_animated() -> void:
 
 	var ai_result := await _run_cascade_animated(_board, Piece.Owner.AI)
 	_match_max_cascade = maxi(_match_max_cascade, ai_result.max_depth)
-	if ai_result.max_depth >= 1:
-		_enemy_portrait.react(EnemyPortrait.Emotion.SMUG)
 	_score_tracker.add_turn(_score_calc.calculate(ai_result, 0))
 	_ai.advance_queue()
 	_turn_manager.advance(_board)
@@ -370,7 +362,6 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			for run in runs:
 				chain_cells.append_array(run.cells)
 			_anim_layer.spawn_popup(_popup_pos(chain_cells) - Vector2(0.0, 28.0), "+150 CHAIN")
-			_enemy_portrait.react(EnemyPortrait.Emotion.STARTLED)
 
 		# Remove all cleared pieces, then let pieces fall
 		board.remove_clears(runs)
@@ -602,8 +593,6 @@ func _on_viewport_resized() -> void:
 	_left_panel.size = Vector2(pw, board_area_h)
 	_right_panel.position = Vector2(vp.x - pw, 0.0)
 	_right_panel.size = Vector2(pw, board_area_h)
-	_enemy_portrait.visible = true
-	_enemy_portrait.position = Vector2(vp.x - pw * 0.5, board_area_h * 0.28)
 
 	_bottom_strip.position = Vector2(0.0, vp.y - bh)
 	_bottom_strip.size = Vector2(vp.x, bh)

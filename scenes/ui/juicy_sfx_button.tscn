@@ -1,22 +1,11 @@
-[gd_scene load_steps=5 format=3 uid="uid://cjuicy_sfx_btn01"]
+[gd_scene format=3 uid="uid://wqifynfc6cvj"]
 
-[ext_resource type="Script" path="res://scripts/ui/juicy_sfx_button.gd" id="1_script"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
-bg_color = Color(0.482353, 0.682353, 0.498039, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.94902, 0.921569, 0.878431, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-content_margin_left = 16.0
-content_margin_top = 10.0
-content_margin_right = 16.0
-content_margin_bottom = 10.0
+[ext_resource type="Script" uid="uid://7iyuo7axuxkp" path="res://scripts/ui/juicy_sfx_button.gd" id="1_script"]
+[ext_resource type="AudioStream" uid="uid://bwk2c8nxg0qlc" path="res://assets/sfx/kenney_interface-sounds/Audio/select_001.ogg" id="2_nyu8n"]
+[ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
+[ext_resource type="AudioStream" uid="uid://ce3q2roj3vy27" path="res://assets/sfx/kenney_interface-sounds/Audio/select_002.ogg" id="3_8sbin"]
+[ext_resource type="AudioStream" uid="uid://5v6cbbh7xqh" path="res://assets/sfx/kenney_interface-sounds/Audio/select_007.ogg" id="8_hdsb8"]
+[ext_resource type="AudioStream" uid="uid://cgkcylb0htj8x" path="res://assets/sfx/kenney_interface-sounds/Audio/select_008.ogg" id="9_54iii"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
 bg_color = Color(0, 0, 0, 0)
@@ -30,21 +19,40 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 
-[node name="JuicySfxButton" type="Button"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 16.0
+content_margin_top = 10.0
+content_margin_right = 16.0
+content_margin_bottom = 10.0
+bg_color = Color(0.482353, 0.682353, 0.498039, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94902, 0.921569, 0.878431, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[node name="JuicySfxButton" type="Button" unique_id=901160555]
 custom_minimum_size = Vector2(200, 44)
 offset_right = 200.0
 offset_bottom = 44.0
-focus_mode = 2
 theme_override_styles/normal = SubResource("StyleBoxFlat_focus")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_focus")
 theme_override_styles/hover = SubResource("StyleBoxFlat_focus")
 theme_override_styles/disabled = SubResource("StyleBoxFlat_focus")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 flat = true
-text = ""
 script = ExtResource("1_script")
+hover_sounds = Array[AudioStream]([ExtResource("2_nyu8n"), ExtResource("3_8sbin"), ExtResource("8_hdsb8"), ExtResource("9_54iii")])
 
-[node name="VisualPivot" type="Control" parent="."]
+[node name="RandomAudioPlayer" parent="." unique_id=1930534351 instance=ExtResource("2_rap")]
+unique_name_in_owner = true
+streams = Array[AudioStream]([ExtResource("2_nyu8n"), ExtResource("3_8sbin"), ExtResource("8_hdsb8"), ExtResource("9_54iii")])
+
+[node name="VisualPivot" type="Control" parent="." unique_id=605185542]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -53,7 +61,7 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="Panel" type="Panel" parent="VisualPivot"]
+[node name="Panel" type="Panel" parent="VisualPivot" unique_id=1302475320]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -63,18 +71,15 @@ grow_vertical = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="Label" type="Label" parent="VisualPivot"]
+[node name="Label" type="Label" parent="VisualPivot" unique_id=1859072617]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.94902, 0.921569, 0.878431, 1)
 theme_override_font_sizes/font_size = 16
 text = "Button"
 horizontal_alignment = 1
 vertical_alignment = 1
-
-[node name="AudioStreamPlayer" type="AudioStreamPlayer" parent="."]

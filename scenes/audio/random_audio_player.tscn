@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://crandom_audio_player1"]
+
+[ext_resource type="Script" path="res://scripts/audio/random_audio_player.gd" id="1_script"]
+
+[node name="RandomAudioPlayer" type="AudioStreamPlayer"]
+script = ExtResource("1_script")
+randomize_pitch = true
+min_pitch = 0.9
+max_pitch = 1.1

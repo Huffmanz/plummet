@@ -514,10 +514,6 @@ func _draw_grav_to(canvas: CanvasItem) -> void:
 			if gp.occupant == CellState.Occupant.PLAYER else renderer.theme.color_ai
 		var piece_rect := Rect2(gp.x, gp.cur_y, gp.cs, gp.cs)
 		renderer.theme.draw_piece(canvas, piece_rect, color)
-		if gp.occupant == CellState.Occupant.AI:
-			var dot_size := gp.cs * 0.15
-			var center := piece_rect.get_center()
-			canvas.draw_rect(Rect2(center - Vector2(dot_size, dot_size) * 0.5, Vector2(dot_size, dot_size)), Color.WHITE)
 
 
 func _draw_drop_to(canvas: CanvasItem) -> void:

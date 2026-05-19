@@ -37,13 +37,6 @@ func draw_player_piece(canvas: CanvasItem, rect: Rect2, piece_type: CellState.Pi
 
 func draw_ai_piece(canvas: CanvasItem, rect: Rect2, piece_type: CellState.PieceType) -> void:
 	_draw_piece_shape(canvas, rect, color_ai, piece_type)
-	# Small square center dot for accessibility — shape distinguishes AI without relying on color
-	var dot_size: float = rect.size.x * 0.15
-	var center := rect.get_center()
-	canvas.draw_rect(
-		Rect2(center - Vector2(dot_size, dot_size) * 0.5, Vector2(dot_size, dot_size) * 1.0),
-		Color.WHITE
-	)
 
 
 func draw_ghost_piece(canvas: CanvasItem, rect: Rect2) -> void:

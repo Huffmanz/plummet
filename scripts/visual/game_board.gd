@@ -42,6 +42,8 @@ var _match_active: bool = false
 var _animating: bool = false
 var _prev_shake: Vector2 = Vector2.ZERO
 var _chip_count: int = 0
+var _win_streak: int = 0
+var _shop_screen: ShopScreen
 
 # Score tween
 var _disp_player_score: float = 0.0
@@ -70,6 +72,10 @@ func _ready() -> void:
 
 	_enemy_portrait = EnemyPortrait.new()
 	add_child(_enemy_portrait)
+
+	_shop_screen = preload("res://scenes/game/shop_screen.tscn").instantiate()
+	add_child(_shop_screen)
+	_shop_screen.shop_closed.connect(_on_shop_closed)
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	_on_viewport_resized()
@@ -130,11 +136,11 @@ func _init_game() -> void:
 	_cascade_loop = CascadeLoop.new()
 	_ai = AIOpponent.new(0.1)
 	_builder = RenderStateBuilder.new()
-	_player_bag = PieceBag.new(Piece.Owner.PLAYER)
+	if _player_bag == null:
+		_player_bag = PieceBag.new(Piece.Owner.PLAYER)
 	_modifier_resolver = ModifierResolver.new()
 	_match_active = true
 	_animating = false
-	_chip_count = 0
 	_disp_player_score = 0.0
 	_disp_ai_score = 0.0
 	_score_milestone = 0
@@ -425,6 +431,23 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 	_anim_layer.play_shake(2.0, 4)
 	await get_tree().create_timer(0.6).timeout
 	await _match_end_overlay.show_result(_score_tracker.player_score, _score_tracker.ai_score)
+	_match_end_overlay.hide()
+
+	var player_won: bool = _score_tracker.player_score > _score_tracker.ai_score
+	if player_won:
+		_win_streak += 1
+		_chip_count += 15
+		if _win_streak >= 2:
+			_chip_count += (_win_streak - 1) * 5
+		_shop_screen.open(_player_bag, _chip_count)
+	else:
+		_win_streak = 0
+		_init_game()
+
+
+func _on_shop_closed(chips_remaining: int) -> void:
+	_chip_count = chips_remaining
+	_init_game()
 
 
 func _refresh_all() -> void:

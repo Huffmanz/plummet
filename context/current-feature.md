@@ -1,11 +1,51 @@
-# Current Feature
+# Current Feature — Juicy SFX Button
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Reusable button component as a standalone scene (Control nodes in the editor, not built programmatically)
+- Plays a randomly selected SFX from an exported list on hover
+- Safe sound playback: null-check the exported array (and each entry) before assigning to `AudioStreamPlayer` and calling `play()`
+- Hover feedback: squash, stretch, and rotation (juice animation)
+- Export variables for sound lists and any tuning knobs needed for animation/audio
+
 ## Notes
+
+### Component design
+- Scene path: `scenes/ui/juicy_sfx_button.tscn` (or similar)
+- Script: `scripts/ui/juicy_sfx_button.gd` extending `Button` (or wrapping a `Button` child)
+- Structure (editor-built):
+  - Root `Button` (or `Control` + child `Button`)
+  - Child node for visual pivot (optional) so scale/rotation animates cleanly
+  - `AudioStreamPlayer` for one-shot hover SFX
+  - `AnimationPlayer` and/or hover tweens for squash / stretch / rotate
+
+### Sound playback (safe)
+- `@export var hover_sounds: Array[AudioStream]` — random pick on hover
+- Shared helper e.g. `_play_random_from(streams: Array[AudioStream])`:
+  - Return immediately if `streams == null` or `streams.is_empty()`
+  - Pick random index; if `streams[i] == null`, skip (no assign, no play)
+  - Only then set `AudioStreamPlayer.stream` and call `play()`
+- Same pattern reusable for other lists (e.g. optional `click_sounds`) if added later
+- Optional: `@export var hover_volume_db` for tuning
+
+### Hover SFX
+- On `mouse_entered`, call `_play_random_from(hover_sounds)` then run hover animation
+
+### Hover animation
+- On `mouse_entered`: brief squash (scale Y down, X up) + slight rotation, then settle or loop subtly
+- On `mouse_exited`: restore default transform
+- Respect reduced-motion / mute if project adds global accessibility later (optional stretch goal)
+
+### Integration
+- Replace or wire into existing cozy UI buttons (main menu, shop, run summary) as a follow-up — this feature is the component only
+- Preview scene optional: `scenes/ui/juicy_sfx_button_preview.tscn` for testing in isolation
+
+### Out of scope
+- Click SFX (hover only unless added later)
+- Rebuilding shop/menu UI in code
 
 ## History
 

@@ -1,0 +1,34 @@
+[gd_scene load_steps=3 format=3 uid="uid://cjuicy_sfx_prev01"]
+
+[ext_resource type="Script" path="res://scripts/visual/cozy_screen_background.gd" id="1_bg"]
+[ext_resource type="PackedScene" uid="uid://cjuicy_sfx_btn01" path="res://scenes/ui/juicy_sfx_button.tscn" id="2_btn"]
+
+[node name="JuicySfxButtonPreview" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.94902, 0.921569, 0.878431, 1)
+script = ExtResource("1_bg")
+
+[node name="Center" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="JuicySfxButton" parent="Center" instance=ExtResource("2_btn")]
+layout_mode = 2
+text = "Hover Me"

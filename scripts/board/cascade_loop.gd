@@ -1,11 +1,13 @@
 class_name CascadeLoop extends RefCounted
 
 # Hooks called at specific points in the loop for modifier resolution (feature 05).
-# on_land:    func(board: BoardEngine) — after piece lands, before first clear check
-# on_clear:   func(board: BoardEngine, runs: Array[MatchedRun]) — after detection, before removal
-# on_gravity: func(board: BoardEngine) — after gravity settles each round
+# on_land:        func(board: BoardEngine) — after piece lands, before first clear check
+# on_clear:       func(board: BoardEngine, runs: Array[MatchedRun]) — after detection, before removal
+# on_pre_gravity: func(board: BoardEngine) — after remove_clears, before apply_gravity (Anchor save)
+# on_gravity:     func(board: BoardEngine) — after gravity settles each round (Anchor restore, Echo drop)
 var _on_land_hooks: Array[Callable] = []
 var _on_clear_hooks: Array[Callable] = []
+var _on_pre_gravity_hooks: Array[Callable] = []
 var _on_gravity_hooks: Array[Callable] = []
 
 
@@ -15,6 +17,10 @@ func register_on_land(hook: Callable) -> void:
 
 func register_on_clear(hook: Callable) -> void:
 	_on_clear_hooks.append(hook)
+
+
+func register_on_pre_gravity(hook: Callable) -> void:
+	_on_pre_gravity_hooks.append(hook)
 
 
 func register_on_gravity(hook: Callable) -> void:
@@ -53,6 +59,8 @@ func run(board: BoardEngine, attribution: Piece.Owner) -> CascadeResult:
 				ai_cleared = true
 
 		board.remove_clears(runs)
+
+		_fire(_on_pre_gravity_hooks, [board])
 		board.apply_gravity()
 
 		_fire(_on_gravity_hooks, [board])

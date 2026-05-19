@@ -7,6 +7,10 @@ var _t: float = 0.0
 var _slide_offset: float = 0.0  # pixels: slides in when queue consumes a piece
 
 
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
 func refresh(new_state: RenderState) -> void:
 	var old_len := state.player_queue.size() if state != null else 0
 	var new_len := new_state.player_queue.size()

@@ -13,48 +13,54 @@ func _init(p_theme: ThemeBase) -> void:
 
 
 func render_board(state: RenderState, canvas: CanvasItem) -> void:
+	render_board_under(state, canvas)
+	render_board_tiles(state, canvas)
+
+
+func render_board_under(state: RenderState, canvas: CanvasItem) -> void:
 	if state == null or layout == null or theme == null:
 		return
-
 	var board_rect := _board_rect()
-	# Board edge glow by turn
 	var glow_color := theme.color_player if state.active_player == CellState.Occupant.PLAYER else theme.color_ai
 	canvas.draw_rect(board_rect.grow(6.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.10), false, 2.0)
 	canvas.draw_rect(board_rect.grow(4.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.22), false, 2.0)
 	canvas.draw_rect(board_rect.grow(2.0), Color(glow_color.r, glow_color.g, glow_color.b, 0.45), false, 2.0)
-	# Background with cascade heat tint
-	var heat_bg := theme.color_bg.lerp(Color(0.25, 0.08, 0.03), cascade_heat)
+	var heat_bg := theme.color_bg.lerp(Color("#682d2c"), cascade_heat)
 	canvas.draw_rect(board_rect, heat_bg)
-
 	for fc in state.frozen_columns:
 		theme.draw_frozen_overlay(canvas, _column_rect(fc.col), fc.turns_remaining)
+	for c in RenderState.COLS:
+		for r in RenderState.ROWS:
+			var cs: CellState = state.get_cell(c, r)
+			if gravity_hidden_cells.has(Vector2i(c, r)) or cs.locked:
+				continue
+			var rect := cell_rect(c, r, state.gravity_flipped)
+			if cs.occupant == CellState.Occupant.PLAYER:
+				theme.draw_player_piece(canvas, rect, cs.piece_type)
+			elif cs.occupant == CellState.Occupant.AI:
+				theme.draw_ai_piece(canvas, rect, cs.piece_type)
 
+
+func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
+	if state == null or layout == null or theme == null:
+		return
 	for c in RenderState.COLS:
 		for r in RenderState.ROWS:
 			var cs: CellState = state.get_cell(c, r)
 			var rect := cell_rect(c, r, state.gravity_flipped)
-			if gravity_hidden_cells.has(Vector2i(c, r)):
-				theme.draw_empty_cell(canvas, rect)
-			elif cs.locked:
-				theme.draw_locked_cell(canvas, rect)
-			elif cs.occupant == CellState.Occupant.EMPTY:
-				theme.draw_empty_cell(canvas, rect)
-			else:
-				if cs.occupant == CellState.Occupant.PLAYER:
-					theme.draw_player_piece(canvas, rect, cs.piece_type)
-				else:
-					theme.draw_ai_piece(canvas, rect, cs.piece_type)
-				for i in mini(cs.modifiers.size(), 3):
-					theme.draw_modifier_badge(canvas, rect, cs.modifiers[i], i)
-
-	# Column fill warnings
+			if gravity_hidden_cells.has(Vector2i(c, r)) or cs.locked:
+				theme.draw_locked_cell(canvas, rect) if cs.locked else theme.draw_empty_cell(canvas, rect)
+				continue
+			theme.draw_empty_cell(canvas, rect)
+			for i in mini(cs.modifiers.size(), 3):
+				theme.draw_modifier_badge(canvas, rect, cs.modifiers[i], i)
 	var t_ms := Time.get_ticks_msec() * 0.006
 	for c in RenderState.COLS:
 		var lr := state.landing_rows[c] if c < state.landing_rows.size() else -1
 		if lr >= RenderState.ROWS - 2 and lr >= 0:
 			var pulse := 0.5 + 0.5 * sin(t_ms)
 			var base_alpha := 0.35 if lr == RenderState.ROWS - 1 else 0.18
-			canvas.draw_rect(_column_rect(c), Color(1.0, 0.1, 0.1, base_alpha * pulse))
+			canvas.draw_rect(_column_rect(c), Color(0.843, 0.302, 0.298, base_alpha * pulse))
 
 
 func render_ghost(state: RenderState, canvas: CanvasItem) -> void:

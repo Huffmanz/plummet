@@ -1,10 +1,174 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c8f1gg3vqf5eo"]
 
-[ext_resource type="Script" path="res://scripts/visual/main_menu.gd" id="1_mm"]
+[ext_resource type="Script" uid="uid://btjrv5f8k1yvs" path="res://scripts/visual/main_menu.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_bg"]
+[ext_resource type="PackedScene" path="res://scenes/ui/title_letter_ball.tscn" id="3_ball"]
+[ext_resource type="PackedScene" path="res://scenes/ui/juicy_sfx_button.tscn" id="4_juicy_btn"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1914713113]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-script = ExtResource("1_mm")
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="Background" parent="." unique_id=1448975118 instance=ExtResource("2_bg")]
+layout_mode = 1
+color_one = Color(0.99517065, 0.9932402, 0.98937565, 1)
+color_two = Color(0.8575321, 0.8028842, 0.73243845, 1)
+stripe_blur = 0.0
+
+[node name="Center" type="CenterContainer" parent="." unique_id=853000062]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Center" unique_id=892810093]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="TitleRow" type="HBoxContainer" parent="Center/VBox" unique_id=1629616422]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 8
+alignment = 1
+
+[node name="SlotP" type="Control" parent="Center/VBox/TitleRow" unique_id=1018206984]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallP" parent="Center/VBox/TitleRow/SlotP" unique_id=774566113 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="SlotL" type="Control" parent="Center/VBox/TitleRow" unique_id=222549826]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallL" parent="Center/VBox/TitleRow/SlotL" unique_id=127702372 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+letter = "L"
+
+[node name="SlotU" type="Control" parent="Center/VBox/TitleRow" unique_id=754394604]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallU" parent="Center/VBox/TitleRow/SlotU" unique_id=650830179 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+letter = "U"
+
+[node name="SlotM1" type="Control" parent="Center/VBox/TitleRow" unique_id=908585958]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallM1" parent="Center/VBox/TitleRow/SlotM1" unique_id=1762509325 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+letter = "M"
+
+[node name="SlotM2" type="Control" parent="Center/VBox/TitleRow" unique_id=16035830]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallM2" parent="Center/VBox/TitleRow/SlotM2" unique_id=526426271 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+letter = "M"
+
+[node name="SlotE" type="Control" parent="Center/VBox/TitleRow" unique_id=1232184542]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallE" parent="Center/VBox/TitleRow/SlotE" unique_id=280559237 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+letter = "E"
+
+[node name="SlotT" type="Control" parent="Center/VBox/TitleRow" unique_id=508481935]
+custom_minimum_size = Vector2(56, 56)
+layout_mode = 2
+
+[node name="BallT" parent="Center/VBox/TitleRow/SlotT" unique_id=567536678 instance=ExtResource("3_ball")]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -56.0
+grow_horizontal = 2
+grow_vertical = 0
+letter = "T"
+
+[node name="Subtitle" type="Label" parent="Center/VBox" unique_id=1984181758]
+visible = false
+layout_mode = 2
+theme_override_colors/font_color = Color(0.603922, 0.580392, 0.658824, 1)
+theme_override_font_sizes/font_size = 14
+text = "By: Shawkwaive"
+horizontal_alignment = 1
+
+[node name="Spacer" type="Control" parent="Center/VBox" unique_id=446685634]
+custom_minimum_size = Vector2(0, 16)
+layout_mode = 2
+
+[node name="BtnStart" parent="Center/VBox" unique_id=357398889 instance=ExtResource("4_juicy_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+button_text = "START RUN"
+
+[node name="BtnQuit" parent="Center/VBox" unique_id=135255386 instance=ExtResource("4_juicy_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 44)
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+hover_bg_color = Color(0.831373, 0.45098, 0.431373, 1)
+button_text = "QUIT"
+
+[connection signal="pressed" from="Center/VBox/BtnStart" to="." method="_on_start_pressed"]

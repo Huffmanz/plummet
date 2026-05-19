@@ -10,8 +10,8 @@ class_name JuicySfxButton extends Button
 @export var hover_border_color: Color = Color(0.98, 0.97, 0.95, 1.0)
 @export var hover_border_width: int = 4
 @export var hover_duration: float = 0.14
-@export var hover_rotation_deg: float = 4.0
-@export var hover_wiggle_period: float = 0.36
+@export var hover_rotation_deg: float = 10.0
+@export var hover_wiggle_period: float = 0.25
 @export var button_text: String = "Button":
 	set(value):
 		button_text = value
@@ -36,16 +36,42 @@ var _highlighted: bool = false
 
 
 func _ready() -> void:
+	# Release-mode clicks were lost when VisualPivot children intercepted input.
+	action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	focus_mode = FOCUS_ALL
 	_audio.volume_db = hover_volume_db
 	_cache_rest_state()
 	_sync_label()
 	_sync_pivot()
+	_make_visuals_click_through()
 	resized.connect(_sync_pivot)
 	mouse_entered.connect(_on_mouse_entered)
 	mouse_exited.connect(_on_mouse_exited)
 	focus_entered.connect(_on_focus_entered)
 	focus_exited.connect(_on_focus_exited)
+	pressed.connect(_clear_highlight_on_press)
+	button_up.connect(_on_button_up)
+
+
+func _make_visuals_click_through() -> void:
+	if _visual != null:
+		_apply_mouse_ignore(_visual)
+
+
+func _apply_mouse_ignore(node: Node) -> void:
+	if node is Control:
+		(node as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
+	for child in node.get_children():
+		_apply_mouse_ignore(child)
+
+
+func _clear_highlight_on_press() -> void:
+	_set_highlighted(false)
+
+
+func _on_button_up() -> void:
+	if not is_hovered() and not has_focus():
+		_set_highlighted(false)
 
 
 func _cache_rest_state() -> void:

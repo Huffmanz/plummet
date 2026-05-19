@@ -34,6 +34,10 @@ func _ready() -> void:
 
 
 func _on_start_run() -> void:
+	await TransitionManager.transition_screen(_begin_new_run)
+
+
+func _begin_new_run() -> void:
 	_main_menu.hide()
 	_run_state = RunState.new()
 	_run_state.player_bag = PieceBag.new(Piece.Owner.PLAYER)
@@ -43,8 +47,10 @@ func _on_start_run() -> void:
 
 
 func _start_match() -> void:
-	if _game_board != null:
-		_game_board.queue_free()
+	var had_board := _game_board != null
+	_teardown_game_board()
+	if had_board:
+		await get_tree().process_frame
 
 	var enemy_name := _get_enemy_name(_run_state.act, _run_state.match_in_act)
 	var gimmick := _ENEMY_GIMMICK.get(enemy_name, "No gimmick") as String
@@ -52,6 +58,7 @@ func _start_match() -> void:
 	_game_board = _GAME_BOARD_SCENE.instantiate()
 	_game_board.standalone = false
 	add_child(_game_board)
+	move_child(_game_board, -1)
 	_game_board.match_complete.connect(_on_match_complete)
 	_game_board.setup_match(
 		_run_state.player_bag,
@@ -91,7 +98,7 @@ func _on_match_complete(
 
 	if not player_won:
 		_run_state.win_streak = 0
-		_end_run(false)
+		call_deferred("_end_run", false)
 		return
 
 	# Award fragments for this match
@@ -110,9 +117,18 @@ func _on_match_complete(
 		_run_state.match_in_act = 1
 
 	if _run_state.is_run_complete():
-		_end_run(true)
+		call_deferred("_end_run", true)
 	else:
-		_start_match()
+		call_deferred("_start_match")
+
+
+func _teardown_game_board() -> void:
+	if _game_board == null:
+		return
+	if _game_board.match_complete.is_connected(_on_match_complete):
+		_game_board.match_complete.disconnect(_on_match_complete)
+	_game_board.queue_free()
+	_game_board = null
 
 
 func _award_act_fragments() -> void:
@@ -132,9 +148,7 @@ func _end_run(victory: bool) -> void:
 	if _run_state.total_score >= 5000:
 		_run_state.fragments_earned += 10
 
-	if _game_board != null:
-		_game_board.queue_free()
-		_game_board = null
+	_teardown_game_board()
 
 	_summary_screen = preload("res://scenes/run/run_summary_screen.tscn").instantiate()
 	add_child(_summary_screen)

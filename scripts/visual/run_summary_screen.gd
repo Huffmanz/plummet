@@ -19,10 +19,7 @@ func show_summary(state: RunState, victory: bool) -> void:
 
 
 func _build_ui(state: RunState, victory: bool) -> void:
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.set_script(load("res://scripts/visual/cozy_screen_background.gd"))
-	bg.color = UITheme.CANVAS
+	var bg := preload("res://scenes/ui/cozy_stripe_background.tscn").instantiate()
 	add_child(bg)
 
 	var scroll := ScrollContainer.new()

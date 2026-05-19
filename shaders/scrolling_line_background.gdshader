@@ -27,6 +27,7 @@ void fragment() {
     uv.x *= a;
     uv = rotate(uv, angle);
     float g = stripe(uv);
-    vec3 col = mix(color_one, color_two, smoothstep(0.0, blur, g));
+    float t = blur < 0.001 ? step(0.0, g) : smoothstep(-blur, blur, g);
+    vec3 col = mix(color_one, color_two, t);
     COLOR = vec4(col, 1.0);
 }

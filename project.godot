@@ -15,6 +15,10 @@ run/main_scene="res://scenes/run/run_controller.tscn"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+TransitionManager="*res://scenes/autoload/transition_manager.tscn"
+
 [display]
 
 window/size/viewport_width=640

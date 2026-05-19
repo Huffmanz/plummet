@@ -1,0 +1,22 @@
+[gd_scene load_steps=3 format=3 uid="uid://ctrans_overlay_prev1"]
+
+[ext_resource type="PackedScene" uid="uid://ccozy_stripe_bg01" path="res://scenes/ui/cozy_stripe_background.tscn" id="1_bg"]
+[ext_resource type="PackedScene" uid="uid://ctransition_overlay1" path="res://scenes/ui/transition_overlay.tscn" id="2_overlay"]
+
+[node name="TransitionOverlayPreview" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Background" parent="." instance=ExtResource("1_bg")]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="TransitionOverlay" parent="." instance=ExtResource("2_overlay")]

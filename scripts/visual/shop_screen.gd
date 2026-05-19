@@ -68,12 +68,7 @@ func _build_ui() -> void:
 	z_index = 10
 	mouse_filter = Control.MOUSE_FILTER_STOP
 
-	var bg := ColorRect.new()
-	bg.set_script(load("res://scripts/visual/cozy_screen_background.gd"))
-	bg.color = UITheme.CANVAS
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.grow_horizontal = Control.GROW_DIRECTION_BOTH
-	bg.grow_vertical = Control.GROW_DIRECTION_BOTH
+	var bg := preload("res://scenes/ui/cozy_stripe_background.tscn").instantiate()
 	add_child(bg)
 
 	var scroll := ScrollContainer.new()

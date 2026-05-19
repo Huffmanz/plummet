@@ -2,50 +2,48 @@ extends Control
 
 signal start_run_pressed
 
-var _btn: Button
+@export var letter_stagger: float = 0.1
+@export var letter_drop_duration: float = 0.55
+
+@onready var _title_row: HBoxContainer = %TitleRow
+@onready var _btn_start: JuicySfxButton = %BtnStart
+@onready var _btn_quit: JuicySfxButton = %BtnQuit
+
+var _seen_once: bool = false
 
 
 func _ready() -> void:
-	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	_build_ui()
+	_btn_quit.pressed.connect(_on_quit_pressed)
+	visibility_changed.connect(_on_visibility_changed)
+	call_deferred("_play_title_intro")
 
 
-func _build_ui() -> void:
-	var bg := ColorRect.new()
-	bg.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	bg.set_script(load("res://scripts/visual/cozy_screen_background.gd"))
-	bg.color = UITheme.CANVAS
-	add_child(bg)
+func _on_start_pressed() -> void:
+	var run_controller := get_parent()
+	if run_controller != null and run_controller.has_method("_on_start_run"):
+		await run_controller._on_start_run()
+		return
+	push_warning("MainMenu: run the project from run_controller.tscn to start a run")
+	start_run_pressed.emit()
 
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	vbox.alignment = BoxContainer.ALIGNMENT_CENTER
-	vbox.custom_minimum_size = Vector2(300.0, 200.0)
-	vbox.add_theme_constant_override("separation", 20)
-	add_child(vbox)
 
-	var title := Label.new()
-	title.text = "PLUMMET"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 48)
-	title.add_theme_color_override("font_color", UITheme.TEXT_ON_CANVAS)
-	vbox.add_child(title)
+func _on_quit_pressed() -> void:
+	get_tree().quit()
 
-	var subtitle := Label.new()
-	subtitle.text = "Roguelike Puzzle"
-	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	subtitle.add_theme_font_size_override("font_size", 14)
-	UITheme.style_label_muted(subtitle)
-	vbox.add_child(subtitle)
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0.0, 16.0)
-	vbox.add_child(spacer)
+func _on_visibility_changed() -> void:
+	if not visible or not _seen_once:
+		return
+	call_deferred("_play_title_intro")
 
-	_btn = Button.new()
-	_btn.text = "START RUN"
-	_btn.custom_minimum_size = Vector2(200.0, 44.0)
-	_btn.add_theme_font_size_override("font_size", 16)
-	UITheme.style_button(_btn)
-	_btn.pressed.connect(func() -> void: start_run_pressed.emit())
-	vbox.add_child(_btn)
+
+func _play_title_intro() -> void:
+	_seen_once = true
+	for i in _title_row.get_child_count():
+		var slot := _title_row.get_child(i)
+		if slot.get_child_count() == 0:
+			continue
+		var ball := slot.get_child(0) as TitleLetterBall
+		if ball == null:
+			continue
+		ball.play_drop(float(i) * letter_stagger, letter_drop_duration)

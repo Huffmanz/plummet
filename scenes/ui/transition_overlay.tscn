@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://oy75jhra4rww"]
+
+[ext_resource type="Shader" uid="uid://df1drt6aks0hu" path="res://shaders/diagonal_wipe_transition.gdshader" id="1_shader"]
+[ext_resource type="Script" uid="uid://c7lmmwoc3xyvq" path="res://scripts/ui/transition_overlay.gd" id="2_script"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_wipe"]
+shader = ExtResource("1_shader")
+shader_parameter/wipe_color = Color(0.09803922, 0.0627451, 0.13725491, 1)
+shader_parameter/wipe_color_alt = Color(0.18039216, 0.16470589, 0.23921569, 1)
+shader_parameter/progress = 0.0
+shader_parameter/angle = 134.62
+shader_parameter/line_count = 20.0
+shader_parameter/edge_softness = 0.0
+
+[node name="TransitionOverlay" type="CanvasLayer" unique_id=388205621]
+process_mode = 3
+layer = 100
+
+[node name="WipeOverlay" type="ColorRect" parent="." unique_id=1311040426]
+unique_name_in_owner = true
+material = SubResource("ShaderMaterial_wipe")
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 2
+script = ExtResource("2_script")
+preview_progress = 0.393

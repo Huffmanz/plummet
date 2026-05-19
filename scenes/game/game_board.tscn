@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://bnxkfv3qm0t4p"]
 
 [ext_resource type="Script" uid="uid://ddkojelartdav" path="res://scripts/visual/game_board.gd" id="1_gamebrd"]
+[ext_resource type="PackedScene" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_1idxs"]
 [ext_resource type="Shader" uid="uid://1tkgcbcxpqvt" path="res://shaders/connected_dots.gdshader" id="2_64pfw"]
 [ext_resource type="Script" uid="uid://rc02r6wdhkry" path="res://scripts/visual/board_canvas.gd" id="2_boardcvs"]
 [ext_resource type="Script" uid="uid://dt8p18ujv6rb0" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
@@ -33,14 +34,14 @@ border_width_left = 2
 border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
-border_color = Color(0, 0, 0, 1)
+border_color = Color(0.09803922, 0.0627451, 0.13725491, 1)
 corner_radius_top_left = 20
 corner_radius_top_right = 20
 corner_radius_bottom_right = 20
 corner_radius_bottom_left = 20
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_64pfw"]
-bg_color = Color(0.84314954, 0.7693206, 0.6522286, 1)
+bg_color = Color(0.18039216, 0.16470589, 0.23921569, 1)
 border_width_bottom = 2
 border_color = Color(0, 0, 0, 1)
 corner_radius_top_left = 18
@@ -57,7 +58,13 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_gamebrd")
 
+[node name="Background2" parent="." unique_id=998394697 instance=ExtResource("2_1idxs")]
+layout_mode = 1
+color_two = Color(0.810273, 0.74657047, 0.6599681, 1)
+stripe_blur = 0.0
+
 [node name="Background" type="ColorRect" parent="." unique_id=2001824056]
+visible = false
 material = SubResource("ShaderMaterial_1shy7")
 layout_mode = 0
 anchor_right = 1.0
@@ -104,6 +111,7 @@ theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
 [node name="PlayerTitle" type="RichTextLabel" parent="MarginContainer/PlayerPanel/LeftPanel/Panel" unique_id=1823059932]
 unique_name_in_owner = true
 layout_mode = 2
+theme_override_colors/default_color = Color(0.9490196, 0.92156863, 0.8784314, 1)
 theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
 theme_override_constants/shadow_outline_size = 2
 theme_override_constants/shadow_offset_x = 2

@@ -8,6 +8,11 @@
 [ext_resource type="Script" uid="uid://rmame1hoea4x" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
 [ext_resource type="Script" uid="uid://b4d44rx2wjhhe" path="res://scripts/animation/anim_layer.gd" id="5_animlyr"]
 [ext_resource type="PackedScene" uid="uid://bf0ry22k4o0ey" path="res://scenes/game/match_end_overlay.tscn" id="6_matchend"]
+[ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="7_rap"]
+[ext_resource type="AudioStream" uid="uid://cjiw66o7oxb0f" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-1.ogg" id="8_chip1"]
+[ext_resource type="AudioStream" uid="uid://cxd0g0w26mtbk" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-2.ogg" id="9_chip2"]
+[ext_resource type="AudioStream" uid="uid://tsmihmgjmjen" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-3.ogg" id="10_chip3"]
+[ext_resource type="AudioStream" uid="uid://dsfrjbctexotv" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-4.ogg" id="11_chip4"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_1idxs"]
 frequency = 0.062
@@ -79,6 +84,9 @@ script = ExtResource("3_ghostcvs")
 
 [node name="AnimLayer" type="Node2D" parent="." unique_id=1129054763]
 script = ExtResource("5_animlyr")
+
+[node name="LandSfx" parent="AnimLayer" instance=ExtResource("7_rap")]
+streams = Array[AudioStream]([ExtResource("8_chip1"), ExtResource("9_chip2"), ExtResource("10_chip3"), ExtResource("11_chip4")])
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=601448502]
 layout_mode = 1

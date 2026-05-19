@@ -27,6 +27,8 @@ const _COMBO_OUT: float = 8.0 / 60.0
 @export var shake_enabled: bool = true
 @export var muted: bool = false
 
+@onready var _land_sfx: RandomAudioPlayer = $LandSfx
+
 var renderer: BoardRenderer
 var shake_offset: Vector2 = Vector2.ZERO
 
@@ -240,6 +242,12 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+func _play_land_sfx() -> void:
+	if muted or _land_sfx == null:
+		return
+	_land_sfx.play_random()
+
+
 func _tick_drop(delta: float) -> void:
 	match _drop_phase:
 		0:  # accelerating fall
@@ -255,6 +263,7 @@ func _tick_drop(delta: float) -> void:
 				_drop_phase_t = 0.0
 				_land_glow = 1.0
 				_spawn_landing_burst(_drop_burst_rect, _drop_burst_owner)
+				_play_land_sfx()
 		1:  # squash on impact
 			_drop_phase_t = minf(_drop_phase_t + delta / _SQUASH_DUR, 1.0)
 			_drop_scale_y = lerp(1.0, 0.65, _drop_phase_t)

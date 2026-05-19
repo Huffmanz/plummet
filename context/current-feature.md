@@ -1,51 +1,11 @@
-# Current Feature — Juicy SFX Button
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Reusable button component as a standalone scene (Control nodes in the editor, not built programmatically)
-- Plays a randomly selected SFX from an exported list on hover
-- Safe sound playback: null-check the exported array (and each entry) before assigning to `AudioStreamPlayer` and calling `play()`
-- Hover feedback: squash, stretch, and rotation (juice animation)
-- Export variables for sound lists and any tuning knobs needed for animation/audio
-
 ## Notes
-
-### Component design
-- Scene path: `scenes/ui/juicy_sfx_button.tscn` (or similar)
-- Script: `scripts/ui/juicy_sfx_button.gd` extending `Button` (or wrapping a `Button` child)
-- Structure (editor-built):
-  - Root `Button` (or `Control` + child `Button`)
-  - Child node for visual pivot (optional) so scale/rotation animates cleanly
-  - `AudioStreamPlayer` for one-shot hover SFX
-  - `AnimationPlayer` and/or hover tweens for squash / stretch / rotate
-
-### Sound playback (safe)
-- `@export var hover_sounds: Array[AudioStream]` — random pick on hover
-- Shared helper e.g. `_play_random_from(streams: Array[AudioStream])`:
-  - Return immediately if `streams == null` or `streams.is_empty()`
-  - Pick random index; if `streams[i] == null`, skip (no assign, no play)
-  - Only then set `AudioStreamPlayer.stream` and call `play()`
-- Same pattern reusable for other lists (e.g. optional `click_sounds`) if added later
-- Optional: `@export var hover_volume_db` for tuning
-
-### Hover SFX
-- On `mouse_entered`, call `_play_random_from(hover_sounds)` then run hover animation
-
-### Hover animation
-- On `mouse_entered`: brief squash (scale Y down, X up) + slight rotation, then settle or loop subtly
-- On `mouse_exited`: restore default transform
-- Respect reduced-motion / mute if project adds global accessibility later (optional stretch goal)
-
-### Integration
-- Replace or wire into existing cozy UI buttons (main menu, shop, run summary) as a follow-up — this feature is the component only
-- Preview scene optional: `scenes/ui/juicy_sfx_button_preview.tscn` for testing in isolation
-
-### Out of scope
-- Click SFX (hover only unless added later)
-- Rebuilding shop/menu UI in code
 
 ## History
 
@@ -90,3 +50,6 @@ Implemented `RunController` as the top-level game state machine with `RunState` 
 
 ### Feature 16 — Light Cozy UI
 Replaced pixel-art board rendering with `ThemeCozy` vector drawing (outlined circles, square cells, type overlays). Added `UITheme` design tokens and `StyleBoxFlat` helpers for a cream canvas, navy surfaces, and sage accents across main menu, shop, run summary, match HUD, and match-end overlay. `CozyScreenBackground` draws a subtle star pattern. Fixed board z-order so pieces render above empty cells and animating drops draw last. `LayoutManager` simplified to desktop-only side panels with frame padding and tweakable `BOARD_OFFSET`; mobile layout removed. Coaster font added as project default.
+
+### Juicy SFX Button
+Added `JuicySfxButton` (`scenes/ui/juicy_sfx_button.tscn`, `scripts/ui/juicy_sfx_button.gd`) — editor-built flat `Button` with `VisualPivot` panel/label and `AudioStreamPlayer`. Plays a random hover SFX from an exported list via null-safe `_play_random_from()`. Hover and keyboard focus tween scale, bg/label colors, and a high-contrast border rim independent of fill color; rotation wiggle on enter. Preview scene `juicy_sfx_button_preview.tscn` for isolated testing. Menu/shop wiring left as follow-up.

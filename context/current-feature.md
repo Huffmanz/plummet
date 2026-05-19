@@ -1,56 +1,11 @@
-# Current Feature — Feature 07: Shop
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Shop opens after a won match only; skipped after a loss
-- Chip count correctly totals win bonus (15), per-clear bonus (1 each), and win streak bonus (+5 per consecutive win beyond the first)
-- Modifier attach: costs 10 chips, places selected modifier on any chosen piece with < 3 modifiers
-- Modifier remove: costs 5 chips, strips a modifier from any piece
-- Piece type upgrade: costs 20 chips, converts a Normal piece to Weighted or Ghost (preserves modifiers)
-- Reroll: costs 5 chips, replaces all 3 offers; only usable once per visit
-- Unspent chips carry over to next shop visit
-- All actions disabled (not hidden) when player cannot afford them
-
 ## Notes
-
-### When Shop Appears
-- After a **won** match only; lost match skips shop entirely
-
-### Chip Economy
-- Win a match: +15
-- Each player clear during match: +1 (already tracked via `_chip_count` in `GameBoard`)
-- Win streak 2nd win: +5 extra; 3rd+ win: +5 additional per win
-- Unspent chips carry over (persistent across shop visits)
-
-### Modifier Offers
-- 3 random modifiers drawn from pool each visit
-- Pool for jam build: Echo, Magnet, Heavy, Anchor, Catalyst, Volatile (all 6 base modifiers)
-- Player selects an offer then selects which piece to attach it to
-- Piece must have < 3 modifiers to be eligible
-- Reroll (5 chips, once per visit) replaces all 3 offers
-
-### Actions
-- **Attach modifier** (10 chips): offer → piece selection → confirm
-- **Remove modifier** (5 chips): piece selection → modifier selection → confirm
-- **Upgrade type** (20 chips): Normal-only piece → Weighted or Ghost
-- **Reroll** (5 chips): available once per visit
-
-### Volatile Pieces
-- Volatile type cannot be created via upgrade; added as a new bag piece (bag temporarily 8; drops oldest Normal piece at start of next match if bag > 7)
-- Not in scope for jam build core — stub allowed
-
-### Out of Scope
-- Meta-progression unlock checks (feature 10) — treat all modifiers/types as available
-- Tier II modifiers
-- Ghost unlock gate (treat as always available for jam)
-
-### UI Structure
-- Shop is a new scene (`ShopScreen`) shown between matches
-- Displays: chip count, 3 modifier offers, full bag with type + modifiers per piece, costs, reroll status
-- "Done" button proceeds to next match
 
 ## History
 
@@ -86,3 +41,6 @@ Implemented `PieceBag` (7-slot cycling array with `current()`/`peek(offset)`/`ad
 
 ### Feature 06 — Piece Types
 Expanded `Piece.Type` enum to `NORMAL`, `WEIGHTED`, `GHOST`, `VOLATILE`. Weighted: on landing pushes the piece directly below down one row then settles into the vacated slot; `_try_push_down` is recursive so stacked Weighted pieces chain their push, and Anchor-modified pieces resist displacement. Ghost: `BoardEngine.get_ghost_landing_row()` finds the first empty slot below the topmost occupied cell (returns -1 for packed stacks or a piece at row 0); `drop_ghost_piece()` places the piece there and emits `piece_placed`; `GameBoard` uses this path when the current piece is Ghost and shows a column-reject shake for invalid drops. Volatile type: `ModifierResolver.on_clear` fires `_apply_volatile_type` which removes all 8 Moore-neighborhood cells; when the piece also carries the Volatile modifier, 4 orthogonal cells at distance 2 are additionally removed (combined 3×3 + cross effect); the modifier's own 4-orthogonal path is skipped to avoid double-removal. `RenderStateBuilder._map_piece_type` now maps all four types to `CellState.PieceType`. 18 acceptance tests in `piece_type_test.gd` cover all spec criteria.
+
+### Feature 07 — Shop
+Implemented `ShopScreen` (full-screen Control overlay, all UI built programmatically) shown after a won match only. Four-phase state machine (IDLE → ATTACH_PICK_PIECE / REMOVE_PICK_MOD / UPGRADE_PICK_TYPE) drives contextual buttons on each bag row. Modifier attach costs 10 chips (offer → piece with < 3 modifiers); remove costs 5 (piece → select which modifier); upgrade costs 20 (Normal-only → Weighted or Ghost); reroll costs 5 (once per visit, replaces all 3 offers). Each visit draws 3 random modifiers from the 6-item pool. All actions disabled when unaffordable. `GameBoard` now tracks `_win_streak` and adds the win bonus (+15) and streak bonus (+5 × (streak−1) for streak ≥ 2) before opening the shop; `PieceBag` and `_chip_count` persist across matches so upgrades and unspent chips carry over. Standalone preview mode populates a sample bag for isolated testing.

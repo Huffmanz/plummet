@@ -1,47 +1,11 @@
-# Current Feature — Juicy Main Menu
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Rebuild the main menu as an **editor-visible** Control node tree in `scenes/run/main_menu.tscn` (no programmatic `_build_ui()` layout)
-- Use **`JuicySfxButton`** instances for **Start Run** and **Quit** (hover SFX + juice from the reusable component)
-- **Title animation:** word **PLUMMET** falls from the top of the screen — each letter in its own circular **ball**, letters drop **one after another** (staggered), each with a **slight bounce** before settling into the title row
-- Keep existing integration: `start_run_pressed` signal still starts a run via `RunController`
-- **Quit** exits the game (`get_tree().quit()`)
-
 ## Notes
-
-### Current state
-- `scenes/run/main_menu.tscn` is an empty shell; `scripts/visual/main_menu.gd` builds background, title, subtitle, and a plain `Button` in code
-- `RunController` preloads `main_menu.tscn`, connects `start_run_pressed` → `_on_start_run`, shows/hides menu between run and summary
-
-### Scene structure (target)
-- Root `Control` (`MainMenu`) — full rect, script wires signals only + runs intro animation
-- `ColorRect` or node with `cozy_screen_background.gd` for star canvas background
-- `CenterContainer` / `VBoxContainer` for vertical layout (visible in editor)
-- **Title row:** `HBoxContainer` with 7 letter-ball nodes (e.g. `Control` or `Panel` per letter + centered `Label`), or a small reusable `title_letter_ball.tscn` instanced 7×
-- **Buttons:** two instances of `res://scenes/ui/juicy_sfx_button.tscn` — `button_text` = `"START RUN"` / `"QUIT"`
-- Optional: keep **Roguelike Puzzle** subtitle as a muted `Label` (was on old menu)
-
-### Letter drop animation
-- On menu show / `_ready`: each ball starts above viewport (or above rest position), tweens down to final slot
-- **Stagger** between letters (e.g. 0.08–0.12s delay per index)
-- **Bounce:** overshoot + settle (e.g. `TRANS_BOUNCE` / `EASE_OUT` or short squash on `VisualPivot` scale Y)
-- Script can drive animation from exported stagger/duration; ball visuals styled with `UITheme` (sage/navy circle, cream letter) to match cozy board pieces
-
-### JuicySfxButton
-- Scene: `scenes/ui/juicy_sfx_button.tscn`, script: `scripts/ui/juicy_sfx_button.gd`
-- Assign `hover_sounds` in editor if SFX assets exist; otherwise leave empty (component still animates)
-
-### Signals
-- `start_run_pressed` — unchanged contract for `RunController`
-- `quit_pressed` — new, or wire Quit button `pressed` in script to `get_tree().quit()`
-
-### Out of scope
-- Shop / run summary button swaps
-- Mobile-specific layout
 
 ## History
 
@@ -89,3 +53,6 @@ Replaced pixel-art board rendering with `ThemeCozy` vector drawing (outlined cir
 
 ### Juicy SFX Button
 Added `JuicySfxButton` (`scenes/ui/juicy_sfx_button.tscn`, `scripts/ui/juicy_sfx_button.gd`) — editor-built flat `Button` with `VisualPivot` panel/label and `AudioStreamPlayer`. Plays a random hover SFX from an exported list via null-safe `_play_random_from()`. Hover and keyboard focus tween scale, bg/label colors, and a high-contrast border rim independent of fill color; rotation wiggle on enter. Preview scene `juicy_sfx_button_preview.tscn` for isolated testing. Menu/shop wiring left as follow-up.
+
+### Juicy Main Menu
+Rebuilt `main_menu.tscn` as an editor-visible layout with `CozyStripeBackground`, seven `TitleLetterBall` instances (staggered PLUMMET drop from top with bounce), and `JuicySfxButton` Start Run / Quit controls. `RunController` starts runs via `TransitionManager.transition_screen()` with a diagonal wipe (`transition_overlay.tscn` + `diagonal_wipe_transition.gdshader`, progress 0→1 cover at midpoint then 1→0 reveal). Added reusable `cozy_stripe_background.tscn` for shop/summary/preview. Fixed `queue_free` teardown when advancing matches after shop.

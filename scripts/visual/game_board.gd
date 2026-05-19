@@ -36,6 +36,8 @@ var _turn_manager: TurnManager
 var _cascade_loop: CascadeLoop
 var _ai: AIOpponent
 var _builder: RenderStateBuilder
+var _player_bag: PieceBag
+var _modifier_resolver: ModifierResolver
 var _match_active: bool = false
 var _animating: bool = false
 var _prev_shake: Vector2 = Vector2.ZERO
@@ -128,6 +130,8 @@ func _init_game() -> void:
 	_cascade_loop = CascadeLoop.new()
 	_ai = AIOpponent.new(0.1)
 	_builder = RenderStateBuilder.new()
+	_player_bag = PieceBag.new(Piece.Owner.PLAYER)
+	_modifier_resolver = ModifierResolver.new()
 	_match_active = true
 	_animating = false
 	_chip_count = 0
@@ -153,7 +157,7 @@ func update_state(rs: RenderState) -> void:
 func _build_state() -> RenderState:
 	return _builder.build(
 		_board, _score_tracker, _turn_manager,
-		[], [], [], false,
+		_player_bag.get_queue_pieces(2), [], [], false,
 		1, 1, "The Stoic", "No gimmick",
 		_chip_count, _animating
 	)
@@ -168,14 +172,17 @@ func _on_column_selected(col: int) -> void:
 	_ghost_canvas.queue_redraw()
 
 	# Player turn — drop and animate
-	var p_piece := Piece.new(Piece.Owner.PLAYER)
+	var p_piece: Piece = _player_bag.current()
+	_player_bag.advance()
 	var gf := _state.gravity_flipped if _state != null else false
 	var landing_row := _board.get_landing_row(col)
 	_board.drop_piece(col, p_piece)
+	_modifier_resolver.set_landed(col, landing_row, p_piece)
 	await _anim_layer.play_drop(col, landing_row, CellState.Occupant.PLAYER, gf)
 	_check_col_fill_flash(col)
 	if _is_block_move(col, landing_row, Piece.Owner.PLAYER):
 		_spawn_blocked_popup(col, landing_row, gf)
+	_modifier_resolver.on_land(_board)
 	_state = _build_state()
 	_refresh_all()
 
@@ -297,6 +304,8 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 
 		var gf := _state.gravity_flipped if _state != null else false
 
+		_modifier_resolver.on_clear(board, runs)
+
 		# Animate each run individually — pop score then sweep clear before moving to next
 		for run in runs:
 			var run_owner := Piece.Owner.PLAYER if run.owner == Piece.Owner.PLAYER else Piece.Owner.AI
@@ -324,7 +333,9 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			await get_tree().create_timer(pause_clear).timeout
 
 		var pre_grav_state := _state
+		_modifier_resolver.on_pre_gravity(board)
 		board.apply_gravity()
+		_modifier_resolver.on_gravity(board)
 		_state = _build_state()
 
 		var grav_moves: Array = _compute_gravity_moves(pre_grav_state, _state)

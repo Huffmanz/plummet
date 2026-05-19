@@ -1,11 +1,56 @@
-# Current Feature
+# Current Feature — Feature 07: Shop
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Shop opens after a won match only; skipped after a loss
+- Chip count correctly totals win bonus (15), per-clear bonus (1 each), and win streak bonus (+5 per consecutive win beyond the first)
+- Modifier attach: costs 10 chips, places selected modifier on any chosen piece with < 3 modifiers
+- Modifier remove: costs 5 chips, strips a modifier from any piece
+- Piece type upgrade: costs 20 chips, converts a Normal piece to Weighted or Ghost (preserves modifiers)
+- Reroll: costs 5 chips, replaces all 3 offers; only usable once per visit
+- Unspent chips carry over to next shop visit
+- All actions disabled (not hidden) when player cannot afford them
+
 ## Notes
+
+### When Shop Appears
+- After a **won** match only; lost match skips shop entirely
+
+### Chip Economy
+- Win a match: +15
+- Each player clear during match: +1 (already tracked via `_chip_count` in `GameBoard`)
+- Win streak 2nd win: +5 extra; 3rd+ win: +5 additional per win
+- Unspent chips carry over (persistent across shop visits)
+
+### Modifier Offers
+- 3 random modifiers drawn from pool each visit
+- Pool for jam build: Echo, Magnet, Heavy, Anchor, Catalyst, Volatile (all 6 base modifiers)
+- Player selects an offer then selects which piece to attach it to
+- Piece must have < 3 modifiers to be eligible
+- Reroll (5 chips, once per visit) replaces all 3 offers
+
+### Actions
+- **Attach modifier** (10 chips): offer → piece selection → confirm
+- **Remove modifier** (5 chips): piece selection → modifier selection → confirm
+- **Upgrade type** (20 chips): Normal-only piece → Weighted or Ghost
+- **Reroll** (5 chips): available once per visit
+
+### Volatile Pieces
+- Volatile type cannot be created via upgrade; added as a new bag piece (bag temporarily 8; drops oldest Normal piece at start of next match if bag > 7)
+- Not in scope for jam build core — stub allowed
+
+### Out of Scope
+- Meta-progression unlock checks (feature 10) — treat all modifiers/types as available
+- Tier II modifiers
+- Ghost unlock gate (treat as always available for jam)
+
+### UI Structure
+- Shop is a new scene (`ShopScreen`) shown between matches
+- Displays: chip count, 3 modifier offers, full bag with type + modifiers per piece, costs, reroll status
+- "Done" button proceeds to next match
 
 ## History
 

@@ -26,5 +26,9 @@ func get_queue_pieces(count: int) -> Array:
 	return result
 
 
+func get_piece_at(index: int) -> Piece:
+	return _pieces[index]
+
+
 func advance() -> void:
 	_index = (_index + 1) % BAG_SIZE

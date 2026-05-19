@@ -9,21 +9,26 @@ const MODIFIER_DATA: Dictionary = {
 	"Double Drop": {"abbrev": "DD", "color": Color(0.2, 0.8, 0.3)},
 }
 
+const _GRID_TILE_REGION := Rect2(0, 0, 16, 16)
+const _PIECE_REGION := Rect2(16, 0, 16, 16)
+
 var _font: Font
+var _spritesheet: Texture2D
 
 
 func _init() -> void:
-	color_player = Color(0.6, 0.2, 0.8)
-	color_ai = Color(0.1, 0.7, 0.6)
-	color_empty = Color(0.3, 0.3, 0.3, 0.5)
-	color_bg = Color(0.12, 0.12, 0.15)
-	color_locked = Color(0.4, 0.4, 0.4)
-	color_frozen_overlay = Color(0.2, 0.5, 0.9, 0.25)
+	color_player = Color("#a146aa")
+	color_ai = Color("#339ca3")
+	color_empty = Color("#474394")
+	color_bg = Color("#322d4d")
+	color_locked = Color("#962f2c")
+	color_frozen_overlay = Color(0.522, 0.875, 0.922, 0.25)
 	_font = ThemeDB.fallback_font
+	_spritesheet = load("res://assets/assets.png")
 
 
 func draw_empty_cell(canvas: CanvasItem, rect: Rect2) -> void:
-	canvas.draw_rect(rect, color_empty, false, 1.0)
+	canvas.draw_texture_rect_region(_spritesheet, rect, _GRID_TILE_REGION, color_empty)
 
 
 func draw_player_piece(canvas: CanvasItem, rect: Rect2, piece_type: CellState.PieceType) -> void:
@@ -42,15 +47,16 @@ func draw_ai_piece(canvas: CanvasItem, rect: Rect2, piece_type: CellState.PieceT
 
 
 func draw_ghost_piece(canvas: CanvasItem, rect: Rect2) -> void:
-	var center := rect.get_center()
-	var radius: float = rect.size.x * 0.42
-	canvas.draw_circle(center, radius, Color(color_player.r, color_player.g, color_player.b, 0.35))
-	canvas.draw_arc(center, radius, 0.0, TAU, 32,
-		Color(color_player.r, color_player.g, color_player.b, 0.70), 1.5)
+	var ghost_color := Color(color_player.r, color_player.g, color_player.b, 0.35)
+	canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, ghost_color)
+
+
+func draw_piece(canvas: CanvasItem, rect: Rect2, color: Color) -> void:
+	canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
 
 
 func draw_locked_cell(canvas: CanvasItem, rect: Rect2) -> void:
-	canvas.draw_rect(rect, color_locked)
+	canvas.draw_texture_rect_region(_spritesheet, rect, _GRID_TILE_REGION, color_locked)
 	var font_size: int = int(rect.size.x * 0.45)
 	var text := "■"
 	var text_h: float = _font.get_ascent(font_size)
@@ -144,24 +150,22 @@ func _draw_piece_shape(
 
 	match piece_type:
 		CellState.PieceType.NORMAL:
-			canvas.draw_circle(center, radius, color)
+			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
 
 		CellState.PieceType.WEIGHTED:
-			canvas.draw_circle(center, radius, color)
+			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
 			canvas.draw_arc(center, radius, 0.0, TAU, 32, Color.WHITE, 3.0)
 
 		CellState.PieceType.GHOST:
-			canvas.draw_circle(center, radius, color.darkened(0.3))
-			# Dashed border: 8 short arcs with gaps
+			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color.darkened(0.3))
 			var dash_arc: float = TAU / 16.0
 			for i in 8:
 				var start_angle: float = i * TAU / 8.0
 				canvas.draw_arc(center, radius, start_angle, start_angle + dash_arc, 8, color, 1.5)
 
 		CellState.PieceType.VOLATILE:
-			canvas.draw_circle(center, radius, color)
-			# Spiky border: 8 short lines radiating outward
-			var spike_color := Color(0.95, 0.35, 0.1)
+			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
+			var spike_color := Color("#eb9d45")
 			for i in 8:
 				var angle: float = i * TAU / 8.0
 				var dir := Vector2(cos(angle), sin(angle))

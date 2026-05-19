@@ -1,15 +1,21 @@
 # Current Feature
 
+## Feature 15 — Pixel Art Sprites
+
 ## Status
-Not Started
+In Progress
 
 ## Goals
-
-<!-- bullet points of what success looks like -->
+- Replace programmatic `draw_circle`/`draw_rect` calls in `ThemeJam` with a spritesheet
+- Grid cell tile drawn from sprite 0 (0,0 region), tinted per state (empty, locked, frozen)
+- Game piece drawn from sprite 1 (16,0 region), tinted per player color; type overlays (arcs, spikes) remain on top
+- Canvas nodes set to `TEXTURE_FILTER_NEAREST` for crisp pixel art at all cell sizes
 
 ## Notes
-
-<!-- additional context, constraints, or details -->
+- Spritesheet: `res://assets/assets.png` — 256×256, 16×16 sprites, grayscale for tinting
+- Sprite 0: tileable grid cell
+- Sprite 1: game piece
+- Cell size is dynamic (16–32px); `draw_texture_rect_region` scales sprite to fit
 
 ## History
 

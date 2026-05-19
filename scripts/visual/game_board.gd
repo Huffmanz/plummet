@@ -61,6 +61,7 @@ func _ready() -> void:
 	_layout_mgr = LayoutManager.new()
 
 	_board_canvas.renderer = _renderer
+	_board_canvas.anim_layer = _anim_layer
 	_ghost_canvas.renderer = _renderer
 	_queue_canvas.renderer = _renderer
 	_anim_layer.renderer = _renderer

@@ -5,6 +5,10 @@ var state: RenderState
 var shake_offset: Vector2 = Vector2.ZERO
 
 
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
+
 func refresh(new_state: RenderState) -> void:
 	state = new_state
 	queue_redraw()

@@ -30,6 +30,10 @@ const _COMBO_OUT: float = 8.0 / 60.0
 var renderer: BoardRenderer
 var shake_offset: Vector2 = Vector2.ZERO
 
+
+func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+
 # --- Drop animation ---
 var _drop_active: bool = false
 var _drop_x: float = 0.0
@@ -76,7 +80,7 @@ class _Popup:
 	var text: String = ""
 	var pos: Vector2 = Vector2.ZERO
 	var elapsed: float = 0.0
-	var color: Color = Color(1.0, 0.95, 0.3)
+	var color: Color = Color("#f6e455")
 
 var _popups: Array = []
 
@@ -368,14 +372,23 @@ func _draw() -> void:
 	_draw_col_flashes()
 	_draw_mod_flashes()
 	_draw_clear_anim()
-	_draw_grav()
-	_draw_drop_anim()
 	_draw_bursts()
 	_draw_score_particles()
 	_draw_popups()
 	_draw_cascade_badge()
 	_draw_milestone_text()
 	_draw_combo_text()
+
+
+func has_active_pieces() -> bool:
+	return _drop_active or _grav_active
+
+
+func draw_pieces_to(canvas: CanvasItem) -> void:
+	if renderer == null:
+		return
+	_draw_grav_to(canvas)
+	_draw_drop_to(canvas)
 
 
 func _draw_ai_preview() -> void:
@@ -387,7 +400,7 @@ func _draw_ai_preview() -> void:
 	var col_x := board.x + _ai_preview_col * step
 	var pulse := 0.5 + 0.5 * sin(_ai_preview_elapsed * _AI_PREVIEW_PULSE)
 	var rect := Rect2(col_x + shake_offset.x, board.y + shake_offset.y, renderer.layout.cell_size, h)
-	draw_rect(rect, Color(1.0, 0.9, 0.2, 0.18 * pulse))
+	draw_rect(rect, Color(0.965, 0.894, 0.333, 0.18 * pulse))
 
 
 func _draw_col_rejects() -> void:
@@ -401,7 +414,7 @@ func _draw_col_rejects() -> void:
 		var shake_x := sin(t * TAU * 3.0) * 4.0 * (1.0 - t)
 		var col_x := board.x + col * step + shake_x + shake_offset.x
 		var rect := Rect2(col_x, board.y + shake_offset.y, renderer.layout.cell_size, h)
-		draw_rect(rect, Color(1.0, 0.1, 0.1, 0.25 * (1.0 - t)))
+		draw_rect(rect, Color(0.843, 0.302, 0.298, 0.25 * (1.0 - t)))
 
 
 func _draw_col_flashes() -> void:
@@ -439,13 +452,13 @@ func _draw_grav() -> void:
 	if not _grav_active or renderer == null:
 		return
 	for gp: _GravPiece in _grav_pieces:
-		var center := Vector2(gp.x + gp.cs * 0.5, gp.cur_y + gp.cs * 0.5) + shake_offset
-		var radius := gp.cs * 0.42
 		var color: Color = renderer.theme.color_player \
 			if gp.occupant == CellState.Occupant.PLAYER else renderer.theme.color_ai
-		draw_circle(center, radius, color)
+		var piece_rect := Rect2(gp.x + shake_offset.x, gp.cur_y + shake_offset.y, gp.cs, gp.cs)
+		renderer.theme.draw_piece(self, piece_rect, color)
 		if gp.occupant == CellState.Occupant.AI:
 			var dot_size := gp.cs * 0.15
+			var center := piece_rect.get_center()
 			draw_rect(Rect2(center - Vector2(dot_size, dot_size) * 0.5, Vector2(dot_size, dot_size)), Color.WHITE)
 
 
@@ -473,8 +486,11 @@ func _draw_drop_anim() -> void:
 		for i in _drop_trail.size():
 			var frac := float(i + 1) / float(_drop_trail.size() + 1)
 			var trail_alpha := frac * 0.6
-			var trail_r := radius * (0.35 + frac * 0.55)
-			draw_circle(_drop_trail[i] + shake_offset, trail_r, Color(color.r, color.g, color.b, trail_alpha))
+			var trail_size := _drop_cs * (0.35 + frac * 0.55)
+			var trail_pos: Vector2 = _drop_trail[i] + shake_offset
+			renderer.theme.draw_piece(self,
+				Rect2(trail_pos.x - trail_size * 0.5, trail_pos.y - trail_size * 0.5, trail_size, trail_size),
+				Color(color.r, color.g, color.b, trail_alpha))
 
 	# Land glow bloom — oversized circle fades out after impact
 	if _land_glow > 0.0 and not reduced_motion:
@@ -483,9 +499,66 @@ func _draw_drop_anim() -> void:
 		draw_circle(Vector2.ZERO, glow_r, Color(color.r, color.g, color.b, _land_glow * 0.55))
 		draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
-	draw_set_transform(center, 0.0, Vector2(1.0, _drop_scale_y))
-	draw_circle(Vector2.ZERO, radius, color)
-	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+	var half_w := _drop_cs * 0.5
+	var half_h := half_w * _drop_scale_y
+	renderer.theme.draw_piece(self,
+		Rect2(center.x - half_w, center.y - half_h, _drop_cs, _drop_cs * _drop_scale_y),
+		color)
+
+
+func _draw_grav_to(canvas: CanvasItem) -> void:
+	if not _grav_active or renderer == null:
+		return
+	for gp: _GravPiece in _grav_pieces:
+		var color: Color = renderer.theme.color_player \
+			if gp.occupant == CellState.Occupant.PLAYER else renderer.theme.color_ai
+		var piece_rect := Rect2(gp.x, gp.cur_y, gp.cs, gp.cs)
+		renderer.theme.draw_piece(canvas, piece_rect, color)
+		if gp.occupant == CellState.Occupant.AI:
+			var dot_size := gp.cs * 0.15
+			var center := piece_rect.get_center()
+			canvas.draw_rect(Rect2(center - Vector2(dot_size, dot_size) * 0.5, Vector2(dot_size, dot_size)), Color.WHITE)
+
+
+func _draw_drop_to(canvas: CanvasItem) -> void:
+	if not _drop_active:
+		return
+	var color: Color = renderer.theme.color_player \
+		if _drop_owner == CellState.Occupant.PLAYER else renderer.theme.color_ai
+	var center := Vector2(_drop_x + _drop_cs * 0.5, _drop_y + _drop_cs * 0.5)
+	var radius := _drop_cs * 0.42
+
+	if _drop_phase == 0 and not reduced_motion:
+		var cur_dist := maxf(0.0, _drop_target_y - _drop_y)
+		var dist_frac := clampf(cur_dist / (_drop_cs * 6.0), 0.0, 1.0)
+		var shadow_rx := _drop_cs * 0.38 * lerpf(0.9, 0.25, dist_frac)
+		var shadow_alpha := lerpf(0.45, 0.08, dist_frac)
+		var shadow_cx := _drop_x + _drop_cs * 0.5
+		var shadow_cy := _drop_target_y + _drop_cs * 0.5
+		canvas.draw_set_transform(Vector2(shadow_cx, shadow_cy), 0.0, Vector2(1.0, 0.25))
+		canvas.draw_circle(Vector2.ZERO, shadow_rx, Color(0.0, 0.0, 0.0, shadow_alpha))
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+		for i in _drop_trail.size():
+			var frac := float(i + 1) / float(_drop_trail.size() + 1)
+			var trail_alpha := frac * 0.6
+			var trail_size := _drop_cs * (0.35 + frac * 0.55)
+			var trail_pos: Vector2 = _drop_trail[i]
+			renderer.theme.draw_piece(canvas,
+				Rect2(trail_pos.x - trail_size * 0.5, trail_pos.y - trail_size * 0.5, trail_size, trail_size),
+				Color(color.r, color.g, color.b, trail_alpha))
+
+	if _land_glow > 0.0 and not reduced_motion:
+		var glow_r := radius * (1.0 + _land_glow * 0.4)
+		canvas.draw_set_transform(center, 0.0, Vector2(1.0, _drop_scale_y))
+		canvas.draw_circle(Vector2.ZERO, glow_r, Color(color.r, color.g, color.b, _land_glow * 0.55))
+		canvas.draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
+
+	var half_w := _drop_cs * 0.5
+	var half_h := half_w * _drop_scale_y
+	renderer.theme.draw_piece(canvas,
+		Rect2(center.x - half_w, center.y - half_h, _drop_cs, _drop_cs * _drop_scale_y),
+		color)
 
 
 func _draw_bursts() -> void:
@@ -541,7 +614,7 @@ func _draw_combo_text() -> void:
 	draw_string(font, pos + Vector2(2.0, 2.0), _combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		font_size, Color(0.0, 0.0, 0.0, alpha * 0.7))
 	draw_string(font, pos, _combo_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
-		font_size, Color(1.0, 0.9, 0.3, alpha))
+		font_size, Color(0.965, 0.894, 0.333, alpha))
 
 
 func _combo_alpha() -> float:
@@ -595,11 +668,11 @@ func _draw_cascade_badge() -> void:
 	var pos := Vector2(board.x + bw - text_w - 4.0, board.y + bh - 4.0) + shake_offset
 	var badge_color: Color
 	if _cascade_badge_depth <= 2:
-		badge_color = Color(1.0, 0.95, 0.3, alpha)
+		badge_color = Color(0.965, 0.894, 0.333, alpha)
 	elif _cascade_badge_depth == 3:
-		badge_color = Color(1.0, 0.6, 0.1, alpha)
+		badge_color = Color(0.922, 0.616, 0.271, alpha)
 	else:
-		badge_color = Color(1.0, 0.2, 0.2, alpha)
+		badge_color = Color(0.843, 0.302, 0.298, alpha)
 	draw_string(font, pos + Vector2(2.0, 2.0), text, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		font_size, Color(0.0, 0.0, 0.0, alpha * 0.7))
 	draw_string(font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, badge_color)
@@ -622,7 +695,7 @@ func _draw_milestone_text() -> void:
 	draw_string(font, pos + Vector2(2.0, 2.0), _milestone_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
 		font_size, Color(0.0, 0.0, 0.0, alpha * 0.7))
 	draw_string(font, pos, _milestone_text, HORIZONTAL_ALIGNMENT_LEFT, -1,
-		font_size, Color(0.88, 0.88, 1.0, alpha))
+		font_size, Color(0.784, 0.859, 0.875, alpha))
 
 
 # ---- Public API ----
@@ -697,7 +770,7 @@ func play_clear(cells: Array[Vector2i], gravity_flipped: bool) -> void:
 	await _clear_done
 
 
-func spawn_popup(pos: Vector2, text: String, color: Color = Color(1.0, 0.95, 0.3)) -> void:
+func spawn_popup(pos: Vector2, text: String, color: Color = Color("#f6e455")) -> void:
 	var p := _Popup.new()
 	p.text = text
 	p.pos = pos
@@ -707,7 +780,7 @@ func spawn_popup(pos: Vector2, text: String, color: Color = Color(1.0, 0.95, 0.3
 
 
 func spawn_chip_popup(pos: Vector2) -> void:
-	spawn_popup(pos, "+1 chip", Color(0.3, 1.0, 0.5))
+	spawn_popup(pos, "+1 chip", Color("#8fcb62"))
 
 
 func play_shake(intensity_px: float, duration_frames: int) -> void:

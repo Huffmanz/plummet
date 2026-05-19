@@ -31,6 +31,10 @@ func draw_ghost_piece(_canvas: CanvasItem, _rect: Rect2) -> void:
 	pass
 
 
+func draw_piece(_canvas: CanvasItem, _rect: Rect2, _color: Color) -> void:
+	pass
+
+
 func draw_locked_cell(_canvas: CanvasItem, _rect: Rect2) -> void:
 	pass
 

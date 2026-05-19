@@ -1,11 +1,35 @@
-# Current Feature
+# Current Feature — Feature 06: Piece Types
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Weighted piece displaces the piece below it by one row on landing; chains when stacked Weighted pieces push each other
+- Ghost piece lands one row below the first piece it encounters; behaves identically to Normal in an empty column
+- Volatile piece type (distinct from modifier) removes all 8 surrounding cells (Moore neighborhood) on clear
+- Volatile piece type + Volatile modifier removes combined 3×3 area plus orthogonal cross
+- Ghost drop into a column where the topmost occupied cell is row 11 is rejected as invalid
+- All 4 piece types (Normal, Weighted, Ghost, Volatile) coexist in `PieceBag` and are tracked per-piece
+
 ## Notes
+
+### Piece Types
+- **Normal** — baseline, no special behavior (all starting bag pieces)
+- **Weighted** — on landing, pushes piece directly below down one row; if no room to push, does nothing; chains with other Weighted pieces
+- **Ghost** — passes through exactly one piece on the way down, landing beneath it; if the first piece it would pass is at row 11, the drop is invalid
+- **Volatile (type)** — on clear, removes all 8 Moore-neighborhood cells (vs. Volatile modifier which removes 4 orthogonal); locked cells (Gravedigger) are immune; bonus cells removed don't award points
+
+### Modifier Interactions
+- Weighted + Heavy: both push effects apply (type pushes during drop, modifier pushes on landing)
+- Weighted + Anchor: Anchor resists displacement by another Weighted piece landing on top
+- Ghost + Magnet: Magnet fires from Ghost's final landed position, not pass-through position
+- Ghost + Echo: Echo copy is a Normal piece, not a Ghost
+- Volatile (type) + Volatile (modifier): combined explosion = 3×3 area + orthogonal cross
+
+### Out of Scope
+- Shop upgrade UI (feature 07)
+- Modifier attachment (already done in feature 05)
 
 ## History
 

@@ -79,6 +79,12 @@ func _map_piece_type(type: Piece.Type) -> CellState.PieceType:
 	match type:
 		Piece.Type.NORMAL:
 			return CellState.PieceType.NORMAL
+		Piece.Type.WEIGHTED:
+			return CellState.PieceType.WEIGHTED
+		Piece.Type.GHOST:
+			return CellState.PieceType.GHOST
+		Piece.Type.VOLATILE:
+			return CellState.PieceType.VOLATILE
 	return CellState.PieceType.NORMAL
 
 

@@ -103,6 +103,38 @@ func get_landing_row(col: int) -> int:
 	return _lowest_empty_row(col)
 
 
+# Returns the row a Ghost piece would land on: passes through the topmost occupied
+# cell, then settles at the first available slot below it.
+# Returns -1 if no valid landing exists (packed stack or top piece at floor).
+func get_ghost_landing_row(col: int) -> int:
+	var rows: int = _grid[col].size()
+	var top_occupied := -1
+	for r in range(rows - 1, -1, -1):
+		if _grid[col][r] != null:
+			top_occupied = r
+			break
+	if top_occupied < 0:
+		return _lowest_empty_row(col)
+	var next_occupied := -1
+	for r in range(top_occupied - 1, -1, -1):
+		if _grid[col][r] != null:
+			next_occupied = r
+			break
+	var ghost_land: int = next_occupied + 1 if next_occupied >= 0 else 0
+	if ghost_land >= top_occupied or _grid[col][ghost_land] != null:
+		return -1
+	return ghost_land
+
+
+func drop_ghost_piece(col: int, piece: Piece) -> int:
+	var ghost_row := get_ghost_landing_row(col)
+	if ghost_row < 0:
+		return -1
+	_grid[col][ghost_row] = piece
+	piece_placed.emit(col, ghost_row, piece)
+	return ghost_row
+
+
 func is_column_full(col: int) -> bool:
 	var rows: int = _grid[col].size()
 	return _grid[col][rows - 1] != null

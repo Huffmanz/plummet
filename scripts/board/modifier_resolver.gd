@@ -14,10 +14,12 @@ func set_landed(col: int, row: int, piece: Piece) -> void:
 	_last_piece = piece
 
 
-# Landing effects: Heavy, Magnet, Catalyst. Catalyst sets flag for next drop.
+# Landing effects: Weighted type first, then Heavy, Magnet, Catalyst.
 func on_land(board: BoardEngine) -> void:
 	if _last_piece == null:
 		return
+	if _last_piece.type == Piece.Type.WEIGHTED:
+		_apply_weighted(board)
 	var was_catalyst := _catalyst_active
 	_catalyst_active = false
 	var fire_count := 2 if was_catalyst else 1
@@ -32,13 +34,16 @@ func on_land(board: BoardEngine) -> void:
 					_catalyst_active = true
 
 
-# Clear effects: Echo queues a copy; Volatile removes orthogonal neighbors.
+# Clear effects: Echo queues a copy; Volatile modifier removes orthogonal neighbors;
+# Volatile type removes 8 Moore neighbors (stacks with modifier to add distance-2 orthogonal).
 func on_clear(board: BoardEngine, runs: Array[MatchedRun]) -> void:
 	for run in runs:
 		for cell_pos: Vector2i in run.cells:
 			var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
 			if piece == null or piece.owner != Piece.Owner.PLAYER:
 				continue
+			var is_volatile_type := piece.type == Piece.Type.VOLATILE
+			var has_volatile_mod := "Volatile" in piece.modifiers
 			for mod: String in piece.modifiers:
 				match mod:
 					"Echo":
@@ -46,7 +51,10 @@ func on_clear(board: BoardEngine, runs: Array[MatchedRun]) -> void:
 						if echo_col >= 0:
 							_echo_pending.append({col = echo_col, piece = Piece.new(Piece.Owner.PLAYER)})
 					"Volatile":
-						_apply_volatile(board, cell_pos)
+						if not is_volatile_type:
+							_apply_volatile(board, cell_pos)
+			if is_volatile_type:
+				_apply_volatile_type(board, cell_pos, has_volatile_mod)
 
 
 # Save anchor pieces before gravity so they won't be compacted downward.
@@ -87,6 +95,64 @@ func _restore_anchor(board: BoardEngine, col: int, row: int, piece: Piece) -> vo
 		board.set_cell(col, r, board.get_cell(col, r - 1))
 		r -= 1
 	board.set_cell(col, row, piece)
+
+
+# Pushes the piece directly below the Weighted piece down one row; the Weighted piece
+# then settles into the vacated slot. Chains if the displaced piece is also Weighted.
+func _apply_weighted(board: BoardEngine) -> void:
+	if _last_col < 0 or _last_row <= 0:
+		return
+	var below_row := _last_row - 1
+	if board.get_cell(_last_col, below_row) == null:
+		return
+	if _try_push_down(board, _last_col, below_row):
+		board.set_cell(_last_col, below_row, board.get_cell(_last_col, _last_row))
+		board.set_cell(_last_col, _last_row, null)
+		_last_row = below_row
+
+
+# Attempts to push the piece at (col, row) down one row. Recursive for Weighted chains.
+# Returns true if the piece moved (or the slot was already empty).
+func _try_push_down(board: BoardEngine, col: int, row: int) -> bool:
+	var piece: Piece = board.get_cell(col, row)
+	if piece == null:
+		return true
+	if "Anchor" in piece.modifiers:
+		return false
+	var dest := row - 1
+	if dest < 0:
+		return false
+	if board.get_cell(col, dest) == null:
+		board.set_cell(col, dest, piece)
+		board.set_cell(col, row, null)
+		return true
+	if piece.type == Piece.Type.WEIGHTED:
+		if _try_push_down(board, col, dest):
+			board.set_cell(col, dest, piece)
+			board.set_cell(col, row, null)
+			return true
+	return false
+
+
+# Removes all 8 Moore-neighborhood cells. If the piece also has the Volatile modifier,
+# additionally removes the 4 orthogonal cells at distance 2 (combined = 3×3 + cross).
+func _apply_volatile_type(board: BoardEngine, cell_pos: Vector2i, extend_with_modifier: bool) -> void:
+	var moore_dirs: Array[Vector2i] = [
+		Vector2i(0, 1), Vector2i(0, -1), Vector2i(1, 0), Vector2i(-1, 0),
+		Vector2i(1, 1), Vector2i(1, -1), Vector2i(-1, 1), Vector2i(-1, -1),
+	]
+	for dir in moore_dirs:
+		var nc := cell_pos + dir
+		if nc.x < 0 or nc.x >= BoardEngine.COLS or nc.y < 0 or nc.y >= BoardEngine.ROWS:
+			continue
+		board.set_cell(nc.x, nc.y, null)
+	if extend_with_modifier:
+		var ortho_dirs: Array[Vector2i] = [Vector2i(0, 2), Vector2i(0, -2), Vector2i(2, 0), Vector2i(-2, 0)]
+		for dir in ortho_dirs:
+			var nc := cell_pos + dir
+			if nc.x < 0 or nc.x >= BoardEngine.COLS or nc.y < 0 or nc.y >= BoardEngine.ROWS:
+				continue
+			board.set_cell(nc.x, nc.y, null)
 
 
 func _apply_heavy(board: BoardEngine) -> void:

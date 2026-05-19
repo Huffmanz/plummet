@@ -1,7 +1,7 @@
 class_name Piece extends RefCounted
 
 enum Owner { PLAYER, AI }
-enum Type { NORMAL }
+enum Type { NORMAL, WEIGHTED, GHOST, VOLATILE }
 
 var owner: Owner
 var type: Type = Type.NORMAL

@@ -175,8 +175,12 @@ func _on_column_selected(col: int) -> void:
 	var p_piece: Piece = _player_bag.current()
 	_player_bag.advance()
 	var gf := _state.gravity_flipped if _state != null else false
-	var landing_row := _board.get_landing_row(col)
-	_board.drop_piece(col, p_piece)
+	var landing_row: int
+	if p_piece.type == Piece.Type.GHOST:
+		landing_row = _board.drop_ghost_piece(col, p_piece)
+	else:
+		landing_row = _board.get_landing_row(col)
+		_board.drop_piece(col, p_piece)
 	_modifier_resolver.set_landed(col, landing_row, p_piece)
 	await _anim_layer.play_drop(col, landing_row, CellState.Occupant.PLAYER, gf)
 	_check_col_fill_flash(col)
@@ -614,7 +618,11 @@ func _input(event: InputEvent) -> void:
 			var local_pos := get_local_mouse_position()
 			var col := _renderer.col_from_position(local_pos.x)
 			if _renderer.is_col_valid(_state, col):
-				column_selected.emit(col)
+				var cur_piece := _player_bag.current()
+				if cur_piece.type == Piece.Type.GHOST and _board.get_ghost_landing_row(col) < 0:
+					_anim_layer.play_col_reject(col)
+				else:
+					column_selected.emit(col)
 			elif col >= 0 and not _animating and not _state.input_locked and \
 				_state.active_player == CellState.Occupant.PLAYER:
 				_anim_layer.play_col_reject(col)

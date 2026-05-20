@@ -1,26 +1,20 @@
-# Current Feature: Scoring Popup Accumulator
+# Current Feature
 
 ## Status
-In Progress
+Not Started
 
 ## Goals
 
-- Add a center-board overlay UI (editor scene, not code-built) that appears during cascade resolution and displays the accumulated base score and multiplier separately
-- Each clear during a cascade adds its base points to the running base total and its multiplier level independently, so both values grow visibly as clears stack
-- Once all clears in a turn are resolved, emit the existing score particles/floating popups, then dismiss the overlay
-- Support simultaneous player and AI scoring in the overlay: player section on top, AI section below
-- The existing per-clear floating score popups (in AnimLayer) remain and still fire
+<!-- List goals here -->
 
 ## Notes
 
-- Build the overlay as a `.tscn` scene with editor-placed nodes (Label, Panel, etc.) — do not construct UI in GDScript
-- The overlay sits centered on the board, above the board canvas, visible during cascade
-- Base score accumulates across all clears in a cascade (e.g. two 4-in-a-rows = 200 base); multiplier shown as the current cascade depth multiplier (×1, ×2, ×4…)
-- Both player and AI can score in the same cascade; show each as a separate row (player on top, AI below)
-- After the final cascade resolves, animate the total out (e.g. flash, scale up briefly) then hide, then fire the existing score particles
-- Tie into existing AnimLayer / GameBoard cascade flow — don't duplicate cascade logic
+<!-- Add context, constraints, or details here -->
 
 ## History
+
+### Scoring Popup Accumulator
+Added `ScoreAccumulatorOverlay` (`scenes/ui/score_accumulator_overlay.tscn`, `scripts/ui/score_accumulator_overlay.gd`) — an editor-built `Control` scene centered on the board via `CenterContainer`. During cascade resolution it shows a `PanelContainer` with a player row (top) and AI row (bottom), each displaying a rapidly counting-up base score and a snapping multiplier label (×1, ×2, ×4…). The overlay appears on the first clear of a cascade, updates incrementally per-run as each clear animation plays (not all at once), and flashes white then fades out after the cascade ends. Both rows are hidden until their owner scores; the divider only shows when both are active. Prism type doubling is reflected in the accumulator by re-scanning run cells for `Piece.Type.PRISM` in the animation loop. Count-up uses `tween_method` (0.28s quad-ease-out) so rapid successive clears chain from the current displayed value. Also fixed Echo + Echo Chamber: `on_gravity` was replaced with `pop_echo_pieces()` + `find_echo_target(board)` so column selection re-evaluates after each drop rather than targeting the same column for all copies; pieces are placed and animated one at a time so each drop is visible before the next begins.
 
 ### Feature 05 — Piece Types, Modifiers & Relics
 Implemented 5 piece types (Normal, Prism, Coin, Ember, Shard), 8 modifiers (Ignite, Magnet, Deposit, Ripple, Echo, Detonate, Bounty, Surge), and 10 relics (Compass, Cushion, Almanac, Forge, Lens, Stockpile, Patron, Echo Chamber, Momentum, Cartographer) as resource-driven `.tres` data files. `DataRegistry` autoload scans and indexes all three resource directories globally. `ModifierResolver` handles all landing and clear hooks; `RelicManager` tracks run-wide passives and passes them through `RunController` across matches. Piece type effects hook into `ScoreCalculator` (Prism ×2 base, Ember +1 cascade depth, Coin +1 chip) and `CascadeLoop` (Shard removes piece above on clear). Modifier initials render centered on pieces in `ThemeCozy`/`ThemeJam` (expandable to icons via resource `icon_path`). Echo fixed to animate drops before updating board canvas; Ripple corrected to push pieces below landing row. Sandbox test scene (`modifier_relic_test.tscn`) provides isolated playtesting of all combinations with tooltips from resource descriptions.

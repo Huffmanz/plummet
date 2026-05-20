@@ -25,6 +25,7 @@
 [ext_resource type="AudioStream" uid="uid://blpr68kd8j1ky" path="res://assets/sfx/kenney_impact-sounds/Audio/impactMining_004.ogg" id="21_mine4"]
 [ext_resource type="AudioStream" uid="uid://cyb4ieglen0t8" path="res://assets/sfx/218461__thomasjaunism__wood-block.wav" id="22_woodblock"]
 [ext_resource type="AudioStream" uid="uid://de3ybywjupdi3" path="res://assets/sfx/571581__el_boss__playing-card-slide-right.wav" id="23_cardslide"]
+[ext_resource type="PackedScene" uid="uid://bqxakp7mr3n5t" path="res://scenes/ui/score_accumulator_overlay.tscn" id="24_accumoverlay"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_1idxs"]
 frequency = 0.062
@@ -318,6 +319,9 @@ horizontal_alignment = 2
 
 [node name="MatchEndOverlay" parent="." unique_id=1903911458 instance=ExtResource("6_matchend")]
 visible = false
+layout_mode = 1
+
+[node name="ScoreAccumulatorOverlay" parent="." unique_id=2034567890 instance=ExtResource("24_accumoverlay")]
 layout_mode = 1
 
 [node name="RotatePrompt" type="Label" parent="." unique_id=1117598531]

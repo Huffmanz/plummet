@@ -21,6 +21,7 @@ signal match_complete(player_won: bool, player_score: int, ai_score: int, chips:
 @onready var _bottom_strip: Control = %BottomStrip
 @onready var _anim_layer: AnimLayer = $AnimLayer
 @onready var _match_end_overlay: MatchEndOverlay = $MatchEndOverlay
+@onready var _score_accum: ScoreAccumulatorOverlay = $ScoreAccumulatorOverlay
 
 # Visual
 var _theme: ThemeBase
@@ -324,11 +325,16 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner, surge_w
 	var ai_clear_count := 0
 	var ai_cleared := false
 	var ember_bonus := 0
+	var accum_shown := false
 
 	while true:
 		var runs: Array[MatchedRun] = board.detect_clears()
 		if runs.is_empty():
 			break
+
+		if not accum_shown:
+			_score_accum.reset_and_show()
+			accum_shown = true
 
 		var has_player := false
 		var has_ai := false
@@ -387,13 +393,22 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner, surge_w
 		var embers_this_round := _count_ember_in_runs(board, runs)
 		ember_bonus += embers_this_round
 
-		# Animate each run
+		# Animate each run, updating the accumulator as each one clears
 		for run in runs:
 			var run_owner := Piece.Owner.PLAYER if run.owner == Piece.Owner.PLAYER else Piece.Owner.AI
 			var occ := CellState.Occupant.PLAYER if run.owner == Piece.Owner.PLAYER else CellState.Occupant.AI
 			var owner_depth := player_clear_count if run.owner == Piece.Owner.PLAYER else ai_clear_count
+			var run_depth := owner_depth + ember_bonus - embers_this_round
+			var run_n := run.cells.size()
+			var run_base: int = 500 if run_n >= 6 else (250 if run_n == 5 else 100)
+			for cell_pos: Vector2i in run.cells:
+				var cp: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+				if cp != null and cp.type == Piece.Type.PRISM:
+					run_base *= 2
+					break
+			_score_accum.add_clear(run.owner, run_base, run_depth)
 			_anim_layer.spawn_score_particles(_cells_center(run.cells), occ, _score_label_pos(run_owner))
-			_spawn_single_run_popup(run, owner_depth + ember_bonus - embers_this_round, attribution)
+			_spawn_single_run_popup(run, run_depth, attribution)
 			await _anim_layer.play_clear(run.cells, gf)
 
 		if result.cross_color and not was_cross_color:
@@ -429,12 +444,18 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner, surge_w
 		if pause_gravity > 0.0:
 			await get_tree().create_timer(pause_gravity).timeout
 
-		# Echo pieces drop with animation after gravity settles
-		var echo_drops := _modifier_resolver.on_gravity(board)
-		if not echo_drops.is_empty():
+		# Echo pieces drop one at a time; target column re-evaluated after each placement
+		var echo_pieces := _modifier_resolver.pop_echo_pieces()
+		if not echo_pieces.is_empty():
 			var gf2 := _state.gravity_flipped if _state != null else false
-			for drop: Dictionary in echo_drops:
-				await _anim_layer.play_drop(drop.col, drop.row, CellState.Occupant.PLAYER, gf2)
+			for echo_piece: Piece in echo_pieces:
+				var echo_col := _modifier_resolver.find_echo_target(board)
+				if echo_col < 0:
+					continue
+				var echo_row: int = board.drop_piece(echo_col, echo_piece)
+				if echo_row < 0:
+					continue
+				await _anim_layer.play_drop(echo_col, echo_row, CellState.Occupant.PLAYER, gf2)
 				_state = _build_state()
 				_refresh_all()
 
@@ -446,6 +467,8 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner, surge_w
 		depth += 1
 
 	_anim_layer.stop_cascade_badge()
+	if accum_shown:
+		await _score_accum.flash_and_dismiss()
 	result.max_depth = maxi(0, depth - 1)
 	return result
 

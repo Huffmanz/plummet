@@ -60,10 +60,8 @@ func on_clear(board: BoardEngine, runs: Array[MatchedRun], echo_copy_count: int 
 				continue
 			match piece.modifier:
 				"Echo":
-					var echo_col := _find_echo_target(board)
-					if echo_col >= 0:
-						for _i in echo_copy_count:
-							_echo_pending.append({col = echo_col, piece = Piece.new(Piece.Owner.PLAYER, piece.type)})
+					for _i in echo_copy_count:
+						_echo_pending.append(Piece.new(Piece.Owner.PLAYER, piece.type))
 				"Detonate":
 					_apply_detonate(board, cell_pos.y)
 				"Bounty":
@@ -77,17 +75,19 @@ func on_pre_gravity(_board: BoardEngine) -> void:
 	pass
 
 
-# Returns Array of {col, row} for each Echo piece dropped (for animation).
-func on_gravity(board: BoardEngine) -> Array:
-	var drops: Array = []
-	for echo in _echo_pending:
-		var target_col: int = echo.col
-		if not board.is_column_full(target_col):
-			var row: int = board.drop_piece(target_col, echo.piece)
-			if row >= 0:
-				drops.append({col = target_col, row = row})
+# Returns pending Echo pieces and clears the queue. Caller must call
+# find_echo_target(board) fresh before placing each piece so column selection
+# re-evaluates after every drop.
+func pop_echo_pieces() -> Array[Piece]:
+	var pieces: Array[Piece] = []
+	for p: Piece in _echo_pending:
+		pieces.append(p)
 	_echo_pending.clear()
-	return drops
+	return pieces
+
+
+func find_echo_target(board: BoardEngine) -> int:
+	return _find_echo_target(board)
 
 
 # Returns the Ignite bonus depth for a piece at (col, row). Consumes the bonus.

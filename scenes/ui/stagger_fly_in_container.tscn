@@ -1,8 +1,28 @@
 [gd_scene format=3 uid="uid://dpsx1vqy5q0fw"]
 
 [ext_resource type="Script" path="res://scripts/ui/stagger_fly_in_container.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
+[ext_resource type="AudioStream" path="res://assets/sfx/571581__el_boss__playing-card-slide-right.wav" id="3_slide"]
+[ext_resource type="AudioStream" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_000.ogg" id="4_imp0"]
+[ext_resource type="AudioStream" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_001.ogg" id="5_imp1"]
+[ext_resource type="AudioStream" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_002.ogg" id="6_imp2"]
+[ext_resource type="AudioStream" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_003.ogg" id="7_imp3"]
+[ext_resource type="AudioStream" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_004.ogg" id="8_imp4"]
 
 [node name="StaggerFlyInContainer" type="VBoxContainer"]
 layout_mode = 2
 theme_override_constants/separation = 10
 script = ExtResource("1_script")
+
+[node name="SlideSfx" parent="." instance=ExtResource("2_rap")]
+bus = &"sfx"
+volume_db = -4.0
+streams = Array[AudioStream]([ExtResource("3_slide")])
+min_pitch = 0.88
+max_pitch = 1.12
+
+[node name="ValuePopSfx" parent="." instance=ExtResource("2_rap")]
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("4_imp0"), ExtResource("5_imp1"), ExtResource("6_imp2"), ExtResource("7_imp3"), ExtResource("8_imp4")])
+min_pitch = 0.92
+max_pitch = 1.08

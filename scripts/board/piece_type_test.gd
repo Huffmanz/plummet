@@ -23,6 +23,7 @@ func _ready() -> void:
 	test_volatile_type_does_not_remove_out_of_bounds()
 	test_volatile_type_plus_modifier_removes_distance_two_ortho()
 	test_volatile_type_alone_no_extra_distance_two()
+	test_magnet_slide_applies_gravity()
 	print("-----------------------------")
 	print("Results: %d passed, %d failed" % [_passed, _failed])
 
@@ -290,6 +291,20 @@ func test_volatile_type_plus_modifier_removes_distance_two_ortho() -> void:
 		if b.get_cell(n.x, n.y) != null:
 			all_clear = false
 	_assert("volatile type + modifier removes distance-2 orthogonal cells", all_clear)
+
+
+func test_magnet_slide_applies_gravity() -> void:
+	var b := _make_board()
+	var pulled := Piece.new(Piece.Owner.PLAYER)
+	b.set_cell(0, 4, pulled)
+	var magnet := Piece.new(Piece.Owner.PLAYER)
+	magnet.modifiers = ["Magnet"]
+	var r := _make_resolver()
+	r.set_landed(3, 4, magnet)
+	r.on_land(b)
+	_assert("magnet: pulled piece left source column", b.get_cell(0, 4) == null)
+	_assert("magnet: pulled piece settled to column floor", b.get_cell(1, 0) == pulled)
+	_assert("magnet: no piece left floating mid-column", b.get_cell(1, 4) == null)
 
 
 func test_volatile_type_alone_no_extra_distance_two() -> void:

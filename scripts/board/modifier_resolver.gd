@@ -29,7 +29,8 @@ func on_land(board: BoardEngine) -> void:
 				"Heavy":
 					_apply_heavy(board)
 				"Magnet":
-					_apply_magnet(board)
+					if _apply_magnet(board):
+						board.apply_gravity()
 				"Catalyst":
 					_catalyst_active = true
 
@@ -172,10 +173,10 @@ func _apply_heavy(board: BoardEngine) -> void:
 
 
 # Scans left and right for the closest player piece at distance >= 2,
-# then slides it one step toward the magnet's column.
-func _apply_magnet(board: BoardEngine) -> void:
+# then slides it one step toward the magnet's column. Returns true if a slide occurred.
+func _apply_magnet(board: BoardEngine) -> bool:
 	if _last_col < 0 or _last_row < 0:
-		return
+		return false
 	var row := _last_row
 	var best_col := -1
 	var best_dist := BoardEngine.COLS + 1
@@ -198,13 +199,14 @@ func _apply_magnet(board: BoardEngine) -> void:
 					best_col = c
 			break
 	if best_col < 0:
-		return
+		return false
 	var slide_dir: int = signi(_last_col - best_col)
 	var new_col: int = best_col + slide_dir
 	if board.get_cell(new_col, row) != null:
-		return
+		return false
 	board.set_cell(new_col, row, board.get_cell(best_col, row))
 	board.set_cell(best_col, row, null)
+	return true
 
 
 func _apply_volatile(board: BoardEngine, cell_pos: Vector2i) -> void:

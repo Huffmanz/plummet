@@ -34,9 +34,9 @@ func _init_grid(cols: int, rows: int) -> void:
 
 # Returns the row the piece landed on, or -1 if the column is full.
 func drop_piece(col: int, piece: Piece) -> int:
-	if is_column_full(col):
-		return -1
 	var landing_row: int = _lowest_empty_row(col)
+	if landing_row < 0:
+		return -1
 	_grid[col][landing_row] = piece
 	piece_placed.emit(col, landing_row, piece)
 	return landing_row
@@ -136,8 +136,7 @@ func drop_ghost_piece(col: int, piece: Piece) -> int:
 
 
 func is_column_full(col: int) -> bool:
-	var rows: int = _grid[col].size()
-	return _grid[col][rows - 1] != null
+	return _lowest_empty_row(col) < 0
 
 
 func is_board_full() -> bool:
@@ -147,12 +146,17 @@ func is_board_full() -> bool:
 	return true
 
 
+# Next open slot above the stack top (row 0 = floor). Ignores internal gaps from Anchor etc.
 func _lowest_empty_row(col: int) -> int:
 	var rows: int = _grid[col].size()
+	var highest_occupied := -1
 	for r in rows:
-		if _grid[col][r] == null:
-			return r
-	return -1
+		if _grid[col][r] != null:
+			highest_occupied = r
+	var landing := highest_occupied + 1
+	if landing >= rows:
+		return -1
+	return landing
 
 
 func _settle_column(col: int) -> void:

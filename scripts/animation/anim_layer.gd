@@ -28,6 +28,10 @@ const _COMBO_OUT: float = 8.0 / 60.0
 @export var muted: bool = false
 
 @onready var _land_sfx: RandomAudioPlayer = $LandSfx
+@onready var _drop_slide_sfx: AudioStreamPlayer = $DropSlideSfx
+@onready var _block_sfx: RandomAudioPlayer = $BlockSfx
+@onready var _score_particle_sfx: RandomAudioPlayer = $ScoreParticleSfx
+@onready var _run_clear_sfx: RandomAudioPlayer = $RunClearSfx
 
 var renderer: BoardRenderer
 var shake_offset: Vector2 = Vector2.ZERO
@@ -100,6 +104,7 @@ class _ScoreParticle:
 	var pos: Vector2 = Vector2.ZERO
 	var vel: Vector2 = Vector2.ZERO
 	var elapsed: float = 0.0
+	var seek_dur: float = 0.75
 	var color: Color = Color.WHITE
 	var target: Vector2 = Vector2.ZERO
 	var seek_start: Vector2 = Vector2.ZERO
@@ -242,10 +247,45 @@ func _process(delta: float) -> void:
 		queue_redraw()
 
 
+func _start_drop_slide_sfx() -> void:
+	if muted or _drop_slide_sfx == null or _drop_slide_sfx.stream == null:
+		return
+
+	_drop_slide_sfx.play()
+
+
+func _stop_drop_slide_sfx() -> void:
+	if _drop_slide_sfx == null:
+		return
+	if _drop_slide_sfx.playing:
+		_drop_slide_sfx.stop()
+	var wav := _drop_slide_sfx.stream as AudioStreamWAV
+	if wav != null:
+		wav.loop_mode = AudioStreamWAV.LOOP_DISABLED
+
+
 func _play_land_sfx() -> void:
 	if muted or _land_sfx == null:
 		return
 	_land_sfx.play_random()
+
+
+func play_block_sfx() -> void:
+	if muted or _block_sfx == null:
+		return
+	_block_sfx.play_random()
+
+
+func _play_score_particle_land_sfx() -> void:
+	if muted or _score_particle_sfx == null:
+		return
+	_score_particle_sfx.play_random_overlapping(self)
+
+
+func _play_run_clear_sfx() -> void:
+	if muted or _run_clear_sfx == null:
+		return
+	_run_clear_sfx.play_random()
 
 
 func _tick_drop(delta: float) -> void:
@@ -261,6 +301,7 @@ func _tick_drop(delta: float) -> void:
 				_drop_trail.clear()
 				_drop_phase = 1
 				_drop_phase_t = 0.0
+				_stop_drop_slide_sfx()
 				_land_glow = 1.0
 				_spawn_landing_burst(_drop_burst_rect, _drop_burst_owner)
 				_play_land_sfx()
@@ -290,6 +331,7 @@ func _tick_drop(delta: float) -> void:
 			_drop_phase_t = minf(_drop_phase_t + delta / _SETTLE_DUR, 1.0)
 			_drop_scale_y = lerp(0.9, 1.0, _drop_phase_t)
 			if _drop_phase_t >= 1.0:
+				_stop_drop_slide_sfx()
 				_drop_active = false
 				_drop_done.emit()
 
@@ -338,8 +380,9 @@ func _tick_score_particles(delta: float) -> void:
 	for i in range(_score_particles.size() - 1, -1, -1):
 		var p: _ScoreParticle = _score_particles[i]
 		p.elapsed += delta
-		if p.elapsed >= _SCORE_EXPLODE_DUR + _SCORE_SEEK_DUR:
+		if p.elapsed >= _SCORE_EXPLODE_DUR + p.seek_dur:
 			_score_particles.remove_at(i)
+			_play_score_particle_land_sfx()
 			continue
 		if p.elapsed < _SCORE_EXPLODE_DUR:
 			p.vel *= 0.92
@@ -348,7 +391,7 @@ func _tick_score_particles(delta: float) -> void:
 			if not p.seeking:
 				p.seek_start = p.pos
 				p.seeking = true
-			var seek_frac := (p.elapsed - _SCORE_EXPLODE_DUR) / _SCORE_SEEK_DUR
+			var seek_frac := (p.elapsed - _SCORE_EXPLODE_DUR) / p.seek_dur
 			var t := seek_frac * seek_frac  # quadratic ease-in: slow start, fast arrival
 			p.pos = p.seek_start.lerp(p.target, t)
 
@@ -580,7 +623,7 @@ func _draw_score_particles() -> void:
 			radius = 10.0
 			alpha = 1.0
 		else:
-			var seek_frac := (p.elapsed - _SCORE_EXPLODE_DUR) / _SCORE_SEEK_DUR
+			var seek_frac := (p.elapsed - _SCORE_EXPLODE_DUR) / p.seek_dur
 			radius = lerpf(10.0, 3.0, seek_frac)
 			alpha = 1.0 if seek_frac < 0.7 else lerpf(1.0, 0.0, (seek_frac - 0.7) / 0.3)
 		draw_circle(p.pos + shake_offset, radius, Color(p.color.r, p.color.g, p.color.b, alpha))
@@ -725,6 +768,7 @@ func play_drop(col: int, landing_row: int, owner: CellState.Occupant, gravity_fl
 	_drop_scale_y = 1.0
 	_drop_trail.clear()
 	_drop_active = true
+	_start_drop_slide_sfx()
 	queue_redraw()
 	await _drop_done
 
@@ -753,7 +797,10 @@ func play_gravity(moves: Array, gravity_flipped: bool) -> void:
 
 
 func play_clear(cells: Array[Vector2i], gravity_flipped: bool) -> void:
-	if reduced_motion or cells.is_empty() or renderer == null or renderer.layout == null:
+	if cells.is_empty():
+		return
+	_play_run_clear_sfx()
+	if reduced_motion or renderer == null or renderer.layout == null:
 		return
 	_clear_rects.clear()
 	var min_pos := Vector2(INF, INF)
@@ -842,6 +889,7 @@ func spawn_score_particles(world_pos: Vector2, owner: CellState.Occupant, target
 		p.pos = world_pos
 		p.vel = Vector2(cos(angle), sin(angle)) * speed
 		p.elapsed = 0.0
+		p.seek_dur = _SCORE_SEEK_DUR * randf_range(0.55, 1.35)
 		p.color = color
 		p.target = target
 		_score_particles.append(p)

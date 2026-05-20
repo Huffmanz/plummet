@@ -1,11 +1,18 @@
 [gd_scene format=3 uid="uid://wqifynfc6cvj"]
 
 [ext_resource type="Script" uid="uid://7iyuo7axuxkp" path="res://scripts/ui/juicy_sfx_button.gd" id="1_script"]
-[ext_resource type="AudioStream" uid="uid://bwk2c8nxg0qlc" path="res://assets/sfx/kenney_interface-sounds/Audio/select_001.ogg" id="2_nyu8n"]
 [ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
-[ext_resource type="AudioStream" uid="uid://ce3q2roj3vy27" path="res://assets/sfx/kenney_interface-sounds/Audio/select_002.ogg" id="3_8sbin"]
-[ext_resource type="AudioStream" uid="uid://5v6cbbh7xqh" path="res://assets/sfx/kenney_interface-sounds/Audio/select_007.ogg" id="8_hdsb8"]
-[ext_resource type="AudioStream" uid="uid://cgkcylb0htj8x" path="res://assets/sfx/kenney_interface-sounds/Audio/select_008.ogg" id="9_54iii"]
+[ext_resource type="AudioStream" uid="uid://dssoebxlbp1w4" path="res://assets/sfx/kenney_interface-sounds/Audio/switch_005.ogg" id="4_wfauq"]
+[ext_resource type="AudioStream" uid="uid://dlpvx74cjpy0v" path="res://assets/sfx/kenney_interface-sounds/Audio/switch_006.ogg" id="5_nyu8n"]
+[ext_resource type="AudioStream" uid="uid://dxm5lb0lotldp" path="res://assets/sfx/kenney_interface-sounds/Audio/switch_007.ogg" id="6_8sbin"]
+[ext_resource type="AudioStream" uid="uid://ck4bqqnfhki0g" path="res://assets/sfx/kenney_interface-sounds/Audio/switch_001.ogg" id="7_nyu8n"]
+[ext_resource type="AudioStream" uid="uid://c81rnfnoee80u" path="res://assets/sfx/kenney_interface-sounds/Audio/switch_003.ogg" id="8_8sbin"]
+[ext_resource type="AudioStream" uid="uid://cy1q4mwdx7xh7" path="res://assets/sfx/kenney_interface-sounds/Audio/switch_004.ogg" id="9_dlkty"]
+[ext_resource type="AudioStream" uid="uid://b7v2m7br8mdjl" path="res://assets/sfx/kenney_interface-sounds/Audio/click_001.ogg" id="10_click1"]
+[ext_resource type="AudioStream" uid="uid://dworebth5pruq" path="res://assets/sfx/kenney_interface-sounds/Audio/click_002.ogg" id="11_click2"]
+[ext_resource type="AudioStream" uid="uid://cm13ukt8b74md" path="res://assets/sfx/kenney_interface-sounds/Audio/click_003.ogg" id="12_click3"]
+[ext_resource type="AudioStream" uid="uid://ddaxkitc63rgy" path="res://assets/sfx/kenney_interface-sounds/Audio/click_004.ogg" id="13_click4"]
+[ext_resource type="AudioStream" uid="uid://bf1x5mwmb7usm" path="res://assets/sfx/kenney_interface-sounds/Audio/click_005.ogg" id="14_click5"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
 bg_color = Color(0, 0, 0, 0)
@@ -46,11 +53,18 @@ theme_override_styles/disabled = SubResource("StyleBoxFlat_focus")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 flat = true
 script = ExtResource("1_script")
-hover_sounds = Array[AudioStream]([ExtResource("2_nyu8n"), ExtResource("3_8sbin"), ExtResource("8_hdsb8"), ExtResource("9_54iii")])
+hover_sounds = Array[AudioStream]([ExtResource("7_nyu8n"), ExtResource("9_dlkty"), ExtResource("4_wfauq"), ExtResource("5_nyu8n"), ExtResource("6_8sbin")])
+click_sounds = Array[AudioStream]([ExtResource("10_click1"), ExtResource("11_click2"), ExtResource("12_click3"), ExtResource("13_click4"), ExtResource("14_click5")])
 
 [node name="RandomAudioPlayer" parent="." unique_id=1930534351 instance=ExtResource("2_rap")]
 unique_name_in_owner = true
-streams = Array[AudioStream]([ExtResource("2_nyu8n"), ExtResource("3_8sbin"), ExtResource("8_hdsb8"), ExtResource("9_54iii")])
+volume_db = -50.438
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("7_nyu8n"), ExtResource("8_8sbin"), ExtResource("9_dlkty")])
+
+[node name="ClickAudioPlayer" parent="." unique_id=1497565124 instance=ExtResource("2_rap")]
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("10_click1"), ExtResource("11_click2"), ExtResource("12_click3"), ExtResource("13_click4"), ExtResource("14_click5")])
 
 [node name="VisualPivot" type="Control" parent="." unique_id=605185542]
 layout_mode = 1

@@ -21,6 +21,8 @@ func _ready() -> void:
 	test_intersection_cell_removed_once()
 	test_mixed_owner_no_clear()
 	test_empty_board_no_clears()
+	test_landing_row_stacks_above_highest_piece()
+	test_landing_row_ignores_internal_gap()
 	print("-----------------------------")
 	print("Results: %d passed, %d failed" % [_passed, _failed])
 
@@ -217,3 +219,18 @@ func test_empty_board_no_clears() -> void:
 	var b := _make_board()
 	var runs := b.detect_clears()
 	_assert("empty board reports no clears", runs.size() == 0)
+
+
+func test_landing_row_stacks_above_highest_piece() -> void:
+	var b := _make_board()
+	b.drop_piece(2, Piece.new(Piece.Owner.PLAYER))
+	b.drop_piece(2, Piece.new(Piece.Owner.PLAYER))
+	_assert("landing row stacks on top of column", b.get_landing_row(2) == 2)
+
+
+func test_landing_row_ignores_internal_gap() -> void:
+	var b := _make_board()
+	b.set_cell(1, 0, Piece.new(Piece.Owner.PLAYER))
+	b.set_cell(1, 2, Piece.new(Piece.Owner.PLAYER))
+	_assert("internal gap does not steal landing row", b.get_landing_row(1) == 3)
+	_assert("drop ignores internal gap", b.drop_piece(1, Piece.new(Piece.Owner.AI)) == 3)

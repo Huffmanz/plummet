@@ -1,6 +1,9 @@
-[gd_scene format=3 uid="uid://bf0ry22k4o0ey"]
+[gd_scene load_steps=5 format=3 uid="uid://bf0ry22k4o0ey"]
 
 [ext_resource type="Script" uid="uid://chgmva2jjopm3" path="res://scripts/visual/match_end_overlay.gd" id="1_matchend"]
+[ext_resource type="AudioStream" path="res://assets/sfx/850021__yoshicakes77__tada.wav" id="3_win"]
+[ext_resource type="AudioStream" path="res://assets/sfx/839834__tommylistens__counting-up.wav" id="5_countup"]
+[ext_resource type="AudioStream" path="res://assets/sfx/362206__taranp__horn_fail_wahwah_1.wav" id="6_lose"]
 
 [node name="MatchEndOverlay" type="Control" unique_id=904110880]
 layout_mode = 3
@@ -10,6 +13,18 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_matchend")
+
+[node name="WinSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3_win")
+bus = &"sfx"
+
+[node name="CountUpSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5_countup")
+bus = &"sfx"
+
+[node name="LoseSfx" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("6_lose")
+bus = &"sfx"
 
 [node name="Background" type="ColorRect" parent="." unique_id=1871626060]
 layout_mode = 1

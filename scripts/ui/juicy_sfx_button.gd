@@ -5,6 +5,11 @@ class_name JuicySfxButton extends Button
 		hover_sounds = value
 		_sync_hover_sounds()
 @export var hover_volume_db: float = 0.0
+@export var click_sounds: Array[AudioStream] = []:
+	set(value):
+		click_sounds = value
+		_sync_click_sounds()
+@export var click_volume_db: float = 0.0
 
 @export var hover_scale: Vector2 = Vector2(1.08, 1.08)
 @export var normal_bg_color: Color = Color(0.482353, 0.682353, 0.498039, 1.0):
@@ -26,6 +31,7 @@ class_name JuicySfxButton extends Button
 			_sync_label()
 
 @onready var _audio: RandomAudioPlayer = $RandomAudioPlayer
+@onready var _click_audio: RandomAudioPlayer = $ClickAudioPlayer
 @onready var _visual: Control = $VisualPivot
 @onready var _panel: Panel = $VisualPivot/Panel
 @onready var _label: Label = $VisualPivot/Label
@@ -47,7 +53,9 @@ func _ready() -> void:
 	action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	focus_mode = FOCUS_ALL
 	_audio.volume_db = hover_volume_db
+	_click_audio.volume_db = click_volume_db
 	_sync_hover_sounds()
+	_sync_click_sounds()
 	_cache_rest_state()
 	_sync_label()
 	_sync_pivot()
@@ -57,7 +65,7 @@ func _ready() -> void:
 	mouse_exited.connect(_on_mouse_exited)
 	focus_entered.connect(_on_focus_entered)
 	focus_exited.connect(_on_focus_exited)
-	pressed.connect(_clear_highlight_on_press)
+	pressed.connect(_on_pressed)
 	button_up.connect(_on_button_up)
 
 
@@ -73,7 +81,8 @@ func _apply_mouse_ignore(node: Node) -> void:
 		_apply_mouse_ignore(child)
 
 
-func _clear_highlight_on_press() -> void:
+func _on_pressed() -> void:
+	_play_random_from(click_sounds, _click_audio)
 	_set_highlighted(false)
 
 
@@ -147,14 +156,18 @@ func _sync_hover_sounds() -> void:
 		_audio.streams = hover_sounds
 
 
+func _sync_click_sounds() -> void:
+	if _click_audio != null:
+		_click_audio.streams = click_sounds
+
+
 func play_random_from(streams: Array[AudioStream]) -> void:
-	if _audio != null:
-		_audio.play_random_from(streams)
+	_play_random_from(streams, _audio)
 
 
-func _play_random_from(streams: Array[AudioStream]) -> void:
-	if _audio != null:
-		_audio.play_random_from(streams)
+func _play_random_from(streams: Array[AudioStream], player: RandomAudioPlayer = _audio) -> void:
+	if player != null:
+		player.play_random_from(streams)
 
 
 func _set_highlighted(active: bool) -> void:

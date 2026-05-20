@@ -214,8 +214,12 @@ func _on_column_selected(col: int) -> void:
 	if p_piece.type == Piece.Type.GHOST:
 		landing_row = _board.drop_ghost_piece(col, p_piece)
 	else:
-		landing_row = _board.get_landing_row(col)
-		_board.drop_piece(col, p_piece)
+		landing_row = _board.drop_piece(col, p_piece)
+	if landing_row < 0:
+		_animating = false
+		_state = _build_state()
+		_refresh_all()
+		return
 	_modifier_resolver.set_landed(col, landing_row, p_piece)
 	await _anim_layer.play_drop(col, landing_row, CellState.Occupant.PLAYER, gf)
 	_check_col_fill_flash(col)
@@ -641,6 +645,7 @@ func _spawn_blocked_popup(col: int, row: int, gf: bool) -> void:
 	var cell_center := _renderer.cell_rect(col, row, gf).get_center()
 	var pos := cell_center - Vector2(0.0, _renderer.layout.cell_size)
 	_anim_layer.spawn_popup(pos, "BLOCKED!", Color(1.0, 0.55, 0.1))
+	_anim_layer.play_block_sfx()
 
 
 func _input(event: InputEvent) -> void:

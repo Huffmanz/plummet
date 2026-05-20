@@ -13,6 +13,18 @@
 [ext_resource type="AudioStream" uid="uid://cxd0g0w26mtbk" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-2.ogg" id="9_chip2"]
 [ext_resource type="AudioStream" uid="uid://tsmihmgjmjen" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-3.ogg" id="10_chip3"]
 [ext_resource type="AudioStream" uid="uid://dsfrjbctexotv" path="res://assets/sfx/kenney_casino-audio/Audio/chips-collide-4.ogg" id="11_chip4"]
+[ext_resource type="AudioStream" uid="uid://br4cy4lpy8ot0" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_000.ogg" id="12_imp0"]
+[ext_resource type="AudioStream" uid="uid://cxiguwesqt88c" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_001.ogg" id="13_imp1"]
+[ext_resource type="AudioStream" uid="uid://bvkelokoa3nk6" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_002.ogg" id="14_imp2"]
+[ext_resource type="AudioStream" uid="uid://3r52re0qx5ks" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_003.ogg" id="15_imp3"]
+[ext_resource type="AudioStream" uid="uid://hytrlrqo72tk" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_004.ogg" id="16_imp4"]
+[ext_resource type="AudioStream" uid="uid://c01tqi3o0bysp" path="res://assets/sfx/kenney_impact-sounds/Audio/impactMining_000.ogg" id="17_mine0"]
+[ext_resource type="AudioStream" uid="uid://b7quajeyojfql" path="res://assets/sfx/kenney_impact-sounds/Audio/impactMining_001.ogg" id="18_mine1"]
+[ext_resource type="AudioStream" uid="uid://bxjvf3b7fmcae" path="res://assets/sfx/kenney_impact-sounds/Audio/impactMining_002.ogg" id="19_mine2"]
+[ext_resource type="AudioStream" uid="uid://qo2b81iqduwl" path="res://assets/sfx/kenney_impact-sounds/Audio/impactMining_003.ogg" id="20_mine3"]
+[ext_resource type="AudioStream" uid="uid://blpr68kd8j1ky" path="res://assets/sfx/kenney_impact-sounds/Audio/impactMining_004.ogg" id="21_mine4"]
+[ext_resource type="AudioStream" uid="uid://cyb4ieglen0t8" path="res://assets/sfx/218461__thomasjaunism__wood-block.wav" id="22_woodblock"]
+[ext_resource type="AudioStream" uid="uid://de3ybywjupdi3" path="res://assets/sfx/571581__el_boss__playing-card-slide-right.wav" id="23_cardslide"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_1idxs"]
 frequency = 0.062
@@ -85,8 +97,27 @@ script = ExtResource("3_ghostcvs")
 [node name="AnimLayer" type="Node2D" parent="." unique_id=1129054763]
 script = ExtResource("5_animlyr")
 
-[node name="LandSfx" parent="AnimLayer" instance=ExtResource("7_rap")]
+[node name="LandSfx" parent="AnimLayer" unique_id=401317313 instance=ExtResource("7_rap")]
+bus = &"sfx"
 streams = Array[AudioStream]([ExtResource("8_chip1"), ExtResource("9_chip2"), ExtResource("10_chip3"), ExtResource("11_chip4")])
+
+[node name="DropSlideSfx" type="AudioStreamPlayer" parent="AnimLayer" unique_id=2022018412]
+stream = ExtResource("23_cardslide")
+bus = &"sfx"
+
+[node name="BlockSfx" parent="AnimLayer" unique_id=1420117235 instance=ExtResource("7_rap")]
+volume_db = -19.024
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("22_woodblock")])
+randomize_pitch = false
+
+[node name="ScoreParticleSfx" parent="AnimLayer" unique_id=175903932 instance=ExtResource("7_rap")]
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("12_imp0"), ExtResource("13_imp1"), ExtResource("14_imp2"), ExtResource("15_imp3"), ExtResource("16_imp4")])
+
+[node name="RunClearSfx" parent="AnimLayer" unique_id=557407052 instance=ExtResource("7_rap")]
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("17_mine0"), ExtResource("18_mine1"), ExtResource("19_mine2"), ExtResource("20_mine3"), ExtResource("21_mine4")])
 
 [node name="MarginContainer" type="MarginContainer" parent="." unique_id=601448502]
 layout_mode = 1

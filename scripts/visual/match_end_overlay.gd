@@ -7,21 +7,25 @@ signal finished
 @onready var _player_score_label: Label = %PlayerScoreDisplay
 @onready var _ai_score_label: Label = %AIScoreDisplay
 @onready var _center: Control = $Center
+@onready var _win_sfx: AudioStreamPlayer = $WinSfx
+@onready var _count_up_sfx: AudioStreamPlayer = $CountUpSfx
+@onready var _lose_sfx: AudioStreamPlayer = $LoseSfx
 
-const _COUNT_DUR: float = 1.8
+const _COUNT_DUR: float = 2.8
 const _HOLD_DUR: float = 1.2
 
 var _player_target: int = 0
 var _ai_target: int = 0
 var _elapsed: float = 0.0
 var _running: bool = false
+var _used_lose_sfx: bool = false
 
 
 func _ready() -> void:
 	hide()
 	_apply_cozy_ui()
 	if get_parent() == get_tree().root:
-		show_result.call_deferred(1250, 980)
+		show_result.call_deferred(980, 980)
 
 
 func _apply_cozy_ui() -> void:
@@ -50,25 +54,63 @@ func _process(delta: float) -> void:
 	_ai_score_label.text = str(int(_ai_target * frac))
 
 	if _elapsed >= _COUNT_DUR and _winner_label.text == "":
+		_stop_count_up_sfx()
 		if _player_target > _ai_target:
 			_winner_label.text = "YOU WIN!"
+			_play_win_sfx()
 		elif _ai_target > _player_target:
 			_winner_label.text = "AI WINS"
+			_play_lose_sfx()
+			_used_lose_sfx = true
 		else:
 			_winner_label.text = "DRAW"
+			_play_lose_sfx()
+			_used_lose_sfx = true
 
 	if _elapsed >= _COUNT_DUR + _HOLD_DUR:
+		if _used_lose_sfx and _lose_sfx != null and _lose_sfx.playing:
+			return
 		_running = false
 		finished.emit()
 
 
+func _play_win_sfx() -> void:
+	if _win_sfx != null:
+		_win_sfx.play()
+
+
+func _play_lose_sfx() -> void:
+	if _lose_sfx != null:
+		_lose_sfx.play()
+
+
+func _start_count_up_sfx() -> void:
+	if _count_up_sfx == null or _count_up_sfx.stream == null:
+		return
+	_count_up_sfx.play()
+
+
+func _stop_count_up_sfx() -> void:
+	if _count_up_sfx == null:
+		return
+	if _count_up_sfx.playing:
+		_count_up_sfx.stop()
+	var wav := _count_up_sfx.stream as AudioStreamWAV
+	if wav != null:
+		wav.loop_mode = AudioStreamWAV.LOOP_DISABLED
+
+
 func show_result(player_score: int, ai_score: int) -> void:
+	_stop_count_up_sfx()
 	_player_target = player_score
 	_ai_target = ai_score
 	_elapsed = 0.0
 	_running = true
+	_used_lose_sfx = false
 	_winner_label.text = ""
 	_player_score_label.text = "0"
 	_ai_score_label.text = "0"
 	show()
+	_start_count_up_sfx()
 	await finished
+	_stop_count_up_sfx()

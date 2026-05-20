@@ -39,6 +39,7 @@ var _ai: AIOpponent
 var _builder: RenderStateBuilder
 var _player_bag: PieceBag
 var _modifier_resolver: ModifierResolver
+var _relic_manager: RelicManager
 var _match_active: bool = false
 var _animating: bool = false
 var _prev_shake: Vector2 = Vector2.ZERO
@@ -57,7 +58,8 @@ var _idle_t: float = 0.0
 var _score_milestone: int = 0
 
 # Match metadata (injected by RunController in run mode)
-var standalone: bool = true
+@export var standalone: bool = true
+@export var sandbox_mode: bool = false
 var _match_act: int = 1
 var _match_num: int = 1
 var _match_enemy_name: String = "The Stoic"
@@ -142,7 +144,8 @@ func setup_match(
 	match_num: int,
 	enemy_name: String,
 	enemy_gimmick: String,
-	is_boss: bool = false
+	is_boss: bool = false,
+	relic_mgr: RelicManager = null
 ) -> void:
 	_player_bag = bag
 	_chip_count = chips
@@ -152,6 +155,7 @@ func setup_match(
 	_match_enemy_name = enemy_name
 	_match_enemy_gimmick = enemy_gimmick
 	_match_is_boss = is_boss
+	_relic_manager = relic_mgr
 	_init_game()
 
 
@@ -165,6 +169,8 @@ func _init_game() -> void:
 	_builder = RenderStateBuilder.new()
 	if _player_bag == null:
 		_player_bag = PieceBag.new(Piece.Owner.PLAYER)
+	if _relic_manager == null:
+		_relic_manager = RelicManager.new()
 	_modifier_resolver = ModifierResolver.new()
 	_match_active = true
 	_animating = false
@@ -210,11 +216,8 @@ func _on_column_selected(col: int) -> void:
 	var p_piece: Piece = _player_bag.current()
 	_player_bag.advance()
 	var gf := _state.gravity_flipped if _state != null else false
-	var landing_row: int
-	if p_piece.type == Piece.Type.GHOST:
-		landing_row = _board.drop_ghost_piece(col, p_piece)
-	else:
-		landing_row = _board.drop_piece(col, p_piece)
+	var surge_pending := _modifier_resolver.consume_surge()
+	var landing_row: int = _board.drop_piece(col, p_piece)
 	if landing_row < 0:
 		_animating = false
 		_state = _build_state()
@@ -225,18 +228,29 @@ func _on_column_selected(col: int) -> void:
 	_check_col_fill_flash(col)
 	if _is_block_move(col, landing_row, Piece.Owner.PLAYER):
 		_spawn_blocked_popup(col, landing_row, gf)
-	_modifier_resolver.on_land(_board)
+	var landing_chips := _modifier_resolver.on_land(_board)
+	if landing_chips > 0:
+		_chip_count += landing_chips
+		_spawn_chip_popups(landing_chips)
+	if p_piece.has_modifier():
+		var _md := DataRegistry.get_modifier(p_piece.modifier)
+		if _md != null:
+			_anim_layer.play_modifier_flash(col, landing_row, gf, _md.badge_color)
 	_state = _build_state()
 	_refresh_all()
 
-	var p_result := await _run_cascade_animated(_board, Piece.Owner.PLAYER)
+	var p_result := await _run_cascade_animated(_board, Piece.Owner.PLAYER, surge_pending)
 	_match_max_cascade = maxi(_match_max_cascade, p_result.max_depth)
 	if p_result.cross_color:
 		_match_cross_color_count += 1
 	var chips_before := _chip_count
 	_award_chips(p_result, Piece.Owner.PLAYER)
-	_score_tracker.add_turn(_score_calc.calculate(p_result, 0))
+	var bounty_pts := _modifier_resolver.get_accumulated_bonus_points()
+	_score_tracker.add_turn(_score_calc.calculate(p_result, bounty_pts, surge_pending))
 	_check_score_milestone()
+	if sandbox_mode:
+		# Replenish player turns so the match never ends
+		_turn_manager.player_turns_remaining = TurnManager.TURNS_PER_PLAYER
 	_turn_manager.advance(_board)
 	if _chip_count > chips_before:
 		_spawn_chip_popups(_chip_count - chips_before)
@@ -248,9 +262,11 @@ func _on_column_selected(col: int) -> void:
 		_animating = false
 		return
 
-	# AI turn
-	if _turn_manager.current_turn == Piece.Owner.AI:
+	# AI turn — skipped in sandbox mode
+	if not sandbox_mode and _turn_manager.current_turn == Piece.Owner.AI:
 		await _run_ai_turn_animated()
+	elif sandbox_mode and _turn_manager.current_turn == Piece.Owner.AI:
+		_turn_manager.current_turn = Piece.Owner.PLAYER
 
 	_animating = false
 	_renderer.hovered_col = _renderer.col_from_position(get_local_mouse_position().x)
@@ -284,9 +300,9 @@ func _run_ai_turn_animated() -> void:
 	_state = _build_state()
 	_refresh_all()
 
-	var ai_result := await _run_cascade_animated(_board, Piece.Owner.AI)
+	var ai_result := await _run_cascade_animated(_board, Piece.Owner.AI, false)
 	_match_max_cascade = maxi(_match_max_cascade, ai_result.max_depth)
-	_score_tracker.add_turn(_score_calc.calculate(ai_result, 0))
+	_score_tracker.add_turn(_score_calc.calculate(ai_result, 0, false))
 	_ai.advance_queue()
 	_turn_manager.advance(_board)
 
@@ -301,19 +317,19 @@ func _run_ai_thinking_dots() -> void:
 		await get_tree().create_timer(0.12).timeout
 
 
-func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> CascadeResult:
+func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner, surge_was_active: bool) -> CascadeResult:
 	var result := CascadeResult.new(attribution)
 	var depth := 0
 	var player_clear_count := 0
 	var ai_clear_count := 0
 	var ai_cleared := false
+	var ember_bonus := 0
 
 	while true:
 		var runs: Array[MatchedRun] = board.detect_clears()
 		if runs.is_empty():
 			break
 
-		# Determine which owners cleared this round before doing anything else.
 		var has_player := false
 		var has_ai := false
 		for run in runs:
@@ -322,10 +338,23 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			else:
 				has_ai = true
 
-		# Tag each clear with its owner's personal cascade depth, not the global round.
+		# Tag clears with effective depth (base depth + ember bonus accumulated so far)
 		for run in runs:
 			var owner_depth := player_clear_count if run.owner == Piece.Owner.PLAYER else ai_clear_count
-			result.clears.append(TaggedClear.new(run, owner_depth))
+			var effective_depth := owner_depth + ember_bonus
+			var tc := TaggedClear.new(run, effective_depth)
+			for cell_pos: Vector2i in run.cells:
+				var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+				if piece == null:
+					continue
+				if piece.type == Piece.Type.PRISM:
+					tc.has_prism = true
+				if piece.type == Piece.Type.COIN and run.owner == Piece.Owner.PLAYER:
+					tc.coin_chips += 3
+			# Surge applies only to the first player round when surge was pending
+			if surge_was_active and depth == 0 and run.owner == Piece.Owner.PLAYER:
+				tc.has_surge = true
+			result.clears.append(tc)
 
 		var was_cross_color := result.cross_color
 		if attribution == Piece.Owner.PLAYER:
@@ -334,12 +363,10 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			if has_ai:
 				ai_cleared = true
 
-		# Cascade heat + badge — escalate with depth
 		_renderer.cascade_heat = clampf(float(depth) / 3.0, 0.0, 1.0)
 		if depth >= 1:
 			_anim_layer.play_cascade_badge(depth + 1)
 
-		# Combo text + shake trigger once per depth level, before individual clears
 		if depth >= 1:
 			_anim_layer.play_combo_text(depth + 1)
 		if depth == 1:
@@ -349,25 +376,32 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 
 		var gf := _state.gravity_flipped if _state != null else false
 
-		_modifier_resolver.on_clear(board, runs)
+		# Clear modifier effects (Echo, Detonate, Bounty, Surge)
+		var echo_copies := _relic_manager.echo_copy_count() if _relic_manager != null else 1
+		_modifier_resolver.on_clear(board, runs, echo_copies)
 
-		# Animate each run individually — pop score then sweep clear before moving to next
+		# Piece type effects: Shard removes two pieces above on clear
+		_apply_shard_effects(board, runs)
+
+		# Count Ember pieces in this round and add to bonus for subsequent rounds
+		var embers_this_round := _count_ember_in_runs(board, runs)
+		ember_bonus += embers_this_round
+
+		# Animate each run
 		for run in runs:
 			var run_owner := Piece.Owner.PLAYER if run.owner == Piece.Owner.PLAYER else Piece.Owner.AI
 			var occ := CellState.Occupant.PLAYER if run.owner == Piece.Owner.PLAYER else CellState.Occupant.AI
 			var owner_depth := player_clear_count if run.owner == Piece.Owner.PLAYER else ai_clear_count
 			_anim_layer.spawn_score_particles(_cells_center(run.cells), occ, _score_label_pos(run_owner))
-			_spawn_single_run_popup(run, owner_depth, attribution)
+			_spawn_single_run_popup(run, owner_depth + ember_bonus - embers_this_round, attribution)
 			await _anim_layer.play_clear(run.cells, gf)
 
-		# Cross-color chain popup after all runs have resolved
 		if result.cross_color and not was_cross_color:
 			var chain_cells: Array[Vector2i] = []
 			for run in runs:
 				chain_cells.append_array(run.cells)
 			_anim_layer.spawn_popup(_popup_pos(chain_cells) - Vector2(0.0, 28.0), "+150 CHAIN")
 
-		# Remove all cleared pieces, then let pieces fall
 		board.remove_clears(runs)
 		_state = _build_state()
 		_refresh_all()
@@ -379,12 +413,10 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 		var pre_grav_state := _state
 		_modifier_resolver.on_pre_gravity(board)
 		board.apply_gravity()
-		_modifier_resolver.on_gravity(board)
-		_state = _build_state()
+		_state = _build_state()  # post-gravity, pre-echo
 
 		var grav_moves: Array = _compute_gravity_moves(pre_grav_state, _state)
 		if not grav_moves.is_empty() and not _anim_layer.reduced_motion:
-			# Hide moving pieces from pre-gravity board so AnimLayer owns them during flight
 			_set_gravity_hidden(grav_moves)
 			_board_canvas.refresh(pre_grav_state)
 			_ghost_canvas.refresh(pre_grav_state)
@@ -396,6 +428,16 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 		var pause_gravity := 0.0 if _anim_layer.reduced_motion else _pause_after_gravity(depth)
 		if pause_gravity > 0.0:
 			await get_tree().create_timer(pause_gravity).timeout
+
+		# Echo pieces drop with animation after gravity settles
+		var echo_drops := _modifier_resolver.on_gravity(board)
+		if not echo_drops.is_empty():
+			var gf2 := _state.gravity_flipped if _state != null else false
+			for drop: Dictionary in echo_drops:
+				await _anim_layer.play_drop(drop.col, drop.row, CellState.Occupant.PLAYER, gf2)
+				_state = _build_state()
+				_refresh_all()
+
 
 		if has_player:
 			player_clear_count += 1
@@ -474,9 +516,9 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 		if _win_streak >= 2:
 			_chip_count += (_win_streak - 1) * 5
 		if not _match_is_boss and not standalone:
-			_shop_screen.open(_player_bag, _chip_count)
+			_shop_screen.open(_player_bag, _chip_count, _relic_manager)
 		elif standalone:
-			_shop_screen.open(_player_bag, _chip_count)
+			_shop_screen.open(_player_bag, _chip_count, _relic_manager)
 		else:
 			match_complete.emit(true, _score_tracker.player_score, _score_tracker.ai_score, _chip_count, _win_streak, _match_max_cascade, _match_cross_color_count)
 	else:
@@ -552,9 +594,35 @@ func _check_col_fill_flash(col: int) -> void:
 func _award_chips(result: CascadeResult, owner: Piece.Owner) -> void:
 	if owner != Piece.Owner.PLAYER:
 		return
+	var chips_per_clear := _relic_manager.chips_per_clear() if _relic_manager != null else 1
 	for tc: TaggedClear in result.clears:
 		if tc.run.owner == Piece.Owner.PLAYER:
-			_chip_count += 1
+			_chip_count += chips_per_clear
+			_chip_count += tc.coin_chips
+
+
+# Removes the two pieces above each Shard piece that cleared.
+func _apply_shard_effects(board: BoardEngine, runs: Array[MatchedRun]) -> void:
+	for run in runs:
+		for cell_pos: Vector2i in run.cells:
+			var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+			if piece == null or piece.type != Piece.Type.SHARD:
+				continue
+			for offset: int in [1, 2]:
+				var above_row: int = cell_pos.y + offset
+				if above_row < BoardEngine.ROWS:
+					board.set_cell(cell_pos.x, above_row, null)
+
+
+# Counts Ember pieces in the given set of runs (from the board state before removal).
+func _count_ember_in_runs(board: BoardEngine, runs: Array[MatchedRun]) -> int:
+	var count := 0
+	for run in runs:
+		for cell_pos: Vector2i in run.cells:
+			var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+			if piece != null and piece.type == Piece.Type.EMBER:
+				count += 1
+	return count
 
 
 func _spawn_chip_popups(count: int) -> void:
@@ -676,11 +744,7 @@ func _input(event: InputEvent) -> void:
 			var local_pos := get_local_mouse_position()
 			var col := _renderer.col_from_position(local_pos.x)
 			if _renderer.is_col_valid(_state, col):
-				var cur_piece := _player_bag.current()
-				if cur_piece.type == Piece.Type.GHOST and _board.get_ghost_landing_row(col) < 0:
-					_anim_layer.play_col_reject(col)
-				else:
-					column_selected.emit(col)
+				column_selected.emit(col)
 			elif col >= 0 and not _animating and not _state.input_locked and \
 				_state.active_player == CellState.Occupant.PLAYER:
 				_anim_layer.play_col_reject(col)

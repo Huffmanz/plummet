@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_coin"]
+
+[resource]
+script = ExtResource("1_coin")
+id = "COIN"
+display_name = "Coin"
+initial = "C"
+description = "When part of a clear, earn +3 chips. Multiple Coins in one clear each trigger independently."
+shader_style = "gold"

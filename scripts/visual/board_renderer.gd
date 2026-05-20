@@ -56,8 +56,8 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 				continue
 			if cs.occupant == CellState.Occupant.EMPTY:
 				theme.draw_empty_cell(canvas, rect)
-			for i in mini(cs.modifiers.size(), 3):
-				theme.draw_modifier_badge(canvas, rect, cs.modifiers[i], i)
+			if not cs.modifier.is_empty():
+				theme.draw_modifier_badge(canvas, rect, cs.modifier)
 	var t_ms := Time.get_ticks_msec() * 0.006
 	for c in RenderState.COLS:
 		var lr := state.landing_rows[c] if c < state.landing_rows.size() else -1

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_patron"]
+
+[resource]
+script = ExtResource("1_patron")
+id = "Patron"
+display_name = "Patron"
+description = "The shop's relic slot is free once per run (25 chip cost waived for one relic)."
+rarity = "uncommon"
+source = "boss_drop"

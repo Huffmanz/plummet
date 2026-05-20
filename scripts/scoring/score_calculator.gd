@@ -1,6 +1,7 @@
 class_name ScoreCalculator extends RefCounted
 
-func calculate(result: CascadeResult, modifier_triggers: int) -> TurnScore:
+
+func calculate(result: CascadeResult, modifier_bonus_points: int, surge_active: bool) -> TurnScore:
 	var turn := TurnScore.new()
 
 	# Group clear points by (owner, depth) using Vector2i(owner, depth) as key.
@@ -9,11 +10,20 @@ func calculate(result: CascadeResult, modifier_triggers: int) -> TurnScore:
 
 	for tc: TaggedClear in result.clears:
 		var key := Vector2i(tc.run.owner, tc.depth)
-		var pts: int = _base_value(tc.run.cells.size()) * _depth_multiplier(tc.depth)
+		var base: int = _base_value(tc.run.cells.size())
+
+		# Prism: doubles base value (only one Prism per clear counts — no stacking)
+		if tc.has_prism:
+			base *= 2
+
+		# Surge: ×3 base if this is the surge-active piece clearing on landing (depth 0)
+		if tc.has_surge and tc.depth == 0 and surge_active:
+			base *= 3
+
+		var pts: int = base * _depth_multiplier(tc.depth)
 		depth_points[key] = depth_points.get(key, 0) + pts
 		depth_count[key] = depth_count.get(key, 0) + 1
 
-	# Each run's points go to the run's owner — both sides earn their own cascade multipliers.
 	for key: Vector2i in depth_points:
 		var pts: int = depth_points[key]
 		if depth_count[key] >= 2:
@@ -23,8 +33,8 @@ func calculate(result: CascadeResult, modifier_triggers: int) -> TurnScore:
 		else:
 			turn.ai_points += pts
 
-	# Cross-color bonus and modifier triggers go to whoever engineered the chain.
-	var bonus: int = modifier_triggers * 25
+	# Cross-color bonus and modifier/bounty points go to whoever engineered the chain.
+	var bonus: int = modifier_bonus_points
 	if result.cross_color:
 		bonus += 150
 	if result.attribution == Piece.Owner.PLAYER:

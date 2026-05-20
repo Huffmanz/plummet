@@ -10,6 +10,11 @@ var ai_delta: int = 0
 var _rounds: Array[TurnScore] = []
 
 
+func add_starting_bonus(bonus: int) -> void:
+	player_score += bonus
+	score_changed.emit(player_score, ai_score, 0, 0)
+
+
 func add_turn(turn: TurnScore) -> void:
 	player_delta = turn.player_points
 	ai_delta = turn.ai_points

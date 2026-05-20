@@ -4,7 +4,7 @@ var _passed: int = 0
 var _failed: int = 0
 
 const MODIFIER_NAMES: Array[String] = [
-	"Echo", "Magnet", "Heavy", "Anchor", "Catalyst", "Volatile", "Double Drop"
+	"Ignite", "Magnet", "Deposit", "Ripple", "Echo", "Detonate", "Bounty", "Surge"
 ]
 
 
@@ -14,10 +14,10 @@ func _ready() -> void:
 	test_render_state_get_cell_correct()
 	test_render_state_queue_has_two_pieces()
 	test_render_state_landing_rows_initialized()
-	test_jam_theme_player_color_distinct_from_ai()
-	test_jam_theme_all_modifier_abbrevs_are_two_chars()
-	test_jam_theme_modifier_colors_all_defined()
-	test_jam_theme_piece_types_have_distinct_border_styles()
+	test_cozy_theme_player_color_distinct_from_ai()
+	test_cozy_theme_all_modifier_initials_defined()
+	test_cozy_theme_modifier_colors_all_defined()
+	test_cozy_theme_piece_types_have_distinct_border_styles()
 	test_board_renderer_col_from_position_inside_board()
 	test_board_renderer_col_from_position_outside_board()
 	test_board_renderer_is_col_valid_unfrozen_open()
@@ -103,13 +103,13 @@ func test_cozy_theme_player_color_distinct_from_ai() -> void:
 	_assert("Player and AI colors are distinct", t.color_player != t.color_ai)
 
 
-func test_cozy_theme_all_modifier_abbrevs_are_two_chars() -> void:
+func test_cozy_theme_all_modifier_initials_defined() -> void:
 	var t := ThemeCozy.new()
 	var all_ok := true
 	for name in MODIFIER_NAMES:
-		if t.get_modifier_abbrev(name).length() != 2:
+		if t.get_modifier_initial(name).is_empty():
 			all_ok = false
-	_assert("All modifier abbreviations are 2 characters", all_ok)
+	_assert("All modifiers have initials defined", all_ok)
 
 
 func test_cozy_theme_modifier_colors_all_defined() -> void:
@@ -124,14 +124,14 @@ func test_cozy_theme_modifier_colors_all_defined() -> void:
 func test_cozy_theme_piece_types_have_distinct_border_styles() -> void:
 	var t := ThemeCozy.new()
 	var styles: Array[int] = []
-	for pt in [CellState.PieceType.NORMAL, CellState.PieceType.WEIGHTED,
-			CellState.PieceType.GHOST, CellState.PieceType.VOLATILE]:
+	for pt in [CellState.PieceType.NORMAL, CellState.PieceType.PRISM,
+			CellState.PieceType.COIN, CellState.PieceType.EMBER, CellState.PieceType.SHARD]:
 		var s := t.get_piece_border_style(pt)
 		if s in styles:
-			_assert("All 4 piece types have distinct border styles", false)
+			_assert("All 5 piece types have distinct border styles", false)
 			return
 		styles.append(s)
-	_assert("All 4 piece types have distinct border styles", true)
+	_assert("All 5 piece types have distinct border styles", true)
 
 
 # --- BoardRenderer ---
@@ -194,7 +194,7 @@ func test_layout_manager_cell_size_clamped() -> void:
 func test_cell_state_defaults_empty() -> void:
 	var cs := CellState.new()
 	_assert("CellState defaults to EMPTY occupant", cs.occupant == CellState.Occupant.EMPTY)
-	_assert("CellState defaults to no modifiers", cs.modifiers.is_empty())
+	_assert("CellState defaults to no modifier", cs.modifier.is_empty())
 	_assert("CellState defaults not locked", not cs.locked)
 	_assert("CellState defaults not frozen", not cs.frozen)
 
@@ -202,7 +202,7 @@ func test_cell_state_defaults_empty() -> void:
 func test_queue_entry_defaults_normal() -> void:
 	var qe := QueueEntry.new()
 	_assert("QueueEntry defaults to NORMAL piece type", qe.piece_type == CellState.PieceType.NORMAL)
-	_assert("QueueEntry defaults to no modifiers", qe.modifiers.is_empty())
+	_assert("QueueEntry defaults to no modifier", qe.modifier.is_empty())
 
 
 func test_frozen_column_stores_col_and_turns() -> void:

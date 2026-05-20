@@ -2,22 +2,28 @@ class_name ShopScreen extends Control
 
 signal shop_closed(chips_remaining: int)
 
-const MODIFIER_POOL: Array[String] = ["Echo", "Magnet", "Heavy", "Anchor", "Catalyst", "Volatile"]
+const MODIFIER_POOL: Array[String] = ["Ignite", "Magnet", "Deposit", "Ripple", "Echo", "Detonate", "Bounty", "Surge"]
+const RELIC_POOL: Array[String] = ["Compass", "Almanac", "Forge", "Lens", "Stockpile", "Momentum"]
 const COST_ATTACH: int = 10
 const COST_REMOVE: int = 5
 const COST_UPGRADE: int = 20
 const COST_REROLL: int = 5
+const COST_RELIC: int = 25
 
 enum Phase { IDLE, ATTACH_PICK_PIECE, REMOVE_PICK_MOD, UPGRADE_PICK_TYPE }
 
 var _bag: PieceBag = null
+var _relic_manager: RelicManager = null
 var _chips: int = 0
 var _offers: Array[String] = []
-var _offer_used: Array[bool] = [false, false, false]
+var _offer_count: int = 3
+var _offer_used: Array[bool] = []
 var _rerolled: bool = false
 var _phase: Phase = Phase.IDLE
 var _selected_offer: int = -1
 var _selected_piece_idx: int = -1
+var _shop_relic: String = ""
+var _relic_purchased: bool = false
 
 var _chip_label: Label = null
 var _phase_label: Label = null
@@ -26,34 +32,44 @@ var _reroll_btn: Button = null
 var _pieces_vbox: VBoxContainer = null
 var _cancel_btn: Button = null
 var _done_btn: Button = null
+var _relic_panel: PanelContainer = null
+var _relic_btn: Button = null
+var _relic_lbl: Label = null
 
 
 func _ready() -> void:
 	_build_ui()
 	hide()
 	if get_parent() == get_tree().root:
-		open(_make_preview_bag(), 30)
+		open(_make_preview_bag(), 30, null)
 
 
 func _make_preview_bag() -> PieceBag:
 	var bag := PieceBag.new(Piece.Owner.PLAYER)
-	bag.get_piece_at(0).modifiers.append_array(["Echo", "Magnet"])
-	bag.get_piece_at(1).type = Piece.Type.WEIGHTED
-	bag.get_piece_at(1).modifiers.append("Heavy")
-	bag.get_piece_at(2).type = Piece.Type.GHOST
-	bag.get_piece_at(3).modifiers.append_array(["Anchor", "Catalyst", "Volatile"])
+	bag.get_piece_at(0).modifier = "Echo"
+	bag.get_piece_at(1).type = Piece.Type.PRISM
+	bag.get_piece_at(1).modifier = "Surge"
+	bag.get_piece_at(2).type = Piece.Type.COIN
+	bag.get_piece_at(3).type = Piece.Type.EMBER
 	return bag
 
 
-func open(bag: PieceBag, chips: int) -> void:
+func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
 	_bag = bag
 	_chips = chips
+	_relic_manager = relic_mgr
+	if _relic_manager != null:
+		_relic_manager.begin_shop_visit()
+	_offer_count = _relic_manager.offer_count() if _relic_manager != null else 3
 	_offers = _roll_offers()
-	_offer_used = [false, false, false]
+	_offer_used.resize(_offer_count)
+	_offer_used.fill(false)
 	_rerolled = false
 	_phase = Phase.IDLE
 	_selected_offer = -1
 	_selected_piece_idx = -1
+	_relic_purchased = false
+	_shop_relic = _pick_shop_relic()
 	show()
 	_refresh()
 
@@ -61,7 +77,21 @@ func open(bag: PieceBag, chips: int) -> void:
 func _roll_offers() -> Array[String]:
 	var pool: Array[String] = MODIFIER_POOL.duplicate()
 	pool.shuffle()
-	return [pool[0], pool[1], pool[2]]
+	var result: Array[String] = []
+	for i in _offer_count:
+		result.append(pool[i % pool.size()])
+	return result
+
+
+func _pick_shop_relic() -> String:
+	var available: Array[String] = []
+	for r in RELIC_POOL:
+		if _relic_manager == null or not _relic_manager.has_relic(r):
+			available.append(r)
+	if available.is_empty():
+		return ""
+	available.shuffle()
+	return available[0]
 
 
 func _build_ui() -> void:
@@ -122,6 +152,7 @@ func _build_ui() -> void:
 	_cancel_btn.pressed.connect(_on_cancel)
 	root_vbox.add_child(_cancel_btn)
 
+	# Modifier offers panel
 	var offers_panel := PanelContainer.new()
 	offers_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
 	root_vbox.add_child(offers_panel)
@@ -148,7 +179,7 @@ func _build_ui() -> void:
 	offers_vbox.add_child(offers_row)
 
 	_offer_btns.clear()
-	for i in 3:
+	for i in 4:  # max 4 with Almanac; extra buttons hidden when not needed
 		var btn := Button.new()
 		btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var idx := i
@@ -162,6 +193,43 @@ func _build_ui() -> void:
 	_reroll_btn.pressed.connect(_on_reroll)
 	offers_row.add_child(_reroll_btn)
 
+	# Relic slot panel
+	_relic_panel = PanelContainer.new()
+	_relic_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
+	root_vbox.add_child(_relic_panel)
+
+	var relic_margin := MarginContainer.new()
+	relic_margin.add_theme_constant_override("margin_left", 8)
+	relic_margin.add_theme_constant_override("margin_right", 8)
+	relic_margin.add_theme_constant_override("margin_top", 8)
+	relic_margin.add_theme_constant_override("margin_bottom", 8)
+	_relic_panel.add_child(relic_margin)
+
+	var relic_hbox := HBoxContainer.new()
+	relic_hbox.add_theme_constant_override("separation", 8)
+	relic_margin.add_child(relic_hbox)
+
+	var relic_title := Label.new()
+	relic_title.text = "RELIC  (25 chips)"
+	relic_title.add_theme_font_size_override("font_size", 11)
+	relic_title.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
+	relic_title.custom_minimum_size = Vector2(100, 0)
+	relic_hbox.add_child(relic_title)
+
+	_relic_lbl = Label.new()
+	_relic_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_relic_lbl.add_theme_font_size_override("font_size", 12)
+	_relic_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
+	relic_hbox.add_child(_relic_lbl)
+
+	_relic_btn = Button.new()
+	_relic_btn.text = "Buy"
+	_relic_btn.add_theme_font_size_override("font_size", 12)
+	UITheme.style_button(_relic_btn, UITheme.SURFACE_LIGHT, UITheme.SURFACE)
+	_relic_btn.pressed.connect(_on_relic_buy)
+	relic_hbox.add_child(_relic_btn)
+
+	# Bag panel
 	var bag_panel := PanelContainer.new()
 	bag_panel.add_theme_stylebox_override("panel", UITheme.make_surface_style())
 	root_vbox.add_child(bag_panel)
@@ -218,14 +286,18 @@ func _refresh() -> void:
 			_phase_label.text = "Select a piece to attach  %s  to" % _offers[_selected_offer]
 			_cancel_btn.visible = true
 		Phase.REMOVE_PICK_MOD:
-			_phase_label.text = "Select a modifier to remove from piece %d" % (_selected_piece_idx + 1)
+			_phase_label.text = "Select which modifier to remove from piece %d" % (_selected_piece_idx + 1)
 			_cancel_btn.visible = true
 		Phase.UPGRADE_PICK_TYPE:
 			_phase_label.text = "Select upgrade type for piece %d" % (_selected_piece_idx + 1)
 			_cancel_btn.visible = true
 
-	for i in 3:
+	for i in _offer_btns.size():
 		var btn: Button = _offer_btns[i]
+		if i >= _offer_count:
+			btn.visible = false
+			continue
+		btn.visible = true
 		var used: bool = _offer_used[i]
 		btn.text = "—" if used else _offers[i]
 		btn.disabled = used or _chips < COST_ATTACH or _phase != Phase.IDLE
@@ -238,9 +310,29 @@ func _refresh() -> void:
 	_reroll_btn.disabled = _rerolled or _chips < COST_REROLL or _phase != Phase.IDLE
 	_reroll_btn.text = "Rerolled" if _rerolled else "Reroll (5)"
 
-	_rebuild_piece_rows()
+	# Relic slot
+	var can_hold := _relic_manager == null or _relic_manager.can_add_relic()
+	var relic_cost := _get_relic_cost()
+	if _shop_relic.is_empty() or _relic_purchased or not can_hold:
+		_relic_lbl.text = _shop_relic if not _shop_relic.is_empty() else "(none available)"
+		_relic_btn.visible = not _relic_purchased and not _shop_relic.is_empty() and can_hold
+		_relic_btn.disabled = true
+	else:
+		var free_tag := " (FREE - Patron)" if relic_cost == 0 else " (%d chips)" % relic_cost
+		_relic_lbl.text = _shop_relic + free_tag
+		_relic_btn.visible = true
+		_relic_btn.disabled = _chips < relic_cost or _phase != Phase.IDLE
+	if _relic_purchased:
+		_relic_lbl.text = _shop_relic + " ✓"
 
+	_rebuild_piece_rows()
 	_done_btn.disabled = _phase != Phase.IDLE
+
+
+func _get_relic_cost() -> int:
+	if _relic_manager != null and _relic_manager.has_relic("Patron") and not _relic_manager.is_patron_spent():
+		return 0
+	return COST_RELIC
 
 
 func _rebuild_piece_rows() -> void:
@@ -278,28 +370,31 @@ func _build_piece_row(idx: int, piece: Piece) -> Control:
 	type_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	hbox.add_child(type_lbl)
 
-	var mods_lbl := Label.new()
-	if piece.modifiers.is_empty():
-		mods_lbl.text = "(none)"
-		mods_lbl.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
+	var mod_lbl := Label.new()
+	if piece.modifier.is_empty():
+		mod_lbl.text = "(none)"
+		mod_lbl.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	else:
-		mods_lbl.text = " · ".join(PackedStringArray(piece.modifiers))
-		mods_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
-	mods_lbl.add_theme_font_size_override("font_size", 11)
-	mods_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	hbox.add_child(mods_lbl)
+		mod_lbl.text = piece.modifier
+		mod_lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
+	mod_lbl.add_theme_font_size_override("font_size", 11)
+	mod_lbl.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hbox.add_child(mod_lbl)
 
 	match _phase:
 		Phase.IDLE:
+			var upgrade_cost := COST_UPGRADE
+			var forge_free := _relic_manager != null and _relic_manager.has_relic("Forge") \
+				and not _relic_manager.is_forge_spent_this_visit()
 			if piece.type == Piece.Type.NORMAL:
 				var up_btn := Button.new()
-				up_btn.text = "Upgrade (20)"
-				up_btn.disabled = _chips < COST_UPGRADE
+				up_btn.text = "Upgrade (FREE)" if forge_free else "Upgrade (%d)" % upgrade_cost
+				up_btn.disabled = (not forge_free) and _chips < upgrade_cost
 				up_btn.add_theme_font_size_override("font_size", 11)
 				var i := idx
 				up_btn.pressed.connect(func(): _on_upgrade_clicked(i))
 				hbox.add_child(up_btn)
-			if not piece.modifiers.is_empty():
+			if not piece.modifier.is_empty():
 				var rem_btn := Button.new()
 				rem_btn.text = "Remove (5)"
 				rem_btn.disabled = _chips < COST_REMOVE
@@ -309,7 +404,7 @@ func _build_piece_row(idx: int, piece: Piece) -> Control:
 				hbox.add_child(rem_btn)
 
 		Phase.ATTACH_PICK_PIECE:
-			if piece.modifiers.size() < 3:
+			if piece.modifier.is_empty():
 				var att_btn := Button.new()
 				att_btn.text = "Attach here"
 				att_btn.add_theme_font_size_override("font_size", 11)
@@ -318,46 +413,41 @@ func _build_piece_row(idx: int, piece: Piece) -> Control:
 				hbox.add_child(att_btn)
 			else:
 				var full_lbl := Label.new()
-				full_lbl.text = "(full)"
+				full_lbl.text = "(has modifier)"
 				full_lbl.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 				full_lbl.add_theme_font_size_override("font_size", 11)
 				hbox.add_child(full_lbl)
 
 		Phase.REMOVE_PICK_MOD:
-			if idx == _selected_piece_idx:
-				for mi in piece.modifiers.size():
-					var mod_btn := Button.new()
-					mod_btn.text = piece.modifiers[mi]
-					mod_btn.add_theme_font_size_override("font_size", 11)
-					var i := idx
-					var m := mi
-					mod_btn.pressed.connect(func(): _on_remove_mod_clicked(i, m))
-					hbox.add_child(mod_btn)
+			if idx == _selected_piece_idx and not piece.modifier.is_empty():
+				var mod_btn := Button.new()
+				mod_btn.text = piece.modifier
+				mod_btn.add_theme_font_size_override("font_size", 11)
+				var i := idx
+				mod_btn.pressed.connect(func(): _on_remove_mod_clicked(i))
+				hbox.add_child(mod_btn)
 
 		Phase.UPGRADE_PICK_TYPE:
 			if idx == _selected_piece_idx:
-				var w_btn := Button.new()
-				w_btn.text = "Weighted"
-				w_btn.add_theme_font_size_override("font_size", 11)
-				var i := idx
-				w_btn.pressed.connect(func(): _on_type_selected(i, Piece.Type.WEIGHTED))
-				hbox.add_child(w_btn)
-
-				var g_btn := Button.new()
-				g_btn.text = "Ghost"
-				g_btn.add_theme_font_size_override("font_size", 11)
-				g_btn.pressed.connect(func(): _on_type_selected(i, Piece.Type.GHOST))
-				hbox.add_child(g_btn)
+				for t in [Piece.Type.PRISM, Piece.Type.COIN, Piece.Type.EMBER, Piece.Type.SHARD]:
+					var t_btn := Button.new()
+					t_btn.text = _type_name(t)
+					t_btn.add_theme_font_size_override("font_size", 11)
+					var i := idx
+					var chosen_type: Piece.Type = t
+					t_btn.pressed.connect(func(): _on_type_selected(i, chosen_type))
+					hbox.add_child(t_btn)
 
 	return panel
 
 
 func _type_name(t: Piece.Type) -> String:
 	match t:
-		Piece.Type.NORMAL: return "Normal"
-		Piece.Type.WEIGHTED: return "Weighted"
-		Piece.Type.GHOST: return "Ghost"
-		Piece.Type.VOLATILE: return "Volatile"
+		Piece.Type.NORMAL:  return "Normal"
+		Piece.Type.PRISM:   return "Prism"
+		Piece.Type.COIN:    return "Coin"
+		Piece.Type.EMBER:   return "Ember"
+		Piece.Type.SHARD:   return "Shard"
 	return "?"
 
 
@@ -369,6 +459,8 @@ func _on_cancel() -> void:
 
 
 func _on_offer_clicked(offer_idx: int) -> void:
+	if offer_idx >= _offer_count:
+		return
 	if _phase != Phase.IDLE or _chips < COST_ATTACH or _offer_used[offer_idx]:
 		return
 	_selected_offer = offer_idx
@@ -381,7 +473,7 @@ func _on_reroll() -> void:
 		return
 	_chips -= COST_REROLL
 	_offers = _roll_offers()
-	_offer_used = [false, false, false]
+	_offer_used.fill(false)
 	_rerolled = true
 	_refresh()
 
@@ -390,10 +482,10 @@ func _on_attach_piece_clicked(piece_idx: int) -> void:
 	if _phase != Phase.ATTACH_PICK_PIECE:
 		return
 	var piece: Piece = _bag.get_piece_at(piece_idx)
-	if piece.modifiers.size() >= 3:
+	if not piece.modifier.is_empty():
 		return
 	_chips -= COST_ATTACH
-	piece.modifiers.append(_offers[_selected_offer])
+	piece.modifier = _offers[_selected_offer]
 	_offer_used[_selected_offer] = true
 	_phase = Phase.IDLE
 	_selected_offer = -1
@@ -408,21 +500,23 @@ func _on_remove_clicked(piece_idx: int) -> void:
 	_refresh()
 
 
-func _on_remove_mod_clicked(piece_idx: int, mod_idx: int) -> void:
+func _on_remove_mod_clicked(piece_idx: int) -> void:
 	if _phase != Phase.REMOVE_PICK_MOD:
 		return
 	var piece: Piece = _bag.get_piece_at(piece_idx)
-	if mod_idx >= piece.modifiers.size():
-		return
 	_chips -= COST_REMOVE
-	piece.modifiers.remove_at(mod_idx)
+	piece.modifier = ""
 	_phase = Phase.IDLE
 	_selected_piece_idx = -1
 	_refresh()
 
 
 func _on_upgrade_clicked(piece_idx: int) -> void:
-	if _phase != Phase.IDLE or _chips < COST_UPGRADE:
+	if _phase != Phase.IDLE:
+		return
+	var forge_free := _relic_manager != null and _relic_manager.has_relic("Forge") \
+		and not _relic_manager.is_forge_spent_this_visit()
+	if not forge_free and _chips < COST_UPGRADE:
 		return
 	_selected_piece_idx = piece_idx
 	_phase = Phase.UPGRADE_PICK_TYPE
@@ -435,10 +529,32 @@ func _on_type_selected(piece_idx: int, new_type: Piece.Type) -> void:
 	var piece: Piece = _bag.get_piece_at(piece_idx)
 	if piece.type != Piece.Type.NORMAL:
 		return
-	_chips -= COST_UPGRADE
+	var forge_free := _relic_manager != null and _relic_manager.has_relic("Forge") \
+		and not _relic_manager.is_forge_spent_this_visit()
+	if forge_free:
+		_relic_manager.try_forge()
+	else:
+		_chips -= COST_UPGRADE
 	piece.type = new_type
 	_phase = Phase.IDLE
 	_selected_piece_idx = -1
+	_refresh()
+
+
+func _on_relic_buy() -> void:
+	if _phase != Phase.IDLE or _shop_relic.is_empty() or _relic_purchased:
+		return
+	if _relic_manager == null or not _relic_manager.can_add_relic():
+		return
+	var cost := _get_relic_cost()
+	if _chips < cost:
+		return
+	if cost == 0 and _relic_manager.has_relic("Patron"):
+		_relic_manager.try_patron()
+	else:
+		_chips -= cost
+	_relic_manager.add_relic(_shop_relic)
+	_relic_purchased = true
 	_refresh()
 
 

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_echo_chamber"]
+
+[resource]
+script = ExtResource("1_echo_chamber")
+id = "EchoChamber"
+display_name = "Echo Chamber"
+description = "Any piece with the Echo modifier drops 2 copies instead of 1."
+rarity = "rare"
+source = "boss_drop"

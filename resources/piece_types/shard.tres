@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_shard"]
+
+[resource]
+script = ExtResource("1_shard")
+id = "SHARD"
+display_name = "Shard"
+initial = "S"
+description = "When part of a clear, removes itself and the two pieces directly above it."
+shader_style = "crystal"

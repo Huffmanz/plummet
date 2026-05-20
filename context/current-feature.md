@@ -1,11 +1,46 @@
-# Current Feature
+# Current Feature: Piece Types, Modifiers & Relics
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
+- Implement 4 **piece types** (Normal, Prism, Coin, Ember, Shard) with passive scoring effects
+- Implement 8 **modifiers** (Ignite, Magnet, Deposit, Ripple, Echo, Detonate, Bounty, Surge) — one per piece max, landing vs. clear triggers
+- Implement 10 **relics** (Compass, Cushion, Almanac, Forge, Lens, Stockpile, Patron, Echo Chamber, Momentum, Cartographer) — run-wide passives, up to 4 held
+- Hook piece type effects into `ScoreCalculator` / `CascadeLoop` at the correct resolution points
+- Hook modifier effects into the cascade loop at landing (pre-cascade) and clear (post-detect, pre-remove) stages
+- Wire relic persistence into `RunController` (across matches for a full run)
+- Add boss-drop and shop acquisition paths for relics
+- All acceptance criteria pass
+- Reference @context/features/05-piece-types-modifiers-relics.md as needed
+- Piece types are identifiable by a unique shader, but with the same base color as the person (player or ai) that played it.
+- Modifieres are listed on the piece with an initial to make it easily identifyable.  This should ideally be just 1 letter in the center of the piece.
+- Try to make this expandable if I want to include icons later, if no icon is present use the initial.  
+- Make this resource driven so it can be saved to disk and other modifiers, types, and relics can be added later on.
+
 ## Notes
+
+### Architecture
+- **Piece types** replace the old Weighted/Ghost/Volatile type enum — Normal, Prism, Coin, Ember, Shard
+- **Modifiers** replace the old modifier system — one modifier per piece (was previously up to 3)
+- **Relics** are new — run-wide passives, separate from per-piece modifiers
+
+### Resolution order
+- Landing modifiers (Ignite, Magnet, Deposit, Ripple) fire before the cascade loop
+- Clear modifiers (Echo, Detonate, Bounty, Surge) fire after clear detection, before removal
+- Piece type effects (Prism doubles base, Ember adds cascade depth, Coin/Deposit add chips, Shard removes above) integrate with scoring/cascade
+
+### Relic acquisition
+- Boss drops: 1 relic offered (choose 1 of 2) after each boss fight
+- Shop: 1 relic slot per visit at 25 chips
+- Max 4 relics held simultaneously
+
+### Key interactions to preserve
+- Echo + Echo Chamber relic → 2 copies instead of 1
+- Prism doubles base value before cascade multipliers apply
+- Ember stacks: multiple Embers in same clear each add +1 depth
+- Surge: ×3 base multiplier on *next* piece only if it clears on the same turn it lands
 
 ## History
 

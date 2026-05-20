@@ -1,10 +1,10 @@
 class_name CascadeLoop extends RefCounted
 
-# Hooks called at specific points in the loop for modifier resolution (feature 05).
+# Hooks called at specific points in the loop for modifier resolution.
 # on_land:        func(board: BoardEngine) — after piece lands, before first clear check
 # on_clear:       func(board: BoardEngine, runs: Array[MatchedRun]) — after detection, before removal
-# on_pre_gravity: func(board: BoardEngine) — after remove_clears, before apply_gravity (Anchor save)
-# on_gravity:     func(board: BoardEngine) — after gravity settles each round (Anchor restore, Echo drop)
+# on_pre_gravity: func(board: BoardEngine) — after remove_clears, before apply_gravity
+# on_gravity:     func(board: BoardEngine) — after gravity settles each round (Echo drop)
 var _on_land_hooks: Array[Callable] = []
 var _on_clear_hooks: Array[Callable] = []
 var _on_pre_gravity_hooks: Array[Callable] = []

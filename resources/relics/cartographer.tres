@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_cartographer"]
+
+[resource]
+script = ExtResource("1_cartographer")
+id = "Cartographer"
+display_name = "Cartographer"
+description = "After each act, choose which enemy you face first in the next act."
+rarity = "rare"
+source = "boss_drop"

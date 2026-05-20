@@ -45,16 +45,9 @@ func _draw() -> void:
 		renderer.theme.draw_queue_entry(self, rect, state.player_queue[i])
 
 		# Modifier badge pulse: overdraw a dim layer that pulses, creating a breathing effect
-		var mods := state.player_queue[i].modifiers
-		if mods.size() > 0:
+		if not state.player_queue[i].modifier.is_empty():
 			var dim := 0.15 + 0.15 * sin(_t * 6.0 + float(i) * 1.5)
-			for j in mini(mods.size(), 3):
-				var badge_w := cs * 0.38
-				var badge_h := cs * 0.26
-				var badge_y := rect.position.y + cs - badge_h
-				var badge_x: float
-				match j:
-					0: badge_x = rect.position.x
-					1: badge_x = rect.position.x + (cs - badge_w) * 0.5
-					_: badge_x = rect.position.x + cs - badge_w
-				draw_rect(Rect2(badge_x, badge_y, badge_w, badge_h), Color(0.0, 0.0, 0.0, dim))
+			var badge_size := cs * 0.42
+			var badge_y := rect.position.y + cs - badge_size - 2.0
+			var badge_x := rect.get_center().x - badge_size * 0.5
+			draw_rect(Rect2(badge_x, badge_y, badge_size, badge_size), Color(0.0, 0.0, 0.0, dim))

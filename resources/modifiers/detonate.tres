@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_detonate"]
+
+[resource]
+script = ExtResource("1_detonate")
+id = "Detonate"
+display_name = "Detonate"
+initial = "X"
+badge_color = Color(0.92, 0.45, 0.12, 1.0)
+trigger = "clear"
+description = "On clear, removes all pieces in the same row (both colors). Removed pieces do not score."

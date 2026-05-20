@@ -1,12 +1,14 @@
 class_name ThemeJam extends ThemeBase
 
 const MODIFIER_DATA: Dictionary = {
-	"Echo":        {"abbrev": "EC", "color": Color(0.6, 0.2, 0.8)},
-	"Magnet":      {"abbrev": "MG", "color": Color(0.2, 0.4, 0.9)},
-	"Heavy":       {"abbrev": "HV", "color": Color(0.9, 0.5, 0.1)},
-	"Anchor":      {"abbrev": "AN", "color": Color(0.5, 0.5, 0.5)},
-	"Catalyst":    {"abbrev": "CT", "color": Color(0.9, 0.8, 0.1)},
-	"Double Drop": {"abbrev": "DD", "color": Color(0.2, 0.8, 0.3)},
+	"Ignite":   {"initial": "I", "color": Color(0.85, 0.22, 0.15)},
+	"Magnet":   {"initial": "M", "color": Color(0.35, 0.56, 0.83)},
+	"Deposit":  {"initial": "D", "color": Color(0.85, 0.72, 0.15)},
+	"Ripple":   {"initial": "R", "color": Color(0.25, 0.72, 0.68)},
+	"Echo":     {"initial": "E", "color": Color(0.6, 0.2, 0.8)},
+	"Detonate": {"initial": "X", "color": Color(0.92, 0.45, 0.12)},
+	"Bounty":   {"initial": "B", "color": Color(0.32, 0.72, 0.35)},
+	"Surge":    {"initial": "Z", "color": Color(0.92, 0.85, 0.12)},
 }
 
 const _GRID_TILE_REGION := Rect2(0, 0, 16, 16)
@@ -61,7 +63,6 @@ func draw_locked_cell(canvas: CanvasItem, rect: Rect2) -> void:
 
 func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int) -> void:
 	canvas.draw_rect(rect, color_frozen_overlay)
-	# Frost hatching — diagonal lines at 45°
 	var hatch_color := Color(0.65, 0.88, 1.0, 0.28)
 	var spacing := 10.0
 	var rx := rect.position.x
@@ -87,40 +88,30 @@ func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int)
 		d += spacing
 
 
-func draw_modifier_badge(canvas: CanvasItem, rect: Rect2, modifier_name: String, slot: int) -> void:
-	var badge_w: float = rect.size.x * 0.38
-	var badge_h: float = rect.size.y * 0.26
-	var badge_y: float = rect.position.y + rect.size.y - badge_h
-
-	var badge_x: float
-	match slot:
-		0:
-			badge_x = rect.position.x
-		1:
-			badge_x = rect.position.x + (rect.size.x - badge_w) * 0.5
-		_:
-			badge_x = rect.position.x + rect.size.x - badge_w
-
-	var badge_rect := Rect2(badge_x, badge_y, badge_w, badge_h)
-	var badge_color: Color = get_modifier_color(modifier_name)
-	canvas.draw_rect(badge_rect, badge_color)
-
-	var abbrev: String = get_modifier_abbrev(modifier_name)
-	var font_size: int = int(badge_h * 0.70)
-	var ascent: float = _font.get_ascent(font_size)
-	canvas.draw_string(_font, Vector2(badge_rect.position.x + 1.0, badge_rect.position.y + ascent),
-		abbrev, HORIZONTAL_ALIGNMENT_LEFT, badge_w, font_size, Color.BLACK)
+func draw_modifier_badge(canvas: CanvasItem, rect: Rect2, modifier_name: String) -> void:
+	if modifier_name.is_empty():
+		return
+	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
+	if data.is_empty():
+		return
+	var badge_color: Color = data.get("color", Color.WHITE)
+	var initial: String = data.get("initial", "?")
+	var font_size: int = int(rect.size.x * 0.48)
+	var text_w: float = _font.get_string_size(initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var text_h: float = _font.get_ascent(font_size)
+	var center := rect.get_center()
+	var text_pos := Vector2(center.x - text_w * 0.5, center.y + text_h * 0.35)
+	canvas.draw_string(_font, text_pos, initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, badge_color)
 
 
 func draw_queue_entry(canvas: CanvasItem, rect: Rect2, entry: QueueEntry) -> void:
 	_draw_piece_shape(canvas, rect, color_player, entry.piece_type)
-	for i in mini(entry.modifiers.size(), 3):
-		draw_modifier_badge(canvas, rect, entry.modifiers[i], i)
+	draw_modifier_badge(canvas, rect, entry.modifier)
 
 
-func get_modifier_abbrev(modifier_name: String) -> String:
+func get_modifier_initial(modifier_name: String) -> String:
 	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
-	return data.get("abbrev", "?")
+	return data.get("initial", "?")
 
 
 func get_modifier_color(modifier_name: String) -> Color:
@@ -141,29 +132,31 @@ func _draw_piece_shape(
 	var center := rect.get_center()
 	var radius: float = rect.size.x * 0.42
 
+	canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
+
 	match piece_type:
-		CellState.PieceType.NORMAL:
-			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
+		CellState.PieceType.PRISM:
+			var t: float = Time.get_ticks_msec() * 0.001
+			for i in 6:
+				var hue := fmod(float(i) / 6.0 + t * 0.3, 1.0)
+				var arc_color := Color.from_hsv(hue, 0.9, 1.0, 0.65)
+				var start_a := float(i) / 6.0 * TAU
+				var end_a := float(i + 1) / 6.0 * TAU
+				canvas.draw_arc(center, radius * 1.08, start_a, end_a, 6, arc_color, 2.5)
 
-		CellState.PieceType.WEIGHTED:
-			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
-			canvas.draw_arc(center, radius, 0.0, TAU, 32, Color.WHITE, 3.0)
+		CellState.PieceType.COIN:
+			canvas.draw_arc(center, radius, 0.0, TAU, 32, Color(1.0, 0.82, 0.18, 0.85), 3.0)
 
-		CellState.PieceType.GHOST:
-			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color.darkened(0.3))
-			var dash_arc: float = TAU / 16.0
-			for i in 8:
-				var start_angle: float = i * TAU / 8.0
-				canvas.draw_arc(center, radius, start_angle, start_angle + dash_arc, 8, color, 1.5)
-
-		CellState.PieceType.VOLATILE:
-			canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
-			var spike_color := Color("#eb9d45")
-			for i in 8:
-				var angle: float = i * TAU / 8.0
+		CellState.PieceType.EMBER:
+			var glow := Color(1.0, 0.42, 0.08, 0.9)
+			for i in 4:
+				var angle: float = i * TAU / 4.0 + TAU / 8.0
 				var dir := Vector2(cos(angle), sin(angle))
-				canvas.draw_line(
-					center + dir * (radius * 0.80),
-					center + dir * (radius * 1.20),
-					spike_color, 2.0
-				)
+				canvas.draw_line(center + dir * (radius * 0.55), center + dir * (radius * 1.1), glow, 2.0)
+
+		CellState.PieceType.SHARD:
+			var crystal := Color(0.78, 0.92, 1.0, 0.7)
+			var dash_arc: float = TAU / 14.0
+			for i in 7:
+				var start_angle: float = i * TAU / 7.0
+				canvas.draw_arc(center, radius * 1.06, start_angle, start_angle + dash_arc, 6, crystal, 1.5)

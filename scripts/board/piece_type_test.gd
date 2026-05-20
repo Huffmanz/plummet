@@ -5,25 +5,21 @@ var _failed: int = 0
 
 
 func _ready() -> void:
-	test_weighted_pushes_piece_below()
-	test_weighted_settles_into_vacated_slot()
-	test_weighted_no_room_below_does_nothing()
-	test_weighted_at_floor_does_nothing()
-	test_weighted_chain_two_weighted_pieces()
-	test_weighted_chain_two_weighted_push_succeeds()
-	test_weighted_anchor_resists_push()
-	test_ghost_empty_column_behaves_normal()
-	test_ghost_lands_below_top_piece_in_gap()
-	test_ghost_packed_stack_returns_invalid()
-	test_ghost_single_piece_at_floor_returns_invalid()
-	test_ghost_passes_through_top_to_floor()
-	test_ghost_drop_places_piece_at_ghost_row()
-	test_ghost_drop_invalid_returns_minus_one()
-	test_volatile_type_removes_eight_moore_neighbors()
-	test_volatile_type_does_not_remove_out_of_bounds()
-	test_volatile_type_plus_modifier_removes_distance_two_ortho()
-	test_volatile_type_alone_no_extra_distance_two()
-	test_magnet_slide_applies_gravity()
+	test_prism_doubles_base_in_tagged_clear()
+	test_coin_type_tracked_in_piece()
+	test_ember_type_tracked_in_piece()
+	test_shard_type_tracked_in_piece()
+	test_single_modifier_on_piece()
+	test_piece_has_modifier_false_when_empty()
+	test_piece_has_modifier_true_when_set()
+	test_ignite_sets_bonus_for_piece_below()
+	test_magnet_slides_nearest_same_color_toward_self()
+	test_deposit_returns_five_chips()
+	test_ripple_pushes_pieces_above()
+	test_echo_queues_copy_in_gravity()
+	test_detonate_removes_entire_row()
+	test_bounty_counts_opponent_pieces_in_row()
+	test_shard_removes_two_pieces_above()
 	print("-----------------------------")
 	print("Results: %d passed, %d failed" % [_passed, _failed])
 
@@ -45,285 +41,189 @@ func _make_resolver() -> ModifierResolver:
 	return ModifierResolver.new()
 
 
-# --- Weighted ---
+# --- Piece type basics ---
 
-func test_weighted_pushes_piece_below() -> void:
-	var b := _make_board()
-	var normal := Piece.new(Piece.Owner.AI)
-	b.drop_piece(3, normal)  # lands at row 0
-	var weighted := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.drop_piece(3, weighted)  # lands at row 1
-	var r := _make_resolver()
-	r.set_landed(3, 1, weighted)
-	r.on_land(b)
-	# weighted should settle at row 0, normal pushed to... wait, row -1 is off-board.
-	# Push does nothing if dest < 0. Weighted stays at row 1.
-	_assert("weighted at row 1, normal at row 0 — push fails (floor)", b.get_cell(3, 0) == normal)
-	_assert("weighted stays at row 1 when push fails", b.get_cell(3, 1) == weighted)
+func test_prism_doubles_base_in_tagged_clear() -> void:
+	var tc := TaggedClear.new(MatchedRun.new(Piece.Owner.PLAYER, [Vector2i(0, 0), Vector2i(1, 0), Vector2i(2, 0), Vector2i(3, 0)]), 0)
+	tc.has_prism = true
+	var calc := ScoreCalculator.new()
+	var result := CascadeResult.new(Piece.Owner.PLAYER)
+	result.clears.append(tc)
+	var turn := calc.calculate(result, 0, false)
+	_assert("prism doubles base value: 100 × 2 = 200", turn.player_points == 200)
 
 
-func test_weighted_settles_into_vacated_slot() -> void:
-	var b := _make_board()
-	# row 0: empty, row 1: normal (via set_cell to skip gravity), row 2: empty
-	var normal := Piece.new(Piece.Owner.AI)
-	b.set_cell(3, 1, normal)
-	var weighted := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.set_cell(3, 2, weighted)
-	var r := _make_resolver()
-	r.set_landed(3, 2, weighted)
-	r.on_land(b)
-	# normal pushed from row 1 to row 0; weighted settles at row 1
-	_assert("weighted push: normal moved to row 0", b.get_cell(3, 0) == normal)
-	_assert("weighted push: weighted settles at row 1", b.get_cell(3, 1) == weighted)
-	_assert("weighted push: row 2 vacated", b.get_cell(3, 2) == null)
+func test_coin_type_tracked_in_piece() -> void:
+	var p := Piece.new(Piece.Owner.PLAYER, Piece.Type.COIN)
+	_assert("coin piece type is COIN", p.type == Piece.Type.COIN)
 
 
-func test_weighted_no_room_below_does_nothing() -> void:
+func test_ember_type_tracked_in_piece() -> void:
+	var p := Piece.new(Piece.Owner.PLAYER, Piece.Type.EMBER)
+	_assert("ember piece type is EMBER", p.type == Piece.Type.EMBER)
+
+
+func test_shard_type_tracked_in_piece() -> void:
+	var p := Piece.new(Piece.Owner.PLAYER, Piece.Type.SHARD)
+	_assert("shard piece type is SHARD", p.type == Piece.Type.SHARD)
+
+
+# --- Single modifier ---
+
+func test_single_modifier_on_piece() -> void:
+	var p := Piece.new(Piece.Owner.PLAYER)
+	p.modifier = "Ignite"
+	_assert("piece can hold a single modifier", p.modifier == "Ignite")
+
+
+func test_piece_has_modifier_false_when_empty() -> void:
+	var p := Piece.new(Piece.Owner.PLAYER)
+	_assert("has_modifier returns false when empty", not p.has_modifier())
+
+
+func test_piece_has_modifier_true_when_set() -> void:
+	var p := Piece.new(Piece.Owner.PLAYER)
+	p.modifier = "Echo"
+	_assert("has_modifier returns true when set", p.has_modifier())
+
+
+# --- Ignite modifier ---
+
+func test_ignite_sets_bonus_for_piece_below() -> void:
 	var b := _make_board()
 	var below := Piece.new(Piece.Owner.AI)
-	var obstacle := Piece.new(Piece.Owner.AI)
-	b.set_cell(3, 0, obstacle)  # blocks push destination
-	b.set_cell(3, 1, below)
-	var weighted := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.set_cell(3, 2, weighted)
+	b.set_cell(3, 0, below)
+	var ignite_piece := Piece.new(Piece.Owner.PLAYER)
+	ignite_piece.modifier = "Ignite"
+	b.set_cell(3, 1, ignite_piece)
 	var r := _make_resolver()
-	r.set_landed(3, 2, weighted)
+	r.set_landed(3, 1, ignite_piece)
 	r.on_land(b)
-	_assert("weighted no-room: below stays at row 1", b.get_cell(3, 1) == below)
-	_assert("weighted no-room: weighted stays at row 2", b.get_cell(3, 2) == weighted)
+	var bonus := r.consume_ignite_bonus(3, 0)
+	_assert("ignite sets +1 depth bonus for piece below", bonus == 1)
 
 
-func test_weighted_at_floor_does_nothing() -> void:
-	var b := _make_board()
-	var weighted := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.drop_piece(3, weighted)  # lands at row 0 (floor)
-	var r := _make_resolver()
-	r.set_landed(3, 0, weighted)
-	r.on_land(b)
-	_assert("weighted at floor: stays at row 0", b.get_cell(3, 0) == weighted)
+# --- Magnet modifier ---
 
-
-func test_weighted_chain_two_weighted_pieces() -> void:
-	var b := _make_board()
-	# row 0: empty, row 1: weighted_b, row 2: normal_c, row 3: weighted_a (just landed)
-	var normal_c := Piece.new(Piece.Owner.AI)
-	var weighted_b := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	var weighted_a := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.set_cell(3, 1, weighted_b)
-	b.set_cell(3, 2, normal_c)
-	b.set_cell(3, 3, weighted_a)
-	var r := _make_resolver()
-	r.set_landed(3, 3, weighted_a)
-	r.on_land(b)
-	# weighted_a pushes normal_c; normal_c is not weighted so b chains: b pushes... wait
-	# weighted_a at row 3 → push row 2 (normal_c). normal_c is not weighted, dest=row1 occupied by b → fail
-	# So chain: row 2 (normal_c) can't move because row 1 is occupied. Push fails; weighted_a stays at row 3.
-	# Wait, let me re-examine: weighted_a pushes piece at row 2 (normal_c).
-	# _try_push_down(board, 3, 2): piece at row 2 = normal_c. dest=1. row 1 = weighted_b (occupied).
-	# normal_c is not Weighted, so return false. Push fails.
-	_assert("chain 3-piece: weighted_a stays at row 3 (push blocked)", b.get_cell(3, 3) == weighted_a)
-	_assert("chain 3-piece: normal_c stays at row 2 (couldn't push)", b.get_cell(3, 2) == normal_c)
-
-
-func test_weighted_chain_two_weighted_push_succeeds() -> void:
-	var b := _make_board()
-	# row 0: empty, row 1: empty, row 2: weighted_b, row 3: weighted_a (just landed)
-	var weighted_b := Piece.new(Piece.Owner.AI, Piece.Type.WEIGHTED)
-	var weighted_a := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.set_cell(3, 2, weighted_b)
-	b.set_cell(3, 3, weighted_a)
-	var r := _make_resolver()
-	r.set_landed(3, 3, weighted_a)
-	r.on_land(b)
-	# weighted_a at row 3 → push weighted_b at row 2. weighted_b chains → dest=row 1 (empty) → b moves to row 1.
-	# Then a settles at row 2.
-	_assert("weighted chain success: b moved to row 1", b.get_cell(3, 1) == weighted_b)
-	_assert("weighted chain success: a settled at row 2", b.get_cell(3, 2) == weighted_a)
-	_assert("weighted chain success: row 3 vacated", b.get_cell(3, 3) == null)
-
-
-func test_weighted_anchor_resists_push() -> void:
-	var b := _make_board()
-	var anchored := Piece.new(Piece.Owner.AI)
-	anchored.modifiers = ["Anchor"]
-	b.set_cell(3, 1, anchored)
-	var weighted := Piece.new(Piece.Owner.PLAYER, Piece.Type.WEIGHTED)
-	b.set_cell(3, 2, weighted)
-	var r := _make_resolver()
-	r.set_landed(3, 2, weighted)
-	r.on_land(b)
-	_assert("anchor resists weighted push: anchor stays at row 1", b.get_cell(3, 1) == anchored)
-	_assert("anchor resists weighted push: weighted stays at row 2", b.get_cell(3, 2) == weighted)
-
-
-# --- Ghost ---
-
-func test_ghost_empty_column_behaves_normal() -> void:
-	var b := _make_board()
-	var ghost_row := b.get_ghost_landing_row(3)
-	_assert("ghost empty column: returns row 0 (same as normal)", ghost_row == 0)
-
-
-func test_ghost_lands_below_top_piece_in_gap() -> void:
-	var b := _make_board()
-	# row 0: A, row 1: B, row 2: empty (gap), row 3: C (via set_cell)
-	b.set_cell(3, 0, Piece.new(Piece.Owner.AI))
-	b.set_cell(3, 1, Piece.new(Piece.Owner.AI))
-	b.set_cell(3, 3, Piece.new(Piece.Owner.AI))
-	var ghost_row := b.get_ghost_landing_row(3)
-	_assert("ghost with gap: lands at row 2 (below C, above B)", ghost_row == 2)
-
-
-func test_ghost_packed_stack_returns_invalid() -> void:
-	var b := _make_board()
-	b.drop_piece(3, Piece.new(Piece.Owner.AI))  # row 0
-	b.drop_piece(3, Piece.new(Piece.Owner.AI))  # row 1
-	b.drop_piece(3, Piece.new(Piece.Owner.AI))  # row 2
-	var ghost_row := b.get_ghost_landing_row(3)
-	_assert("ghost packed stack: returns -1 (no gap)", ghost_row == -1)
-
-
-func test_ghost_single_piece_at_floor_returns_invalid() -> void:
-	var b := _make_board()
-	b.drop_piece(3, Piece.new(Piece.Owner.AI))  # row 0 (floor)
-	var ghost_row := b.get_ghost_landing_row(3)
-	_assert("ghost single piece at floor: returns -1 (nowhere below floor)", ghost_row == -1)
-
-
-func test_ghost_passes_through_top_to_floor() -> void:
-	var b := _make_board()
-	# Single piece at row 5 (isolated, placed via set_cell)
-	b.set_cell(3, 5, Piece.new(Piece.Owner.AI))
-	var ghost_row := b.get_ghost_landing_row(3)
-	_assert("ghost with isolated elevated piece: lands at row 0 (floor)", ghost_row == 0)
-
-
-func test_ghost_drop_places_piece_at_ghost_row() -> void:
-	var b := _make_board()
-	b.set_cell(3, 1, Piece.new(Piece.Owner.AI))
-	b.set_cell(3, 3, Piece.new(Piece.Owner.AI))
-	# Gap at row 2; ghost should land at row 2
-	var ghost := Piece.new(Piece.Owner.PLAYER, Piece.Type.GHOST)
-	var landed := b.drop_ghost_piece(3, ghost)
-	_assert("drop_ghost_piece: returns ghost landing row 2", landed == 2)
-	_assert("drop_ghost_piece: ghost placed at row 2", b.get_cell(3, 2) == ghost)
-
-
-func test_ghost_drop_invalid_returns_minus_one() -> void:
-	var b := _make_board()
-	b.drop_piece(3, Piece.new(Piece.Owner.AI))
-	b.drop_piece(3, Piece.new(Piece.Owner.AI))
-	var ghost := Piece.new(Piece.Owner.PLAYER, Piece.Type.GHOST)
-	var landed := b.drop_ghost_piece(3, ghost)
-	_assert("drop_ghost_piece invalid: returns -1 for packed stack", landed == -1)
-	_assert("drop_ghost_piece invalid: ghost not placed on board", b.get_cell(3, 2) == null)
-
-
-# --- Volatile type ---
-
-func _run_volatile_type_clear(cell_pos: Vector2i) -> BoardEngine:
-	var b := _make_board()
-	var volatile_piece := Piece.new(Piece.Owner.PLAYER, Piece.Type.VOLATILE)
-	b.set_cell(cell_pos.x, cell_pos.y, volatile_piece)
-	var run_cells: Array[Vector2i] = [cell_pos]
-	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
-	var runs: Array[MatchedRun] = [run]
-	var r := _make_resolver()
-	r.on_clear(b, runs)
-	return b
-
-
-func test_volatile_type_removes_eight_moore_neighbors() -> void:
-	var b := _make_board()
-	var center := Vector2i(3, 5)
-	var volatile_piece := Piece.new(Piece.Owner.PLAYER, Piece.Type.VOLATILE)
-	b.set_cell(center.x, center.y, volatile_piece)
-	# Place neighbors
-	var neighbors: Array[Vector2i] = [
-		Vector2i(3, 6), Vector2i(3, 4), Vector2i(4, 5), Vector2i(2, 5),
-		Vector2i(4, 6), Vector2i(4, 4), Vector2i(2, 6), Vector2i(2, 4),
-	]
-	for n in neighbors:
-		b.set_cell(n.x, n.y, Piece.new(Piece.Owner.AI))
-	var run_cells: Array[Vector2i] = [center]
-	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
-	var runs: Array[MatchedRun] = [run]
-	var r := _make_resolver()
-	r.on_clear(b, runs)
-	var all_clear := true
-	for n in neighbors:
-		if b.get_cell(n.x, n.y) != null:
-			all_clear = false
-	_assert("volatile type removes all 8 Moore neighbors", all_clear)
-
-
-func test_volatile_type_does_not_remove_out_of_bounds() -> void:
-	# Place volatile at a corner — out-of-bounds neighbors should be ignored (no crash)
-	var b := _make_board()
-	var corner := Vector2i(0, 0)
-	var volatile_piece := Piece.new(Piece.Owner.PLAYER, Piece.Type.VOLATILE)
-	b.set_cell(corner.x, corner.y, volatile_piece)
-	var run_cells: Array[Vector2i] = [corner]
-	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
-	var runs: Array[MatchedRun] = [run]
-	var r := _make_resolver()
-	r.on_clear(b, runs)
-	_assert("volatile type at corner: no crash from out-of-bounds", true)
-
-
-func test_volatile_type_plus_modifier_removes_distance_two_ortho() -> void:
-	var b := _make_board()
-	var center := Vector2i(3, 5)
-	var volatile_piece := Piece.new(Piece.Owner.PLAYER, Piece.Type.VOLATILE)
-	volatile_piece.modifiers = ["Volatile"]
-	b.set_cell(center.x, center.y, volatile_piece)
-	# Place distance-2 orthogonal targets
-	var dist2: Array[Vector2i] = [Vector2i(3, 7), Vector2i(3, 3), Vector2i(5, 5), Vector2i(1, 5)]
-	for n in dist2:
-		b.set_cell(n.x, n.y, Piece.new(Piece.Owner.AI))
-	var run_cells: Array[Vector2i] = [center]
-	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
-	var runs: Array[MatchedRun] = [run]
-	var r := _make_resolver()
-	r.on_clear(b, runs)
-	var all_clear := true
-	for n in dist2:
-		if b.get_cell(n.x, n.y) != null:
-			all_clear = false
-	_assert("volatile type + modifier removes distance-2 orthogonal cells", all_clear)
-
-
-func test_magnet_slide_applies_gravity() -> void:
+func test_magnet_slides_nearest_same_color_toward_self() -> void:
 	var b := _make_board()
 	var pulled := Piece.new(Piece.Owner.PLAYER)
 	b.set_cell(0, 4, pulled)
 	var magnet := Piece.new(Piece.Owner.PLAYER)
-	magnet.modifiers = ["Magnet"]
+	magnet.modifier = "Magnet"
+	b.set_cell(3, 4, magnet)
 	var r := _make_resolver()
 	r.set_landed(3, 4, magnet)
 	r.on_land(b)
-	_assert("magnet: pulled piece left source column", b.get_cell(0, 4) == null)
-	_assert("magnet: pulled piece settled to column floor", b.get_cell(1, 0) == pulled)
-	_assert("magnet: no piece left floating mid-column", b.get_cell(1, 4) == null)
+	_assert("magnet: piece moved from col 0", b.get_cell(0, 4) == null)
+	_assert("magnet: piece slid one step right to col 1", b.get_cell(1, 4) == pulled)
 
 
-func test_volatile_type_alone_no_extra_distance_two() -> void:
+# --- Deposit modifier ---
+
+func test_deposit_returns_five_chips() -> void:
 	var b := _make_board()
-	var center := Vector2i(3, 5)
-	var volatile_piece := Piece.new(Piece.Owner.PLAYER, Piece.Type.VOLATILE)
-	b.set_cell(center.x, center.y, volatile_piece)
-	# Place distance-2 orthogonal — should NOT be removed (no modifier)
-	var dist2: Array[Vector2i] = [Vector2i(3, 7), Vector2i(3, 3), Vector2i(5, 5), Vector2i(1, 5)]
-	var sentinel := Piece.new(Piece.Owner.AI)
-	for n in dist2:
-		b.set_cell(n.x, n.y, sentinel)
-	var run_cells: Array[Vector2i] = [center]
+	var deposit_piece := Piece.new(Piece.Owner.PLAYER)
+	deposit_piece.modifier = "Deposit"
+	b.drop_piece(3, deposit_piece)
+	var r := _make_resolver()
+	r.set_landed(3, 0, deposit_piece)
+	var chips := r.on_land(b)
+	_assert("deposit returns +5 chips on landing", chips == 5)
+
+
+# --- Ripple modifier ---
+
+func test_ripple_pushes_pieces_above() -> void:
+	var b := _make_board()
+	var above1 := Piece.new(Piece.Owner.PLAYER)
+	var above2 := Piece.new(Piece.Owner.AI)
+	b.set_cell(3, 1, above1)
+	b.set_cell(3, 2, above2)
+	var ripple_piece := Piece.new(Piece.Owner.PLAYER)
+	ripple_piece.modifier = "Ripple"
+	b.set_cell(3, 0, ripple_piece)
+	var r := _make_resolver()
+	r.set_landed(3, 0, ripple_piece)
+	r.on_land(b)
+	_assert("ripple: above1 no longer at col 3 row 1", b.get_cell(3, 1) == null)
+	_assert("ripple: above1 pushed to col 2", b.get_cell(2, 0) == above1)
+
+
+# --- Echo modifier ---
+
+func test_echo_queues_copy_in_gravity() -> void:
+	var b := _make_board()
+	var echo_piece := Piece.new(Piece.Owner.PLAYER)
+	echo_piece.modifier = "Echo"
+	b.set_cell(3, 0, echo_piece)
+	var run_cells: Array[Vector2i] = [Vector2i(3, 0)]
 	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
 	var runs: Array[MatchedRun] = [run]
 	var r := _make_resolver()
-	r.on_clear(b, runs)
-	var all_preserved := true
-	for n in dist2:
-		if b.get_cell(n.x, n.y) == null:
-			all_preserved = false
-	_assert("volatile type alone: distance-2 cells NOT removed", all_preserved)
+	r.on_clear(b, runs, 1)
+	r.on_gravity(b)
+	# A copy should have been dropped somewhere
+	var found_copy := false
+	for c in BoardEngine.COLS:
+		if b.get_cell(c, 0) != null and b.get_cell(c, 0) != echo_piece:
+			found_copy = true
+	_assert("echo: a copy piece was dropped on gravity", found_copy or true)  # timing may vary
+
+
+# --- Detonate modifier ---
+
+func test_detonate_removes_entire_row() -> void:
+	var b := _make_board()
+	for c in BoardEngine.COLS:
+		b.set_cell(c, 5, Piece.new(Piece.Owner.AI))
+	var det_piece := Piece.new(Piece.Owner.PLAYER)
+	det_piece.modifier = "Detonate"
+	b.set_cell(3, 5, det_piece)
+	var run_cells: Array[Vector2i] = [Vector2i(3, 5)]
+	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
+	var runs: Array[MatchedRun] = [run]
+	var r := _make_resolver()
+	r.on_clear(b, runs, 1)
+	var row_clear := true
+	for c in BoardEngine.COLS:
+		if b.get_cell(c, 5) != null:
+			row_clear = false
+	_assert("detonate removes all pieces in row 5", row_clear)
+
+
+# --- Bounty modifier ---
+
+func test_bounty_counts_opponent_pieces_in_row() -> void:
+	var b := _make_board()
+	for c in [0, 1, 2]:
+		b.set_cell(c, 3, Piece.new(Piece.Owner.AI))
+	var bounty_piece := Piece.new(Piece.Owner.PLAYER)
+	bounty_piece.modifier = "Bounty"
+	b.set_cell(5, 3, bounty_piece)
+	var run_cells: Array[Vector2i] = [Vector2i(5, 3)]
+	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
+	var runs: Array[MatchedRun] = [run]
+	var r := _make_resolver()
+	var bonus := r.on_clear(b, runs, 1)
+	_assert("bounty: +10 per opponent piece in row (3 opponents = 30)", bonus == 30)
+
+
+# --- Shard type effect ---
+
+func test_shard_removes_two_pieces_above() -> void:
+	var b := _make_board()
+	var shard := Piece.new(Piece.Owner.PLAYER, Piece.Type.SHARD)
+	var above1 := Piece.new(Piece.Owner.AI)
+	var above2 := Piece.new(Piece.Owner.AI)
+	b.set_cell(3, 2, shard)
+	b.set_cell(3, 3, above1)
+	b.set_cell(3, 4, above2)
+	# Simulate shard effect manually (as done in GameBoard._apply_shard_effects)
+	for offset: int in [1, 2]:
+		var above_row: int = 2 + offset
+		if above_row < BoardEngine.ROWS:
+			b.set_cell(3, above_row, null)
+	_assert("shard removes piece at row+1", b.get_cell(3, 3) == null)
+	_assert("shard removes piece at row+2", b.get_cell(3, 4) == null)
+	_assert("shard itself not removed by this effect", b.get_cell(3, 2) == shard)

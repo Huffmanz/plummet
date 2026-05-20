@@ -12,6 +12,11 @@ var cross_color_count: int = 0
 var player_bag: PieceBag
 var chip_count: int = 0
 var win_streak: int = 0
+var relic_manager: RelicManager
+
+
+func _init() -> void:
+	relic_manager = RelicManager.new()
 
 
 func is_boss_match() -> bool:

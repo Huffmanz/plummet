@@ -9,7 +9,6 @@ var color_frozen_overlay: Color = Color(0.2, 0.5, 0.9, 0.25)
 var color_ui_bg: Color = Color(0.08, 0.08, 0.10)
 var color_text_primary: Color = Color.WHITE
 var color_text_secondary: Color = Color(0.65, 0.65, 0.70)
-var modifier_colors: Dictionary = {}
 
 var cell_size: float = 48.0
 var cell_gap: float = 4.0
@@ -43,7 +42,7 @@ func draw_frozen_overlay(_canvas: CanvasItem, _rect: Rect2, _turns_remaining: in
 	pass
 
 
-func draw_modifier_badge(_canvas: CanvasItem, _rect: Rect2, _modifier_name: String, _slot: int) -> void:
+func draw_modifier_badge(_canvas: CanvasItem, _rect: Rect2, _modifier_name: String) -> void:
 	pass
 
 
@@ -51,7 +50,7 @@ func draw_queue_entry(_canvas: CanvasItem, _rect: Rect2, _entry: QueueEntry) -> 
 	pass
 
 
-func get_modifier_abbrev(_modifier_name: String) -> String:
+func get_modifier_initial(_modifier_name: String) -> String:
 	return ""
 
 

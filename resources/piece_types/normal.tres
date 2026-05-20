@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_normal"]
+
+[resource]
+script = ExtResource("1_normal")
+id = "NORMAL"
+display_name = "Normal"
+initial = "N"
+description = "Standard piece. Baseline for all comparisons."
+shader_style = "none"

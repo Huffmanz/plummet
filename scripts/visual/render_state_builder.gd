@@ -29,7 +29,7 @@ func build(
 				cs.occupant = CellState.Occupant.PLAYER if piece.owner == Piece.Owner.PLAYER \
 					else CellState.Occupant.AI
 				cs.piece_type = _map_piece_type(piece.type)
-				cs.modifiers = _map_modifiers(piece.modifiers)
+				cs.modifier = piece.modifier
 			rs.cells[c * RenderState.ROWS + r] = cs
 
 	for locked_cell in locked_cells:
@@ -46,7 +46,7 @@ func build(
 		var qe := QueueEntry.new()
 		if piece != null:
 			qe.piece_type = _map_piece_type(piece.type)
-			qe.modifiers = _map_modifiers(piece.modifiers)
+			qe.modifier = piece.modifier
 		rs.player_queue.append(qe)
 
 	rs.player_score = score_tracker.player_score
@@ -79,20 +79,12 @@ func _map_piece_type(type: Piece.Type) -> CellState.PieceType:
 	match type:
 		Piece.Type.NORMAL:
 			return CellState.PieceType.NORMAL
-		Piece.Type.WEIGHTED:
-			return CellState.PieceType.WEIGHTED
-		Piece.Type.GHOST:
-			return CellState.PieceType.GHOST
-		Piece.Type.VOLATILE:
-			return CellState.PieceType.VOLATILE
+		Piece.Type.PRISM:
+			return CellState.PieceType.PRISM
+		Piece.Type.COIN:
+			return CellState.PieceType.COIN
+		Piece.Type.EMBER:
+			return CellState.PieceType.EMBER
+		Piece.Type.SHARD:
+			return CellState.PieceType.SHARD
 	return CellState.PieceType.NORMAL
-
-
-func _map_modifiers(modifiers: Array) -> Array[String]:
-	var result: Array[String] = []
-	for m in modifiers:
-		if m is String:
-			result.append(m)
-		else:
-			result.append(str(m))
-	return result

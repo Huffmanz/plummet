@@ -1,0 +1,279 @@
+[gd_scene format=3 uid="uid://c2ng2oeue8ihg"]
+
+[ext_resource type="Script" uid="uid://c5kyb36qnppmn" path="res://scripts/tests/modifier_relic_test.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://bnxkfv3qm0t4p" path="res://scenes/game/game_board.tscn" id="2_board"]
+
+[node name="ModifierRelicTest" type="Control" unique_id=2127090604]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="HBox" type="HBoxContainer" parent="." unique_id=553890629]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="GameBoard" parent="HBox" unique_id=611285414 instance=ExtResource("2_board")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+standalone = false
+sandbox_mode = true
+
+[node name="SidePanel" type="PanelContainer" parent="HBox" unique_id=665908095]
+custom_minimum_size = Vector2(100, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Scroll" type="ScrollContainer" parent="HBox/SidePanel" unique_id=527945942]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="HBox/SidePanel/Scroll" unique_id=1512797507]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="HBox/SidePanel/Scroll/Margin" unique_id=1094826234]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="TypeSectionLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1142640892]
+modulate = Color(0.7, 0.7, 0.7, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "NEXT PIECE TYPE"
+
+[node name="TypeGrid" type="GridContainer" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=616193498]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="TypeNormal" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/TypeGrid" unique_id=730440338]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Normal"
+
+[node name="TypePrism" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/TypeGrid" unique_id=1830038892]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Prism"
+
+[node name="TypeCoin" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/TypeGrid" unique_id=1585437267]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Coin"
+
+[node name="TypeEmber" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/TypeGrid" unique_id=1285727001]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ember"
+
+[node name="TypeShard" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/TypeGrid" unique_id=916855784]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Shard"
+
+[node name="ModSectionLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=2020099961]
+modulate = Color(0.7, 0.7, 0.7, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "NEXT PIECE MODIFIER"
+
+[node name="ModGrid" type="GridContainer" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1264900903]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 3
+
+[node name="ModNone" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=713705916]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "(none)"
+
+[node name="ModIgnite" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=1114323500]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ignite"
+
+[node name="ModMagnet" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=1293427471]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Magnet"
+
+[node name="ModDeposit" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=717296843]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Deposit"
+
+[node name="ModRipple" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=528007044]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Ripple"
+
+[node name="ModEcho" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=757291855]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Echo"
+
+[node name="ModDetonate" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=1002402454]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Detonate"
+
+[node name="ModBounty" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=1106974987]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Bounty"
+
+[node name="ModSurge" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/ModGrid" unique_id=708762251]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Surge"
+
+[node name="NextLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=630935818]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Normal  +  (none)"
+autowrap_mode = 3
+
+
+[node name="Sep1" type="HSeparator" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=2084810066]
+layout_mode = 2
+
+[node name="RelicSectionLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1288815425]
+modulate = Color(0.7, 0.7, 0.7, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "ACTIVE RELICS (toggle)"
+
+[node name="RelicGrid" type="GridContainer" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=2057363609]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 4
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="RelicCushion" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=461957024]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Cushion"
+
+[node name="RelicAlmanac" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=946890625]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Almanac"
+
+[node name="RelicForge" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=1262309398]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Forge"
+
+[node name="RelicLens" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=1394304719]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Lens"
+
+[node name="RelicStockpile" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=2106785873]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Stockpile"
+
+[node name="RelicPatron" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=302893677]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Patron"
+
+[node name="RelicEchoChamber" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=342542309]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "EchoChamber"
+
+[node name="RelicMomentum" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=1976316411]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Momentum"
+
+[node name="RelicCartographer" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=732133957]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Cartographer"
+
+[node name="RelicCompass" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/RelicGrid" unique_id=157167237]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 11
+toggle_mode = true
+text = "Compass"
+
+[node name="Sep2" type="HSeparator" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1677716451]
+layout_mode = 2
+
+[node name="StatusSectionLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1481244796]
+modulate = Color(0.7, 0.7, 0.7, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "STATUS"
+
+[node name="ChipLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1923093511]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Chips: 0"
+
+[node name="ResetBtn" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1887962485]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset Board"
+
+[node name="Sep3" type="HSeparator" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=431040719]
+layout_mode = 2
+
+[node name="LogSectionLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=618271119]
+modulate = Color(0.7, 0.7, 0.7, 1)
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "LOG"
+
+[node name="LogLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox" unique_id=1065305897]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 10
+text = "Drop pieces to test effects."
+autowrap_mode = 3

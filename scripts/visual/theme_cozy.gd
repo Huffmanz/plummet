@@ -1,13 +1,16 @@
 class_name ThemeCozy extends ThemeBase
 
+# Modifier visual data: icon path (future) + initial letter + badge color.
+# If icon is null/empty, the initial is drawn instead.
 const MODIFIER_DATA: Dictionary = {
-	"Echo":         {"abbrev": "EC", "color": Color("#9B6BB8")},
-	"Magnet":       {"abbrev": "MG", "color": Color("#5A8FD4")},
-	"Heavy":        {"abbrev": "HV", "color": Color("#D4924A")},
-	"Anchor":       {"abbrev": "AN", "color": Color("#8A8498")},
-	"Catalyst":     {"abbrev": "CT", "color": Color("#D4B84A")},
-	"Volatile":     {"abbrev": "VL", "color": Color("#D4736E")},
-	"Double Drop":  {"abbrev": "DD", "color": Color("#5A9E62")},
+	"Ignite":   {"initial": "I", "color": Color("#D93824")},
+	"Magnet":   {"initial": "M", "color": Color("#3A90D4")},
+	"Deposit":  {"initial": "D", "color": Color("#D9B81E")},
+	"Ripple":   {"initial": "R", "color": Color("#25B8AE")},
+	"Echo":     {"initial": "E", "color": Color("#9B6BB8")},
+	"Detonate": {"initial": "X", "color": Color("#E87320")},
+	"Bounty":   {"initial": "B", "color": Color("#52B85A")},
+	"Surge":    {"initial": "Z", "color": Color("#EBD91F")},
 }
 
 var _font: Font
@@ -86,37 +89,34 @@ func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int)
 		d += spacing
 
 
-func draw_modifier_badge(canvas: CanvasItem, rect: Rect2, modifier_name: String, slot: int) -> void:
-	var badge_w: float = rect.size.x * 0.40
-	var badge_h: float = rect.size.y * 0.28
-	var badge_y: float = rect.position.y + rect.size.y - badge_h
-	var badge_x: float
-	match slot:
-		0: badge_x = rect.position.x
-		1: badge_x = rect.position.x + (rect.size.x - badge_w) * 0.5
-		_: badge_x = rect.position.x + rect.size.x - badge_w
-	var badge_rect := Rect2(badge_x, badge_y, badge_w, badge_h)
-	var badge_color: Color = get_modifier_color(modifier_name)
-	UITheme.draw_rounded_rect(canvas, badge_rect, 3.0, badge_color, Color(0.12, 0.10, 0.16, 0.5), 1.0)
-	var abbrev: String = get_modifier_abbrev(modifier_name)
-	var font_size: int = int(badge_h * 0.68)
-	var ascent: float = _font.get_ascent(font_size)
-	canvas.draw_string(
-		_font,
-		Vector2(badge_rect.position.x + 2.0, badge_rect.position.y + ascent),
-		abbrev, HORIZONTAL_ALIGNMENT_LEFT, badge_w, font_size, UITheme.TEXT_ON_SURFACE
-	)
+# Draws a modifier badge showing the initial letter (or icon when added later).
+# modifier_name is a single modifier string (empty = no badge).
+func draw_modifier_badge(canvas: CanvasItem, rect: Rect2, modifier_name: String) -> void:
+	if modifier_name.is_empty():
+		return
+	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
+	if data.is_empty():
+		return
+
+	var badge_color: Color = data.get("color", Color.WHITE)
+	var initial: String = data.get("initial", "?")
+
+	var font_size: int = int(rect.size.x * 0.48)
+	var text_w: float = _font.get_string_size(initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+	var text_h: float = _font.get_ascent(font_size)
+	var center := rect.get_center()
+	var text_pos := Vector2(center.x - text_w * 0.5, center.y + text_h * 0.35)
+	canvas.draw_string(_font, text_pos, initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, badge_color)
 
 
 func draw_queue_entry(canvas: CanvasItem, rect: Rect2, entry: QueueEntry) -> void:
 	_draw_piece(canvas, rect, color_player, entry.piece_type)
-	for i in mini(entry.modifiers.size(), 3):
-		draw_modifier_badge(canvas, rect, entry.modifiers[i], i)
+	draw_modifier_badge(canvas, rect, entry.modifier)
 
 
-func get_modifier_abbrev(modifier_name: String) -> String:
+func get_modifier_initial(modifier_name: String) -> String:
 	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
-	return data.get("abbrev", "?")
+	return data.get("initial", "?")
 
 
 func get_modifier_color(modifier_name: String) -> Color:
@@ -136,27 +136,55 @@ func _draw_piece(
 	var outline := color.darkened(0.32)
 	if ghost_outline:
 		outline = Color(outline.r, outline.g, outline.b, 0.5)
+
+	# Base circle
 	canvas.draw_circle(center, radius, color)
 	canvas.draw_arc(center, radius, 0.0, TAU, 32, outline, 2.5)
 
+	# Type-specific overlay drawn on top of the base
 	match piece_type:
-		CellState.PieceType.WEIGHTED:
-			canvas.draw_arc(
-				center + Vector2(0.0, radius * 0.15), radius * 0.72,
-				PI * 0.15, PI * 0.85, 16, UITheme.TEXT_ON_SURFACE, 2.0
-			)
-		CellState.PieceType.GHOST:
-			var dash_arc: float = TAU / 14.0
-			for i in 8:
-				var start_angle: float = i * TAU / 8.0
-				canvas.draw_arc(center, radius * 1.02, start_angle, start_angle + dash_arc, 8, outline, 1.5)
-		CellState.PieceType.VOLATILE:
-			var spike := UITheme.ACCENT_POP
+		CellState.PieceType.PRISM:
+			# Rainbow ring — spectral color bands rotating
+			var t: float = Time.get_ticks_msec() * 0.001
+			var hue_steps := 6
+			for i in hue_steps:
+				var hue := fmod(float(i) / hue_steps + t * 0.3, 1.0)
+				var arc_color := Color.from_hsv(hue, 0.9, 1.0, 0.7)
+				var start_a := float(i) / hue_steps * TAU
+				var end_a := float(i + 1) / hue_steps * TAU
+				canvas.draw_arc(center, radius * 1.06, start_a, end_a, 6, arc_color, 2.5)
+
+		CellState.PieceType.COIN:
+			# Gold shimmer ring + inner dollar-sign cross
+			var gold := Color(1.0, 0.82, 0.18, 0.85)
+			canvas.draw_arc(center, radius * 0.98, 0.0, TAU, 32, gold, 3.0)
+			var inner_r := radius * 0.38
+			canvas.draw_line(center + Vector2(0.0, -inner_r), center + Vector2(0.0, inner_r), gold, 2.0)
+			canvas.draw_line(center + Vector2(-inner_r, 0.0), center + Vector2(inner_r, 0.0), gold, 2.0)
+
+		CellState.PieceType.EMBER:
+			# Smoldering glow — orange-red inner dot + outward spikes
+			var glow := Color(1.0, 0.42, 0.08, 0.9)
+			canvas.draw_circle(center, radius * 0.48, glow)
 			for i in 4:
-				var angle: float = i * TAU / 4.0
+				var angle: float = i * TAU / 4.0 + TAU / 8.0
 				var dir := Vector2(cos(angle), sin(angle))
-				canvas.draw_line(
-					center + dir * (radius * 0.55),
-					center + dir * (radius * 1.05),
-					spike, 2.0
-				)
+				canvas.draw_line(center + dir * (radius * 0.55), center + dir * (radius * 1.02), glow, 2.0)
+
+		CellState.PieceType.SHARD:
+			# Crystal fracture lines — internal crack pattern
+			var crystal := Color(0.78, 0.92, 1.0, 0.75)
+			var crack_pts: Array[Vector2] = [
+				center + Vector2(-radius * 0.1, radius * 0.05),
+				center + Vector2(radius * 0.35, -radius * 0.25),
+				center + Vector2(-radius * 0.3, -radius * 0.35),
+				center + Vector2(radius * 0.15, radius * 0.38),
+			]
+			for i in crack_pts.size() - 1:
+				canvas.draw_line(crack_pts[i], crack_pts[i + 1], crystal, 1.5)
+			canvas.draw_line(crack_pts[0], crack_pts[2], crystal, 1.0)
+			# Outer dashed ring
+			var dash_arc: float = TAU / 14.0
+			for i in 7:
+				var start_angle: float = i * TAU / 7.0
+				canvas.draw_arc(center, radius * 1.04, start_angle, start_angle + dash_arc, 6, crystal, 1.5)

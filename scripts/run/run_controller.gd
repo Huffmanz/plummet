@@ -25,6 +25,8 @@ var _run_state: RunState
 var _game_board = null
 var _main_menu = null
 var _summary_screen = null
+# Cartographer relic: overrides first-match enemy order per act (act -> [enemy1, enemy2])
+var _cartographer_overrides: Dictionary = {}
 
 
 func _ready() -> void:
@@ -46,6 +48,10 @@ func _begin_new_run() -> void:
 	_start_match()
 
 
+func _get_relic_manager() -> RelicManager:
+	return _run_state.relic_manager if _run_state != null else null
+
+
 func _start_match() -> void:
 	var had_board := _game_board != null
 	_teardown_game_board()
@@ -60,6 +66,9 @@ func _start_match() -> void:
 	add_child(_game_board)
 	move_child(_game_board, -1)
 	_game_board.match_complete.connect(_on_match_complete)
+	# Momentum relic: starting score bonus for consecutive wins
+	var momentum_bonus := _run_state.relic_manager.momentum_bonus(_run_state.win_streak)
+
 	_game_board.setup_match(
 		_run_state.player_bag,
 		_run_state.chip_count,
@@ -68,14 +77,20 @@ func _start_match() -> void:
 		_run_state.match_in_act,
 		enemy_name,
 		gimmick,
-		_run_state.is_boss_match()
+		_run_state.is_boss_match(),
+		_run_state.relic_manager
 	)
+	if momentum_bonus > 0:
+		_game_board._score_tracker.add_starting_bonus(momentum_bonus)
 
 
 func _get_enemy_name(act: int, match_in_act: int) -> String:
 	var schedule: Array = _ENEMY_SCHEDULE[act]
+	if _cartographer_overrides.has(act):
+		var override: Array = _cartographer_overrides[act]
+		if match_in_act - 1 < override.size():
+			return override[match_in_act - 1]
 	if match_in_act == 3:
-		# Random from first two in act
 		return schedule[randi() % 2]
 	return schedule[match_in_act - 1]
 
@@ -97,8 +112,20 @@ func _on_match_complete(
 	_run_state.cross_color_count += cross_color_count
 
 	if not player_won:
-		_run_state.win_streak = 0
-		call_deferred("_end_run", false)
+		# Cushion relic absorbs one loss
+		if _run_state.relic_manager.try_cushion():
+			_run_state.win_streak = 0
+			_run_state.match_in_act += 1
+			if _run_state.match_in_act > 4:
+				_run_state.act += 1
+				_run_state.match_in_act = 1
+			if _run_state.is_run_complete():
+				call_deferred("_end_run", true)
+			else:
+				call_deferred("_start_match")
+		else:
+			_run_state.win_streak = 0
+			call_deferred("_end_run", false)
 		return
 
 	# Award fragments for this match
@@ -118,8 +145,129 @@ func _on_match_complete(
 
 	if _run_state.is_run_complete():
 		call_deferred("_end_run", true)
+	elif _run_state.match_in_act == 1:
+		# Just entered a new act (via boss win) — offer boss relic drop
+		call_deferred("_offer_boss_relic")
 	else:
 		call_deferred("_start_match")
+
+
+const _BOSS_DROP_RELICS: Array[String] = ["Cushion", "Patron", "EchoChamber", "Cartographer"]
+
+func _offer_boss_relic() -> void:
+	# Pick 2 relic options the player doesn't already own
+	var available: Array[String] = []
+	for r in _BOSS_DROP_RELICS:
+		if not _run_state.relic_manager.has_relic(r):
+			available.append(r)
+	available.shuffle()
+	var offer_a: String = available[0] if available.size() > 0 else ""
+	var offer_b: String = available[1] if available.size() > 1 else ""
+
+	if offer_a.is_empty() or not _run_state.relic_manager.can_add_relic():
+		# Nothing to offer — check Cartographer then advance
+		if _run_state.relic_manager.has_relic("Cartographer"):
+			call_deferred("_offer_cartographer_choice")
+		else:
+			call_deferred("_start_match")
+		return
+
+	var overlay := _build_relic_offer_overlay(offer_a, offer_b)
+	add_child(overlay)
+
+
+func _offer_cartographer_choice() -> void:
+	var act := _run_state.act
+	if act > 3 or not _ENEMY_SCHEDULE[act] is Array:
+		call_deferred("_start_match")
+		return
+	var schedule: Array = _ENEMY_SCHEDULE[act]
+	var enemy_a: String = schedule[0]
+	var enemy_b: String = schedule[1]
+	if enemy_a.is_empty() or enemy_b.is_empty():
+		call_deferred("_start_match")
+		return
+
+	var overlay := Control.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 20
+
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.05, 0.05, 0.12, 0.88)
+	overlay.add_child(bg)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.add_theme_constant_override("separation", 16)
+	overlay.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "CARTOGRAPHER — CHOOSE FIRST ENEMY"
+	title.add_theme_font_size_override("font_size", 18)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	for chosen_first in [enemy_a, enemy_b]:
+		var chosen_second := enemy_b if chosen_first == enemy_a else enemy_a
+		var btn := Button.new()
+		btn.text = chosen_first + " first"
+		btn.add_theme_font_size_override("font_size", 15)
+		btn.custom_minimum_size = Vector2(260, 48)
+		btn.pressed.connect(func():
+			_cartographer_overrides[act] = [chosen_first, chosen_second]
+			overlay.queue_free()
+			call_deferred("_start_match")
+		)
+		vbox.add_child(btn)
+
+	add_child(overlay)
+
+
+func _build_relic_offer_overlay(offer_a: String, offer_b: String) -> Control:
+	var overlay := Control.new()
+	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
+	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	overlay.z_index = 20
+
+	var bg := ColorRect.new()
+	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
+	bg.color = Color(0.05, 0.05, 0.12, 0.88)
+	overlay.add_child(bg)
+
+	var vbox := VBoxContainer.new()
+	vbox.set_anchors_preset(Control.PRESET_CENTER)
+	vbox.add_theme_constant_override("separation", 16)
+	overlay.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "BOSS DEFEATED — CHOOSE A RELIC"
+	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_color_override("font_color", Color.WHITE)
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	for offer in [offer_a, offer_b]:
+		if offer.is_empty():
+			continue
+		var btn := Button.new()
+		btn.text = offer
+		btn.add_theme_font_size_override("font_size", 16)
+		btn.custom_minimum_size = Vector2(260, 48)
+		btn.pressed.connect(func():
+			if _run_state.relic_manager.can_add_relic():
+				_run_state.relic_manager.add_relic(offer)
+			overlay.queue_free()
+			if _run_state.match_in_act == 1 and _run_state.relic_manager.has_relic("Cartographer"):
+				call_deferred("_offer_cartographer_choice")
+			else:
+				call_deferred("_start_match")
+		)
+		vbox.add_child(btn)
+
+	return overlay
 
 
 func _teardown_game_board() -> void:

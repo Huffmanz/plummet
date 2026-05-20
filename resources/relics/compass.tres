@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_compass"]
+
+[resource]
+script = ExtResource("1_compass")
+id = "Compass"
+display_name = "Compass"
+description = "At the start of each match, reveal the enemy's gimmick and their first 3 planned moves."
+rarity = "common"
+source = "shop"

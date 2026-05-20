@@ -5,13 +5,16 @@ Not Started
 
 ## Goals
 
-<!-- List goals here -->
+<!-- Add goals when loading a feature spec -->
 
 ## Notes
 
-<!-- Add context, constraints, or details here -->
+<!-- Add notes when loading a feature spec -->
 
 ## History
+
+### Headless Run Simulation Test
+Added `run_simulation_test.gd` and `scenes/tests/run_simulation_test.tscn` — a headless, seed-deterministic test suite (`seed(12345)`) that instantiates game logic directly with no rendering. Covers all 8 modifiers (unit tests per hook), piece types and scoring rules, 10 relic passives, bag mutations, chip economy, and a full simulated run (3 acts × 4 matches) with guaranteed player wins, shop visits cycling modifiers/relics, and pass/fail reporting. Fixed magnet test to assert slide after gravity compaction and bag init to assign seven modifiers without overwriting Ignite.
 
 ### Scoring Popup Accumulator
 Added `ScoreAccumulatorOverlay` (`scenes/ui/score_accumulator_overlay.tscn`, `scripts/ui/score_accumulator_overlay.gd`) — an editor-built `Control` scene centered on the board via `CenterContainer`. During cascade resolution it shows a `PanelContainer` with a player row (top) and AI row (bottom), each displaying a rapidly counting-up base score and a snapping multiplier label (×1, ×2, ×4…). The overlay appears on the first clear of a cascade, updates incrementally per-run as each clear animation plays (not all at once), and flashes white then fades out after the cascade ends. Both rows are hidden until their owner scores; the divider only shows when both are active. Prism type doubling is reflected in the accumulator by re-scanning run cells for `Piece.Type.PRISM` in the animation loop. Count-up uses `tween_method` (0.28s quad-ease-out) so rapid successive clears chain from the current displayed value. Also fixed Echo + Echo Chamber: `on_gravity` was replaced with `pop_echo_pieces()` + `find_echo_target(board)` so column selection re-evaluates after each drop rather than targeting the same column for all copies; pieces are placed and animated one at a time so each drop is visible before the next begins.

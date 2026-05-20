@@ -1,10 +1,201 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://d2m5udosedx6o"]
 
-[ext_resource type="Script" path="res://scripts/visual/run_summary_screen.gd" id="1_rs"]
+[ext_resource type="Script" uid="uid://4wweu8lhwsjq" path="res://scripts/visual/run_summary_screen.gd" id="1_rs"]
+[ext_resource type="PackedScene" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_bg"]
+[ext_resource type="Script" uid="uid://spybluaifgqm" path="res://scripts/ui/stagger_fly_in_container.gd" id="3_flyin"]
 
-[node name="RunSummaryScreen" type="Control"]
+[node name="RunSummaryScreen" type="Control" unique_id=2009310441]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_rs")
+
+[node name="Background" parent="." unique_id=642229224 instance=ExtResource("2_bg")]
+layout_mode = 1
+
+[node name="Scroll" type="ScrollContainer" parent="." unique_id=115986442]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="Scroll" unique_id=81431429]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 20
+
+[node name="Card" type="PanelContainer" parent="Scroll/Margin" unique_id=138201979]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FlyInVBox" type="VBoxContainer" parent="Scroll/Margin/Card" unique_id=823410676]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+script = ExtResource("3_flyin")
+stagger = 0.5
+duration = 0.26
+
+[node name="ResultLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox" unique_id=421849042]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 40
+text = "VICTORY"
+horizontal_alignment = 1
+
+[node name="ReachedRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=171885861]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ReachedLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox/ReachedRow" unique_id=213730381]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Reached"
+
+[node name="ReachedValue" type="Label" parent="Scroll/Margin/Card/FlyInVBox/ReachedRow" unique_id=1804770406]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "Act 1 · Match 1"
+horizontal_alignment = 2
+
+[node name="SpacerStats" type="Control" parent="Scroll/Margin/Card/FlyInVBox" unique_id=1338110539]
+custom_minimum_size = Vector2(0, 6)
+layout_mode = 2
+
+[node name="FinalScoreRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=1723601370]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FinalScoreLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox/FinalScoreRow" unique_id=837405956]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Final Match Score"
+
+[node name="FinalScoreValue" type="Label" parent="Scroll/Margin/Card/FlyInVBox/FinalScoreRow" unique_id=371485915]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0"
+horizontal_alignment = 2
+
+[node name="TotalScoreRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=448973368]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="TotalScoreLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox/TotalScoreRow" unique_id=25878948]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Total Run Score"
+
+[node name="TotalScoreValue" type="Label" parent="Scroll/Margin/Card/FlyInVBox/TotalScoreRow" unique_id=1110783306]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0"
+horizontal_alignment = 2
+
+[node name="FragmentsRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=997578137]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="FragmentsLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox/FragmentsRow" unique_id=1019133687]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Fragments Earned"
+
+[node name="FragmentsValue" type="Label" parent="Scroll/Margin/Card/FlyInVBox/FragmentsRow" unique_id=358294382]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0"
+horizontal_alignment = 2
+
+[node name="CascadeRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=1072283125]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CascadeLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox/CascadeRow" unique_id=1707898495]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Highest Cascade"
+
+[node name="CascadeValue" type="Label" parent="Scroll/Margin/Card/FlyInVBox/CascadeRow" unique_id=1917790410]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "None"
+horizontal_alignment = 2
+
+[node name="CrossColorRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=2007986518]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CrossColorLabel" type="Label" parent="Scroll/Margin/Card/FlyInVBox/CrossColorRow" unique_id=1787555914]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "Cross-Color Bonuses"
+
+[node name="CrossColorValue" type="Label" parent="Scroll/Margin/Card/FlyInVBox/CrossColorRow" unique_id=907955053]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "0"
+horizontal_alignment = 2
+
+[node name="SpacerBag" type="Control" parent="Scroll/Margin/Card/FlyInVBox" unique_id=461874937]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+
+[node name="BagHeader" type="Label" parent="Scroll/Margin/Card/FlyInVBox" unique_id=2106482243]
+layout_mode = 2
+theme_override_font_sizes/font_size = 13
+text = "YOUR BAG"
+horizontal_alignment = 1
+
+[node name="BagText" type="Label" parent="Scroll/Margin/Card/FlyInVBox" unique_id=1262484947]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "  1. Normal"
+autowrap_mode = 3
+
+[node name="SpacerButtons" type="Control" parent="Scroll/Margin/Card/FlyInVBox" unique_id=992530276]
+custom_minimum_size = Vector2(0, 12)
+layout_mode = 2
+
+[node name="BtnRow" type="HBoxContainer" parent="Scroll/Margin/Card/FlyInVBox" unique_id=1772211729]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
+
+[node name="NewRunBtn" type="Button" parent="Scroll/Margin/Card/FlyInVBox/BtnRow" unique_id=660542568]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "NEW RUN"
+
+[node name="MenuBtn" type="Button" parent="Scroll/Margin/Card/FlyInVBox/BtnRow" unique_id=1801737873]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(130, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "MAIN MENU"

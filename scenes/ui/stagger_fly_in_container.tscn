@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dpsx1vqy5q0fw"]
+
+[ext_resource type="Script" path="res://scripts/ui/stagger_fly_in_container.gd" id="1_script"]
+
+[node name="StaggerFlyInContainer" type="VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+script = ExtResource("1_script")

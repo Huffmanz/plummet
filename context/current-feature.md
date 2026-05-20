@@ -1,15 +1,24 @@
-# Current Feature
+# Current Feature: Scoring Popup Accumulator
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 
-<!-- List goals here -->
+- Add a center-board overlay UI (editor scene, not code-built) that appears during cascade resolution and displays the accumulated base score and multiplier separately
+- Each clear during a cascade adds its base points to the running base total and its multiplier level independently, so both values grow visibly as clears stack
+- Once all clears in a turn are resolved, emit the existing score particles/floating popups, then dismiss the overlay
+- Support simultaneous player and AI scoring in the overlay: player section on top, AI section below
+- The existing per-clear floating score popups (in AnimLayer) remain and still fire
 
 ## Notes
 
-<!-- Add context, constraints, or details here -->
+- Build the overlay as a `.tscn` scene with editor-placed nodes (Label, Panel, etc.) — do not construct UI in GDScript
+- The overlay sits centered on the board, above the board canvas, visible during cascade
+- Base score accumulates across all clears in a cascade (e.g. two 4-in-a-rows = 200 base); multiplier shown as the current cascade depth multiplier (×1, ×2, ×4…)
+- Both player and AI can score in the same cascade; show each as a separate row (player on top, AI below)
+- After the final cascade resolves, animate the total out (e.g. flash, scale up briefly) then hide, then fire the existing score particles
+- Tie into existing AnimLayer / GameBoard cascade flow — don't duplicate cascade logic
 
 ## History
 

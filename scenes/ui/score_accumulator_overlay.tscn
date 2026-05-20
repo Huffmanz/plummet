@@ -1,0 +1,101 @@
+[gd_scene format=3 uid="uid://bqxakp7mr3n5t"]
+
+[ext_resource type="Script" uid="uid://dvqrnpb8wftdh" path="res://scripts/ui/score_accumulator_overlay.gd" id="1_script"]
+
+[node name="ScoreAccumulatorOverlay" type="Control" unique_id=313368830]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("1_script")
+
+[node name="MarginContainer" type="MarginContainer" parent="." unique_id=471717198]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_top = 25
+
+[node name="Center" type="CenterContainer" parent="MarginContainer" unique_id=1091854190]
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 2
+
+[node name="AccumPanel" type="PanelContainer" parent="MarginContainer/Center" unique_id=818953505]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="MarginContainer/Center/AccumPanel" unique_id=1087186165]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 12
+
+[node name="VBox" type="VBoxContainer" parent="MarginContainer/Center/AccumPanel/Margin" unique_id=1839686698]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PlayerRow" type="HBoxContainer" parent="MarginContainer/Center/AccumPanel/Margin/VBox" unique_id=1956674934]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="PlayerOwner" type="Label" parent="MarginContainer/Center/AccumPanel/Margin/VBox/PlayerRow" unique_id=1677428294]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "YOU"
+
+[node name="PlayerBaseLabel" type="Label" parent="MarginContainer/Center/AccumPanel/Margin/VBox/PlayerRow" unique_id=1914633539]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "0"
+horizontal_alignment = 2
+
+[node name="PlayerMultLabel" type="Label" parent="MarginContainer/Center/AccumPanel/Margin/VBox/PlayerRow" unique_id=1052471939]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "×1"
+horizontal_alignment = 2
+
+[node name="Divider" type="HSeparator" parent="MarginContainer/Center/AccumPanel/Margin/VBox" unique_id=218320020]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="AIRow" type="HBoxContainer" parent="MarginContainer/Center/AccumPanel/Margin/VBox" unique_id=53232108]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="AIOwner" type="Label" parent="MarginContainer/Center/AccumPanel/Margin/VBox/AIRow" unique_id=1567842271]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 13
+text = "AI"
+
+[node name="AIBaseLabel" type="Label" parent="MarginContainer/Center/AccumPanel/Margin/VBox/AIRow" unique_id=1997271577]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+text = "0"
+horizontal_alignment = 2
+
+[node name="AIMultLabel" type="Label" parent="MarginContainer/Center/AccumPanel/Margin/VBox/AIRow" unique_id=911467835]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "×1"
+horizontal_alignment = 2

@@ -1,7 +1,7 @@
 # Current Feature: Piece Types, Modifiers & Relics
 
 ## Status
-Not Started
+In Progress
 
 ## Goals
 

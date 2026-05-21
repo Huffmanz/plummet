@@ -1,16 +1,32 @@
-# Current Feature
+# Current Feature — Feature 15: Shop Enter / Exit Transition
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
-<!-- Bullet points of what success looks like for the active feature -->
+- After a won match, the shop does not pop in instantly; a full-screen diagonal wipe transition plays first
+- Continue → plays a closing transition before the next match starts
+- Player cannot drag offers or spend chips while the enter/exit wipe is in progress
+- Standalone shop preview (`ShopScreen` as main scene) still opens without requiring `TransitionManager`
+- Transition style matches main menu / run (`DIAGONAL_WIPE` by default)
+- Shop open/close sounds (feature 18) fire at reveal/hide if audio is implemented
 
 ## Notes
 
-<!-- Spec path, constraints, dependencies -->
+Spec: `context/features/15-shop-enter-exit.md`
+
+**Dependencies:** Feature 07 (Shop layout, `ShopScreen.open` / `shop_closed`), `TransitionManager` autoload
+
+**Files to touch:**
+- `scripts/visual/game_board.gd` — wrap `_shop_screen.open(...)` in `transition_screen`
+- `scripts/visual/shop_screen.gd` — wrap `_on_continue` exit; skip transition in preview mode (`get_parent() == root`)
+
+**Enter sequence:** match end overlay hides → `TransitionManager.transition_screen(func(): shop.open(...))` → enable input after transition
+**Exit sequence:** disable input → `TransitionManager.transition_screen(func(): hide(); shop_closed.emit(chips))` → RunController resumes
+
+Add `_input_enabled: bool` to `ShopScreen`; offer cards and buttons check flag before acting. Reduced motion → use FADE at 0.15s or skip transition.
 
 ## History
 

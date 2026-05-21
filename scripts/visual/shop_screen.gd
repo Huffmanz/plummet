@@ -40,6 +40,7 @@ var _popover_piece_idx: int = -1
 
 var _drag_offer_idx: int = -1
 var _offer_dragging: bool = false
+var _input_enabled: bool = true
 
 
 func _ready() -> void:
@@ -89,6 +90,12 @@ func _style_ui() -> void:
 		UITheme.style_label_muted(offers_hint)
 
 
+func _set_input_enabled(enabled: bool) -> void:
+	_input_enabled = enabled
+	_continue_btn.disabled = not enabled
+	_reroll_btn.disabled = not enabled or _rerolled or _chips < COST_REROLL
+
+
 func _wire_signals() -> void:
 	_continue_btn.pressed.connect(_on_continue)
 	_reroll_btn.pressed.connect(_on_reroll)
@@ -127,6 +134,7 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
 	_hide_popover()
 	_offer_dragging = false
 	show()
+	_set_input_enabled(true)
 	_refresh()
 	_update_shop_cursor()
 
@@ -331,6 +339,8 @@ func _get_hovered_offer_card() -> ShopOfferCard:
 
 
 func _on_offer_drag_started(offer_idx: int) -> void:
+	if not _input_enabled:
+		return
 	_offer_dragging = true
 	_drag_offer_idx = offer_idx
 	_update_shop_cursor()
@@ -502,11 +512,20 @@ func _on_reroll() -> void:
 
 
 func _on_continue() -> void:
+	if not _input_enabled:
+		return
 	_hide_popover()
 	_offer_dragging = false
 	GameCursor.apply_default()
-	hide()
-	shop_closed.emit(_chips)
+	_set_input_enabled(false)
+	if get_parent() == get_tree().root:
+		hide()
+		shop_closed.emit(_chips)
+		return
+	await TransitionManager.transition_screen(func():
+		hide()
+		shop_closed.emit(_chips)
+	)
 
 
 func _hide_popover() -> void:

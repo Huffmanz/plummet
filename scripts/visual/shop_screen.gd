@@ -42,6 +42,10 @@ var _drag_offer_idx: int = -1
 var _offer_dragging: bool = false
 var _input_enabled: bool = true
 
+@export var reduced_motion: bool = false
+var _displayed_chips: int = 0
+var _chip_tween: Tween
+
 
 func _ready() -> void:
 	add_to_group("shop_cursor_owner")
@@ -124,6 +128,7 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_bag = bag
 	_chips = chips
+	_displayed_chips = chips
 	_relic_manager = relic_mgr if relic_mgr != null else RelicManager.new()
 	_relic_manager.begin_shop_visit()
 	_offer_count = _relic_manager.offer_count()
@@ -195,8 +200,53 @@ func _weighted_pick(pool: Array[Dictionary]) -> Dictionary:
 	return pool[0]
 
 
+func _set_chip_display(v: int) -> void:
+	_chip_label.text = "%d chips" % v
+
+
+func _animate_chips_to(target: int, spent_delta: int = 0) -> void:
+	if _chip_tween != null and _chip_tween.is_valid():
+		_chip_tween.kill()
+	if reduced_motion:
+		_displayed_chips = target
+		_set_chip_display(target)
+	else:
+		_chip_tween = create_tween()
+		_chip_tween.tween_method(
+			func(v: float) -> void: _set_chip_display(int(v)),
+			float(_displayed_chips),
+			float(target),
+			0.28
+		).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
+		_displayed_chips = target
+	if spent_delta > 0 and not reduced_motion:
+		_flash_chip_spend()
+		_spawn_chip_floater(spent_delta)
+
+
+func _flash_chip_spend() -> void:
+	var flash := create_tween()
+	flash.tween_property(_chip_label, "modulate", Color(2.0, 1.2, 0.5, 1.0), 0.06)
+	flash.tween_property(_chip_label, "modulate", Color.WHITE, 0.12)
+
+
+func _spawn_chip_floater(amount: int) -> void:
+	var lbl := Label.new()
+	lbl.text = "−%d" % amount
+	lbl.add_theme_font_size_override("font_size", 11)
+	lbl.add_theme_color_override("font_color", UITheme.ACCENT_POP)
+	add_child(lbl)
+	var chip_rect := _chip_label.get_global_rect()
+	lbl.global_position = Vector2(chip_rect.end.x + 8.0, chip_rect.position.y - 4.0)
+	var t := create_tween()
+	t.set_parallel(true)
+	t.tween_property(lbl, "position:y", lbl.position.y - 12.0, 0.35)
+	t.tween_property(lbl, "modulate:a", 0.0, 0.35)
+	t.chain().tween_callback(lbl.queue_free)
+
+
 func _refresh() -> void:
-	_chip_label.text = "%d chips" % _chips
+	_set_chip_display(_displayed_chips)
 	_reroll_btn.disabled = _rerolled or _chips < COST_REROLL
 	_reroll_btn.button_text = "Rerolled" if _rerolled else "Reroll (%d)" % COST_REROLL
 	_refresh_offers()
@@ -392,6 +442,7 @@ func _apply_modifier_offer(offer_idx: int, piece_idx: int, offer: Dictionary) ->
 	_chips -= COST_ATTACH
 	piece.modifier = offer.get("id", "")
 	_offer_used[offer_idx] = true
+	_animate_chips_to(_chips, COST_ATTACH)
 	_refresh()
 
 
@@ -405,6 +456,7 @@ func _apply_piece_type_offer(offer_idx: int, piece_idx: int, offer: Dictionary) 
 	_chips -= COST_PIECE_TYPE
 	piece.type = _piece_type_from_id(type_id)
 	_offer_used[offer_idx] = true
+	_animate_chips_to(_chips, COST_PIECE_TYPE)
 	_refresh()
 
 
@@ -435,6 +487,7 @@ func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 	if not _relic_manager.add_relic(offer.get("id", "")):
 		return
 	_offer_used[offer_idx] = true
+	_animate_chips_to(_chips, cost)
 	_refresh()
 
 
@@ -446,6 +499,7 @@ func _on_remove_modifier(piece_idx: int) -> void:
 		return
 	_chips -= COST_REMOVE
 	piece.modifier = ""
+	_animate_chips_to(_chips, COST_REMOVE)
 	_refresh()
 
 
@@ -497,6 +551,8 @@ func _apply_upgrade(piece_idx: int, new_type: Piece.Type) -> void:
 		_chips -= COST_UPGRADE
 	piece.type = new_type
 	_hide_popover()
+	if not forge_free:
+		_animate_chips_to(_chips, COST_UPGRADE)
 	_refresh()
 
 
@@ -508,6 +564,7 @@ func _on_reroll() -> void:
 	_offer_used.resize(_offers.size())
 	_offer_used.fill(false)
 	_rerolled = true
+	_animate_chips_to(_chips, COST_REROLL)
 	_refresh()
 
 

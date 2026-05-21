@@ -6,13 +6,13 @@ Not Started
 
 ## Goals
 
-<!-- Bullet points of what success looks like for the active feature -->
-
 ## Notes
 
-<!-- Spec path, constraints, dependencies -->
-
 ## History
+
+### Shop Chip Counter Juice
+
+Added animated chip count to `ShopScreen` (`scripts/visual/shop_screen.gd`). `_displayed_chips` tracks the currently shown value; `_animate_chips_to(target, spent_delta)` kills any in-flight tween and starts a new 0.28s quad-ease-out count-down from the current displayed number so rapid purchases chain correctly. `_flash_chip_spend()` tweens `ChipLabel.modulate` to a warm gold spike (`Color(2.0, 1.2, 0.5, 1.0)`) over 0.06s then back to white over 0.12s. `_spawn_chip_floater(amount)` adds a `Label` child to `ShopScreen`, positions it right of the chip label, and tweens it 12px upward + alpha 0 over 0.35s before `queue_free()`. All six purchase handlers (attach modifier, piece type, relic drop, remove modifier, upgrade popover, reroll) call `_animate_chips_to` before `_refresh()`. Patron relic (cost = 0) correctly skips the floater since `spent_delta = 0`. `_refresh()` calls `_set_chip_display(_displayed_chips)` instead of writing the label directly. `@export var reduced_motion: bool = false` — when set, label snaps immediately and floater/flash are skipped.
 
 ### Shop Enter / Exit Transition
 

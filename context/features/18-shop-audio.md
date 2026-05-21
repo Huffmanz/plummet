@@ -175,18 +175,18 @@ Replace `TBD` with final path(s) under `res://assets/sfx/shop/` (or existing ken
 ## Filename worksheet (fill in when assets exist)
 
 ```text
-shop_open:              TBD
-shop_close:             TBD
-drag_pickup:            TBD
-drop_valid_hover:       TBD   # optional
-drop_invalid:           TBD
-modifier_attach:        TBD
-piece_type_apply:       TBD
-relic_acquire:          TBD
-modifier_remove:        TBD
-chip_spend:             TBD
-reroll:                 TBD
-cant_afford:            TBD
+shop_open:              res://assets/sfx/571581__el_boss__playing-card-slide-right.wav
+shop_close:             res://assets/sfx/kenney_interface-sounds/Audio/switch_005.ogg (+ switch_006)
+drag_pickup:            res://assets/sfx/817579__silverdubloons__slidecard04.wav
+drop_valid_hover:       res://assets/sfx/kenney_ui-audio/Audio/click3.ogg
+drop_invalid:           res://assets/sfx/kenney_interface-sounds/Audio/bong_001.ogg
+modifier_attach:        res://assets/sfx/kenney_interface-sounds/Audio/switch_003.ogg (+ switch_004)
+piece_type_apply:       res://assets/sfx/kenney_interface-sounds/Audio/switch_005.ogg (+ switch_006)
+relic_acquire:          res://assets/sfx/kenney_ui-audio/Audio/switch30.ogg
+modifier_remove:        res://assets/sfx/kenney_interface-sounds/Audio/switch_002.ogg (+ switch_001)
+chip_spend:             res://assets/sfx/209578__zott820__cash-register-purchase.wav
+reroll:                 res://assets/sfx/kenney_casino-audio/Audio/dice-throw-1..3.ogg
+cant_afford:            res://assets/sfx/kenney_interface-sounds/Audio/bong_001.ogg
 ```
 
 Example multi-variant entry (once known):

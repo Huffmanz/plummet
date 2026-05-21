@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://b3e6lwoj0jiwu" path="res://scenes/game/shop_relic_slot.tscn" id="5_relic"]
 [ext_resource type="PackedScene" uid="uid://wqifynfc6cvj" path="res://scenes/ui/juicy_sfx_button.tscn" id="6_juicy_btn"]
 [ext_resource type="Script" path="res://scripts/ui/stagger_fly_in_hcontainer.gd" id="7_hfly"]
+[ext_resource type="PackedScene" path="res://scenes/audio/shop_audio.tscn" id="8_shop_audio"]
 
 [node name="ShopScreen" type="Control" unique_id=171700366]
 layout_mode = 3
@@ -16,6 +17,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_shopscr")
+
+[node name="ShopAudio" parent="." instance=ExtResource("8_shop_audio")]
 
 [node name="Background" parent="." unique_id=825474732 instance=ExtResource("2_bg")]
 z_index = -1

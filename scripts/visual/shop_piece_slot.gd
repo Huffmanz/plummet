@@ -4,18 +4,6 @@ signal remove_pressed(piece_index: int)
 signal slot_clicked(piece_index: int)
 signal offer_dropped(piece_index: int, data: Dictionary)
 
-const _MOD_ATTACH_STREAMS: Array[AudioStream] = [
-	preload("res://assets/sfx/kenney_interface-sounds/Audio/switch_003.ogg"),
-	preload("res://assets/sfx/kenney_interface-sounds/Audio/switch_004.ogg"),
-]
-const _PIECE_TYPE_STREAMS: Array[AudioStream] = [
-	preload("res://assets/sfx/kenney_interface-sounds/Audio/switch_005.ogg"),
-	preload("res://assets/sfx/kenney_interface-sounds/Audio/switch_006.ogg"),
-]
-const _MOD_REMOVE_STREAMS: Array[AudioStream] = [
-	preload("res://assets/sfx/kenney_interface-sounds/Audio/bong_001.ogg"),
-]
-
 @onready var _preview: ShopPiecePreview = %PiecePreview
 @onready var _mod_host: CenterContainer = %ModIconHost
 @onready var _drop_ring: Control = %DropRing
@@ -76,14 +64,12 @@ func play_attach_juice(kind: String) -> void:
 func play_modifier_attach_juice() -> void:
 	if reduced_motion or _modifier_id.is_empty() or _mod_badge == null:
 		return
-	_play_sfx(_MOD_ATTACH_STREAMS)
 	_pop_modifier_badge()
 
 
 func play_piece_type_morph_juice() -> void:
 	if reduced_motion:
 		return
-	_play_sfx(_PIECE_TYPE_STREAMS)
 	_play_type_morph()
 
 
@@ -91,6 +77,10 @@ func set_drop_highlight(on: bool) -> void:
 	_drop_highlight = on
 	if _drop_ring != null and _drop_ring.has_method("set_active"):
 		_drop_ring.set_active(on)
+
+
+func is_drop_highlight_active() -> bool:
+	return _drop_highlight
 
 
 func set_remove_enabled(enabled: bool) -> void:
@@ -138,7 +128,6 @@ func _play_modifier_remove_out(on_complete: Callable) -> void:
 	if _mod_badge == null:
 		on_complete.call()
 		return
-	_play_sfx(_MOD_REMOVE_STREAMS)
 	if _badge_pop_tween != null and _badge_pop_tween.is_valid():
 		_badge_pop_tween.kill()
 	_mod_badge.pivot_offset = _mod_badge.size * 0.5
@@ -176,10 +165,6 @@ func _on_remove_hover_out() -> void:
 	_remove_hover_tween = null
 	var t := create_tween()
 	t.tween_property(_remove_btn, "scale", Vector2.ONE, 0.1).set_ease(Tween.EASE_OUT)
-
-
-func _play_sfx(streams: Array[AudioStream]) -> void:
-	RandomAudioPlayer.play_random_overlapping_static(self, streams)
 
 
 func _sync_pivot() -> void:

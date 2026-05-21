@@ -17,13 +17,10 @@ const WEIGHT_RELIC_UNCOMMON: int = 2
 const WEIGHT_RELIC_RARE: int = 1
 
 const _JUICY_BUTTON_SCENE := preload("res://scenes/ui/juicy_sfx_button.tscn")
-const _REROLL_SFX: Array[AudioStream] = [
-	preload("res://assets/sfx/kenney_casino-audio/Audio/dice-throw-1.ogg"),
-	preload("res://assets/sfx/kenney_casino-audio/Audio/dice-throw-2.ogg"),
-	preload("res://assets/sfx/kenney_casino-audio/Audio/dice-throw-3.ogg"),
-]
 const OFFER_EXIT_DURATION := 0.18
+const DROP_HOVER_SFX_MS := 200
 
+@onready var _audio: ShopAudio = $ShopAudio
 @onready var _chip_label: Label = %ChipLabel
 @onready var _offer_fly_in: StaggerFlyInHContainer = %OffersRow
 @onready var _bag_fly_in: StaggerFlyInHContainer = %BagRow
@@ -54,6 +51,8 @@ var _input_enabled: bool = true
 @export var reduced_motion: bool = false
 var _displayed_chips: int = 0
 var _chip_tween: Tween
+var _hover_sfx_ms: int = 0
+var _drag_drop_accepted: bool = false
 
 
 func _ready() -> void:
@@ -133,7 +132,7 @@ func _make_preview_bag() -> PieceBag:
 	return bag
 
 
-func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
+func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = false) -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	_bag = bag
 	_chips = chips
@@ -147,10 +146,13 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
 	_rerolled = false
 	_hide_popover()
 	_offer_dragging = false
+	if _audio != null:
+		_audio.muted = muted
+	for card in _offer_cards:
+		card.shop_audio = _audio
+		card.reduced_motion = reduced_motion
 	show()
 	_set_input_enabled(true)
-	for card in _offer_cards:
-		card.reduced_motion = reduced_motion
 	for slot in _piece_slots:
 		slot.reduced_motion = reduced_motion
 	_refresh()
@@ -238,6 +240,8 @@ func _animate_chips_to(target: int, spent_delta: int = 0) -> void:
 		).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_QUAD)
 		_displayed_chips = target
 	if spent_delta > 0 and not reduced_motion:
+		if _audio != null:
+			_audio.play_chip_spend()
 		_flash_chip_spend()
 		_spawn_chip_floater(spent_delta)
 
@@ -344,6 +348,8 @@ func _refresh_bag() -> void:
 func _play_shop_intro_animations() -> void:
 	_offer_fly_in.reduced_motion = reduced_motion
 	_bag_fly_in.reduced_motion = reduced_motion
+	if _audio != null:
+		_audio.play_open()
 	await _play_offer_deal_in()
 	if not is_inside_tree():
 		return
@@ -370,12 +376,6 @@ func _play_offer_exit() -> void:
 		any = true
 	if any:
 		await get_tree().create_timer(OFFER_EXIT_DURATION).timeout
-
-
-func _play_reroll_sfx() -> void:
-	RandomAudioPlayer.play_random_overlapping_static(
-		self, _REROLL_SFX, &"sfx", -4.0, -10.0, true, 0.92, 1.08
-	)
 
 
 func _play_reroll_btn_wiggle() -> void:
@@ -436,6 +436,8 @@ func _count_empty_mod_slots() -> int:
 func _process(_delta: float) -> void:
 	if visible:
 		_update_shop_cursor()
+	if _offer_dragging:
+		_update_drag_hover_sfx()
 
 
 func _update_shop_cursor() -> void:
@@ -469,6 +471,7 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 	if not _input_enabled:
 		return
 	_offer_dragging = true
+	_drag_drop_accepted = false
 	_drag_offer_idx = offer_idx
 	_update_shop_cursor()
 	for i in _offer_cards.size():
@@ -490,8 +493,17 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 
 
 func _on_offer_drag_ended() -> void:
+	var ended_idx := _drag_offer_idx
 	_offer_dragging = false
 	_drag_offer_idx = -1
+	if (
+		not _drag_drop_accepted
+		and ended_idx >= 0
+		and ended_idx < _offer_used.size()
+		and not _offer_used[ended_idx]
+		and _audio != null
+	):
+		_audio.play_drop_invalid()
 	_update_shop_cursor()
 	for slot in _piece_slots:
 		slot.set_drop_highlight(false)
@@ -501,9 +513,46 @@ func _on_offer_drag_ended() -> void:
 		card.set_drag_dim(false)
 
 
+func _update_drag_hover_sfx() -> void:
+	if _audio == null:
+		return
+	var hover := _get_drag_hover_target()
+	if hover.is_empty():
+		return
+	var now := Time.get_ticks_msec()
+	if now - _hover_sfx_ms < DROP_HOVER_SFX_MS:
+		return
+	if hover.get("valid", false):
+		_audio.play_drop_valid_hover()
+		_hover_sfx_ms = now
+	elif hover.get("invalid", false):
+		_audio.play_drop_invalid()
+		_hover_sfx_ms = now
+
+
+func _get_drag_hover_target() -> Dictionary:
+	var node: Node = get_viewport().gui_get_hovered_control()
+	while node != null:
+		if node is ShopPieceSlot:
+			var slot := node as ShopPieceSlot
+			if slot.is_drop_highlight_active():
+				return {"valid": true, "invalid": false}
+			return {"valid": false, "invalid": true}
+		if node is ShopRelicSlot:
+			var relic_slot := node as ShopRelicSlot
+			if relic_slot.is_drop_highlight_active():
+				return {"valid": true, "invalid": false}
+			if relic_slot.is_occupied():
+				return {"valid": false, "invalid": true}
+			return {"valid": false, "invalid": true}
+		node = node.get_parent()
+	return {}
+
+
 func _on_piece_offer_dropped(piece_idx: int, data: Dictionary) -> void:
 	if not _input_enabled:
 		return
+	_drag_drop_accepted = true
 	var offer_idx: int = data.get("index", -1)
 	if offer_idx < 0 or offer_idx >= _offers.size():
 		return
@@ -518,9 +567,13 @@ func _on_piece_offer_dropped(piece_idx: int, data: Dictionary) -> void:
 	var apply := func() -> void:
 		if kind == "modifier":
 			_apply_modifier_offer(offer_idx, piece_idx, offer)
+			if _audio != null:
+				_audio.play_modifier_attach()
 			_piece_slots[piece_idx].play_attach_juice("modifier")
 		elif kind == "piece_type":
 			_apply_piece_type_offer(offer_idx, piece_idx, offer)
+			if _audio != null:
+				_audio.play_piece_type_apply()
 			_piece_slots[piece_idx].play_attach_juice("piece_type")
 	if icon != null and is_instance_valid(icon):
 		icon.snap_to(target_center, apply, reduced_motion)
@@ -558,6 +611,7 @@ func _apply_piece_type_offer(offer_idx: int, piece_idx: int, offer: Dictionary) 
 func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 	if not _input_enabled:
 		return
+	_drag_drop_accepted = true
 	var offer_idx: int = data.get("index", -1)
 	if offer_idx < 0 or offer_idx >= _offers.size():
 		return
@@ -589,6 +643,8 @@ func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 		if not _relic_manager.add_relic(offer.get("id", ""), slot_idx):
 			return
 		_offer_used[offer_idx] = true
+		if _audio != null:
+			_audio.play_relic_acquire()
 		_animate_chips_to(_chips, cost)
 		_refresh()
 	if icon != null and is_instance_valid(icon):
@@ -607,6 +663,8 @@ func _on_remove_modifier(piece_idx: int) -> void:
 		return
 	_chips -= COST_REMOVE
 	piece.modifier = ""
+	if _audio != null:
+		_audio.play_modifier_remove()
 	_animate_chips_to(_chips, COST_REMOVE)
 	_refresh()
 
@@ -665,6 +723,8 @@ func _apply_upgrade(piece_idx: int, new_type: Piece.Type) -> void:
 	_hide_popover()
 	if not forge_free:
 		_animate_chips_to(_chips, COST_UPGRADE)
+	if _audio != null:
+		_audio.play_piece_type_apply()
 	_refresh()
 	_piece_slots[piece_idx].play_attach_juice("piece_type")
 
@@ -675,7 +735,8 @@ func _on_reroll() -> void:
 	_hide_popover()
 	_set_input_enabled(false)
 	_play_reroll_btn_wiggle()
-	_play_reroll_sfx()
+	if _audio != null:
+		_audio.play_reroll()
 	_chips -= COST_REROLL
 	_animate_chips_to(_chips, COST_REROLL)
 	if reduced_motion:
@@ -708,6 +769,8 @@ func _on_continue() -> void:
 	_offer_dragging = false
 	GameCursor.apply_default()
 	_set_input_enabled(false)
+	if _audio != null:
+		_audio.play_close()
 	if get_parent() == get_tree().root:
 		hide()
 		shop_closed.emit(_chips)

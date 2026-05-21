@@ -540,11 +540,11 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 			_chip_count += (_win_streak - 1) * 5
 		if not _match_is_boss and not standalone:
 			await TransitionManager.transition_screen(func():
-				_shop_screen.open(_player_bag, _chip_count, _relic_manager)
+				_shop_screen.open(_player_bag, _chip_count, _relic_manager, _anim_layer.muted)
 			)
 		elif standalone:
 			await TransitionManager.transition_screen(func():
-				_shop_screen.open(_player_bag, _chip_count, _relic_manager)
+				_shop_screen.open(_player_bag, _chip_count, _relic_manager, _anim_layer.muted)
 			)
 		else:
 			match_complete.emit(true, _score_tracker.player_score, _score_tracker.ai_score, _chip_count, _win_streak, _match_max_cascade, _match_cross_color_count)

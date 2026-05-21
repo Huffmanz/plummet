@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://bshopaudio18x"]
+
+[ext_resource type="Script" path="res://scripts/audio/shop_audio.gd" id="1_script"]
+[ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
+
+[node name="ShopAudio" type="Node"]
+script = ExtResource("1_script")
+
+[node name="OpenSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="CloseSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="DragPickupSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="DropValidSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="DropInvalidSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="ModifierAttachSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="PieceTypeApplySfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="RelicAcquireSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="ModifierRemoveSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="RerollSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="ChipSpendSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="CantAffordSfx" parent="." instance=ExtResource("2_rap")]
+
+[node name="OfferHoverSfx" parent="." instance=ExtResource("2_rap")]

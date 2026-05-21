@@ -54,6 +54,10 @@ func set_drop_highlight(on: bool) -> void:
 	_update_pulse(on)
 
 
+func is_drop_highlight_active() -> bool:
+	return _drop_highlight
+
+
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
 	if _occupied or typeof(data) != TYPE_DICTIONARY:
 		return false

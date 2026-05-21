@@ -1,12 +1,49 @@
-# Current Feature
+# Current Feature — Feature 18: Shop Audio
 
 ## Status
 
-Not Started
+In Progress
 
 ## Goals
 
+- Wire every shop cue through `RandomAudioPlayer` nodes (not raw `AudioStreamPlayer`)
+- Add `ShopAudio` (or equivalent) under `ShopScreen` with players for open, close, drag, purchase, reroll, deny, chip spend
+- Use `play_random()` / `play_random_overlapping()` with pitch variation on every play
+- Respect global mute (shared with board `AnimLayer` or run setting)
+- Purchase/attach sounds fire after drop snap, not on drag start
+- Throttle valid-drop hover tick while dragging (max 1 per 200ms)
+- Skip `chip_spend` when cost is 0 (e.g. Patron relic)
+- Update filename worksheet when assets are assigned in the editor
+
 ## Notes
+
+Spec: `context/features/18-shop-audio.md`
+
+### Scene layout
+`ShopAudio` child node with `RandomAudioPlayer` instances: OpenSfx, CloseSfx, DragPickupSfx, DropValidSfx, DropInvalidSfx, ModifierAttachSfx, PieceTypeApplySfx, RelicAcquireSfx, ModifierRemoveSfx, RerollSfx, ChipSpendSfx, CantAffordSfx. Bus `SFX`, volume ~−4 to −8 dB.
+
+### Trigger map
+| Cue | Call site |
+|-----|-----------|
+| shop_open | After enter transition + deal-in starts |
+| shop_close | `_on_continue` before exit transition |
+| drag_pickup | `ShopOfferCard._start_drag` |
+| drop_valid_hover | Slot hover while dragging (throttled) |
+| drop_invalid | Invalid hover or drag end without purchase |
+| modifier_attach / piece_type_apply / relic_acquire | After snap in apply handlers |
+| modifier_remove | `_on_remove_modifier` |
+| chip_spend | `_animate_chips_to` when `spent_delta > 0` |
+| reroll | `_on_reroll` |
+| cant_afford | Blocked drag on unaffordable card |
+
+### Assets (partial — many TBD)
+Known paths in spec: `slidecard04.wav` (drag), kenney click/bong/switch30, cash-register-purchase (chip), dice-throw 1–3 (reroll). `shop_open` / `shop_close` / `modifier_remove` still TBD.
+
+### Existing work
+Feature 21 inlined reroll SFX via `RandomAudioPlayer.play_random_overlapping_static` in `shop_screen.gd` — consolidate into `ShopAudio` during this feature.
+
+### Dependencies
+Features 07, 15–17, 19–21; `random_audio_player.gd` + `scenes/audio/random_audio_player.tscn`
 
 ## History
 

@@ -24,6 +24,7 @@ var offer_cost: int = 0
 
 var _can_drag: bool = true
 var _consumed: bool = false
+var shop_audio: ShopAudio = null
 
 var _press_pos: Vector2 = Vector2.ZERO
 var _pressed: bool = false
@@ -219,6 +220,10 @@ func _apply_border(is_relic: bool) -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if not _can_drag:
+		if event is InputEventMouseButton:
+			var mb := event as InputEventMouseButton
+			if mb.button_index == MOUSE_BUTTON_LEFT and mb.pressed and shop_audio != null:
+				shop_audio.play_cant_afford()
 		return
 	if event is InputEventMouseButton:
 		var mb := event as InputEventMouseButton
@@ -241,6 +246,8 @@ func _start_drag() -> void:
 	var data: Dictionary = _make_drag_payload()
 	if data.is_empty():
 		return
+	if shop_audio != null:
+		shop_audio.play_drag_pickup()
 	_stop_hover_immediate()
 	_hidden_for_drag = true
 	GameCursor.apply_closed()
@@ -330,8 +337,11 @@ func is_dragging() -> bool:
 func _on_mouse_entered() -> void:
 	if is_offer_hover_target():
 		GameCursor.apply_open()
-		if _affordable and not reduced_motion:
-			_start_hover()
+		if _affordable:
+			if shop_audio != null:
+				shop_audio.play_offer_hover()
+			if not reduced_motion:
+				_start_hover()
 
 
 func _on_mouse_exited() -> void:

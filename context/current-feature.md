@@ -1,46 +1,18 @@
-# Current Feature — Feature 21: Shop Reroll Juice
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- Pressing Reroll plays shuffle SFX and chip spend feedback
-- Old offers visibly leave before new offers appear
-- New offers deal in with stagger (same as shop open)
-- Player cannot drag or buy during the reroll sequence
-- Reroll button ends disabled with "Rerolled" text
-- Reduced motion performs instant swap without blocking input long
-
 ## Notes
 
-Spec: `context/features/21-shop-reroll-juice.md`
-
-### Sequence (~0.6s total)
-1. Disable input; validate chips ≥ 5 and not `_rerolled`
-2. `JuicySfxButton` click + `reroll` SFX
-3. Chip spend: tween + `−5` floater (feature 16)
-4. **Exit** visible offer cards in parallel (scale 1→0.8, fade, ~0.16–0.2s)
-5. `_roll_offers()`, reset `_offer_used`, `_rerolled = true`, `_refresh_offers()`
-6. **Deal-in** via shared `_play_offer_deal_in()` (feature 19 / `StaggerFlyInHContainer`)
-7. Re-enable input; refresh reroll button disabled state
-
-### Exit animation
-- Same as feature 19 consumed exit on cards that were showing offers (not empty consumed spacers)
-- `set_consumed(false)` on refresh before deal-in
-
-### Optional reroll button wiggle
-- Press: `rotation_deg` ±4° over 0.1s
-
-### Files to touch
-- `scripts/visual/shop_screen.gd` — async `_on_reroll`, `_play_offer_exit()`, `_play_offer_deal_in()`
-- `scripts/visual/shop_offer_card.gd` — `play_exit()` / `prepare_deal_in()` if needed
-
-### Dependencies
-- Features 07, 16, 18, 19; `%RerollBtn` is `JuicySfxButton`
-
 ## History
+
+### Shop Reroll Juice
+
+Reroll runs an async ~0.6s sequence in `shop_screen.gd`: disable input (Continue, Reroll, drags, bag remove/upgrade/drops), play dice-throw shuffle SFX and chip `−5` floater, parallel exit on active offer cards via new `ShopOfferCard.play_exit()` (scale 1→0.8, fade 0.18s), roll new offers, `_refresh_offers()`, then shared `_play_offer_deal_in()` (feature 19 stagger). Optional `VisualPivot` wiggle on reroll press. Reduced motion skips tweens for an instant swap. `_play_offer_deal_in()` extracted so shop open and reroll share the same deal-in path.
 
 ### Shop Bag Row Juice
 

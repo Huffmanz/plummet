@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PieceTypeData" format=3 uid="uid://fgbf2tpw3v8o"]
 
-[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_prism"]
+[ext_resource type="Script" uid="uid://bhpbb1uxpb4dq" path="res://scripts/data/piece_type_data.gd" id="1_prism"]
+[ext_resource type="Texture2D" uid="uid://dlaorlle0wh35" path="res://assets/tablerio/prism.png" id="1_uindp"]
 
 [resource]
 script = ExtResource("1_prism")
@@ -9,3 +10,4 @@ display_name = "Prism"
 initial = "P"
 description = "When part of a clear, doubles the base point value (before multipliers)."
 shader_style = "rainbow"
+icon = ExtResource("1_uindp")

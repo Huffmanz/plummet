@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://dqf2x0nrfkmnn"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_momentum"]
+[ext_resource type="Texture2D" uid="uid://2lnax1mer78n" path="res://assets/tablerio/trending-up.png" id="1_mjdg5"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_momentum"]
 
 [resource]
 script = ExtResource("1_momentum")
@@ -8,4 +9,4 @@ id = "Momentum"
 display_name = "Momentum"
 description = "Each consecutive match win increases your starting score for the next match by 50 points."
 rarity = "uncommon"
-source = "shop"
+icon = ExtResource("1_mjdg5")

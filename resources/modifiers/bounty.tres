@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://d2fcm7pw3168e"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_bounty"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_bounty"]
+[ext_resource type="Texture2D" uid="uid://c3tx0xsr1mbg1" path="res://assets/tablerio/viewfinder.png" id="1_ikqou"]
 
 [resource]
 script = ExtResource("1_bounty")
 id = "Bounty"
 display_name = "Bounty"
 initial = "B"
-badge_color = Color(0.32, 0.72, 0.35, 1.0)
+badge_color = Color(0.32, 0.72, 0.35, 1)
 trigger = "clear"
 description = "On clear, earn +10 points per opponent piece in the same row."
+icon = ExtResource("1_ikqou")

@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://b3dbeqqj0jiwu" path="res://scenes/game/shop_piece_slot.tscn" id="4_piece"]
 [ext_resource type="PackedScene" uid="uid://b3e6lwoj0jiwu" path="res://scenes/game/shop_relic_slot.tscn" id="5_relic"]
 [ext_resource type="PackedScene" uid="uid://wqifynfc6cvj" path="res://scenes/ui/juicy_sfx_button.tscn" id="6_juicy_btn"]
+[ext_resource type="Script" path="res://scripts/ui/stagger_fly_in_hcontainer.gd" id="7_hfly"]
 
 [node name="ShopScreen" type="Control" unique_id=171700366]
 layout_mode = 3
@@ -117,9 +118,11 @@ text = "Offers"
 uppercase = true
 
 [node name="OffersRow" type="HBoxContainer" parent="Root/Body/OffersSection/OffersVBox" unique_id=1961747764]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 5
+script = ExtResource("7_hfly")
 
 [node name="Offer0" parent="Root/Body/OffersSection/OffersVBox/OffersRow" unique_id=1522280543 instance=ExtResource("3_offer")]
 unique_name_in_owner = true

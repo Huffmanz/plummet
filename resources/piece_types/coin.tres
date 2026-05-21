@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PieceTypeData" format=3 uid="uid://b0o0sfbvdrf2y"]
 
-[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_coin"]
+[ext_resource type="Script" uid="uid://bhpbb1uxpb4dq" path="res://scripts/data/piece_type_data.gd" id="1_coin"]
+[ext_resource type="Texture2D" uid="uid://csci22usinkkm" path="res://assets/tablerio/coins.png" id="1_pvll5"]
 
 [resource]
 script = ExtResource("1_coin")
@@ -9,3 +10,4 @@ display_name = "Coin"
 initial = "C"
 description = "When part of a clear, earn +3 chips. Multiple Coins in one clear each trigger independently."
 shader_style = "gold"
+icon = ExtResource("1_pvll5")

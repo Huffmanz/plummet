@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://cqwxgd1c1fff0"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_ripple"]
+[ext_resource type="Texture2D" uid="uid://sve8xyge2rqv" path="res://assets/tablerio/ripple.png" id="1_a1apw"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_ripple"]
 
 [resource]
 script = ExtResource("1_ripple")
 id = "Ripple"
 display_name = "Ripple"
 initial = "R"
-badge_color = Color(0.25, 0.72, 0.68, 1.0)
-trigger = "land"
+badge_color = Color(0.25, 0.72, 0.68, 1)
 description = "On landing, pushes the two pieces above into adjacent columns if space exists."
+icon = ExtResource("1_a1apw")

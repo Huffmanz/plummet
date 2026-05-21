@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://x34krc1ji047"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_deposit"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_deposit"]
+[ext_resource type="Texture2D" uid="uid://cmb8ox8jem1u6" path="res://assets/tablerio/pig-money.png" id="1_sitbs"]
 
 [resource]
 script = ExtResource("1_deposit")
 id = "Deposit"
 display_name = "Deposit"
 initial = "D"
-badge_color = Color(0.85, 0.72, 0.15, 1.0)
-trigger = "land"
+badge_color = Color(0.85, 0.72, 0.15, 1)
 description = "On landing, earn +5 chips immediately regardless of whether this piece clears."
+icon = ExtResource("1_sitbs")

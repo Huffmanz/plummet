@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PieceTypeData" format=3 uid="uid://b8c1ewuv3ahet"]
 
-[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_ember"]
+[ext_resource type="Script" uid="uid://bhpbb1uxpb4dq" path="res://scripts/data/piece_type_data.gd" id="1_ember"]
+[ext_resource type="Texture2D" uid="uid://c6taynwkhc4w3" path="res://assets/tablerio/campfire.png" id="1_mmyvl"]
 
 [resource]
 script = ExtResource("1_ember")
@@ -9,3 +10,4 @@ display_name = "Ember"
 initial = "E"
 description = "When part of a clear, add +1 to cascade depth for subsequent clears. Multiple Embers stack."
 shader_style = "ember"
+icon = ExtResource("1_mmyvl")

@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://cbbudh7sjopub"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_cushion"]
+[ext_resource type="Texture2D" uid="uid://cqt4otdlpthey" path="res://assets/tablerio/shield.png" id="1_87kjv"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_cushion"]
 
 [resource]
 script = ExtResource("1_cushion")
@@ -9,3 +10,4 @@ display_name = "Cushion"
 description = "Once per run, a match loss is ignored — the run continues as if you won (skip shop)."
 rarity = "uncommon"
 source = "boss_drop"
+icon = ExtResource("1_87kjv")

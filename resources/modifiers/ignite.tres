@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://c0nvd0jgwovoo"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_ignite"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_ignite"]
+[ext_resource type="Texture2D" uid="uid://c4lb3vn5okock" path="res://assets/tablerio/flame.png" id="1_qhnli"]
 
 [resource]
 script = ExtResource("1_ignite")
 id = "Ignite"
 display_name = "Ignite"
 initial = "I"
-badge_color = Color(0.85, 0.22, 0.15, 1.0)
-trigger = "land"
+badge_color = Color(0.85, 0.22, 0.15, 1)
 description = "On landing, the piece below treats its next clear as +1 cascade depth."
+icon = ExtResource("1_qhnli")

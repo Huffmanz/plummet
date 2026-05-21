@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://dv6sim547dgba"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_forge"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_forge"]
+[ext_resource type="Texture2D" uid="uid://c4nuvd6reqsmk" path="res://assets/tablerio/hammer.png" id="1_rrqlu"]
 
 [resource]
 script = ExtResource("1_forge")
@@ -8,4 +9,4 @@ id = "Forge"
 display_name = "Forge"
 description = "Once per shop visit, upgrade one piece type for free (chip cost waived)."
 rarity = "uncommon"
-source = "shop"
+icon = ExtResource("1_rrqlu")

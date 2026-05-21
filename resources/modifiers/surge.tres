@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://5fejns2nalq3"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_surge"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_surge"]
+[ext_resource type="Texture2D" uid="uid://bnnsedee8oj3c" path="res://assets/tablerio/bolt.png" id="1_t7c7s"]
 
 [resource]
 script = ExtResource("1_surge")
 id = "Surge"
 display_name = "Surge"
 initial = "Z"
-badge_color = Color(0.92, 0.85, 0.12, 1.0)
+badge_color = Color(0.92, 0.85, 0.12, 1)
 trigger = "clear"
 description = "On clear, the next piece you drop has its base clear value ×3 if it clears on the same turn."
+icon = ExtResource("1_t7c7s")

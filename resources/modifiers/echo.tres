@@ -1,12 +1,14 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://6hv3jst5xpmx"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_echo"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_echo"]
+[ext_resource type="Texture2D" uid="uid://bbywpefykuthj" path="res://assets/tablerio/radar.png" id="1_q7eny"]
 
 [resource]
 script = ExtResource("1_echo")
 id = "Echo"
 display_name = "Echo"
 initial = "E"
-badge_color = Color(0.61, 0.42, 0.72, 1.0)
+badge_color = Color(0.61, 0.42, 0.72, 1)
 trigger = "clear"
 description = "On clear, drops a copy of this piece (same type, no modifier) into the column with fewest pieces."
+icon = ExtResource("1_q7eny")

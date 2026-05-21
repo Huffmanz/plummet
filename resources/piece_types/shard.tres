@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="PieceTypeData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="PieceTypeData" format=3 uid="uid://b8bn0od68cpuk"]
 
-[ext_resource type="Script" path="res://scripts/data/piece_type_data.gd" id="1_shard"]
+[ext_resource type="Texture2D" uid="uid://cvrvre3ev7gh" path="res://assets/tablerio/sparkle-2.png" id="1_0pq53"]
+[ext_resource type="Script" uid="uid://bhpbb1uxpb4dq" path="res://scripts/data/piece_type_data.gd" id="1_shard"]
 
 [resource]
 script = ExtResource("1_shard")
@@ -9,3 +10,4 @@ display_name = "Shard"
 initial = "S"
 description = "When part of a clear, removes itself and the two pieces directly above it."
 shader_style = "crystal"
+icon = ExtResource("1_0pq53")

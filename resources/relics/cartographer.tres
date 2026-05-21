@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://fg73g5phs117"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_cartographer"]
+[ext_resource type="Texture2D" uid="uid://dmb3kokur4xhy" path="res://assets/tablerio/map.png" id="1_2d1xr"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_cartographer"]
 
 [resource]
 script = ExtResource("1_cartographer")
@@ -9,3 +10,4 @@ display_name = "Cartographer"
 description = "After each act, choose which enemy you face first in the next act."
 rarity = "rare"
 source = "boss_drop"
+icon = ExtResource("1_2d1xr")

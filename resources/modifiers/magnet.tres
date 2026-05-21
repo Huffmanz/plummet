@@ -1,12 +1,13 @@
-[gd_resource type="Resource" script_class="ModifierData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="ModifierData" format=3 uid="uid://jtb4uirgcs7g"]
 
-[ext_resource type="Script" path="res://scripts/data/modifier_data.gd" id="1_magnet"]
+[ext_resource type="Texture2D" uid="uid://bpmu5eobte3xv" path="res://assets/tablerio/magnet.png" id="1_3gucv"]
+[ext_resource type="Script" uid="uid://tv7o4ycc17jm" path="res://scripts/data/modifier_data.gd" id="1_magnet"]
 
 [resource]
 script = ExtResource("1_magnet")
 id = "Magnet"
 display_name = "Magnet"
 initial = "M"
-badge_color = Color(0.35, 0.56, 0.83, 1.0)
-trigger = "land"
+badge_color = Color(0.35, 0.56, 0.83, 1)
 description = "On landing, slides the nearest same-color piece in this row one cell toward this piece."
+icon = ExtResource("1_3gucv")

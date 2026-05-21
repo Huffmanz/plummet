@@ -1,9 +1,10 @@
 # Feature 18 — Shop Audio
+
 *Plummet · Shop juice · Plummet*
 
 ## Purpose
 
-Wire short, cozy SFX to every shop gesture so drag, purchase, reroll, and navigation match the board and menu feel. All shop sounds go through **`RandomAudioPlayer`** so a single imported file still gets pitch variation.
+Wire short, cozy SFX to every shop gesture so drag, purchase, reroll, and navigation match the board and menu feel. All shop sounds go through `**RandomAudioPlayer`** so a single imported file still gets pitch variation.
 
 ---
 
@@ -42,14 +43,16 @@ For each logical sound:
 3. Enable `randomize_pitch = true` (default)
 4. Recommended pitch ranges:
 
-| Cue type | `min_pitch` | `max_pitch` |
-|----------|-------------|-------------|
-| UI click / hover tick | `0.92` | `1.08` |
-| Soft whoosh / slide | `0.88` | `1.12` |
-| Positive attach / chime | `0.94` | `1.06` |
-| Error / deny | `0.85` | `1.0` |
 
-5. Call `play_random()` or `play_random_overlapping(parent)` for rapid repeats
+| Cue type                | `min_pitch` | `max_pitch` |
+| ----------------------- | ----------- | ----------- |
+| UI click / hover tick   | `0.92`      | `1.08`      |
+| Soft whoosh / slide     | `0.88`      | `1.12`      |
+| Positive attach / chime | `0.94`      | `1.06`      |
+| Error / deny            | `0.85`      | `1.0`       |
+
+
+1. Call `play_random()` or `play_random_overlapping(parent)` for rapid repeats
 
 **Why:** With only one WAV in the array, `pick_random_stream()` still returns it, and `_apply_pitch()` varies `pitch_scale` each play so repeats do not sound robotic.
 
@@ -57,11 +60,13 @@ Reference: `JuicySfxButton`, `StaggerFlyInContainer`, `AnimLayer` land/clear SFX
 
 ### Overlapping plays
 
-| Cue | Method |
-|-----|--------|
-| Hover tick (throttled) | `play_random_overlapping(self)` |
+
+| Cue                       | Method                                     |
+| ------------------------- | ------------------------------------------ |
+| Hover tick (throttled)    | `play_random_overlapping(self)`            |
 | Cascade of deal-in slides | `play_random_overlapping` per card stagger |
-| Single purchase | `play_random()` |
+| Single purchase           | `play_random()`                            |
+
 
 ---
 
@@ -89,11 +94,13 @@ Export arrays on `shop_screen.gd` or dedicated `shop_audio.gd` for assignment in
 
 ### Bus and volume
 
-| Setting | Value |
-|---------|-------|
-| Bus | `SFX` (or `Master` if no bus) |
-| Default `volume_db` | `-4` to `-8` for UI (tune in editor) |
+
+| Setting                           | Value                                           |
+| --------------------------------- | ----------------------------------------------- |
+| Bus                               | `SFX` (or `Master` if no bus)                   |
+| Default `volume_db`               | `-4` to `-8` for UI (tune in editor)            |
 | `overlapping_volume_db` on player | `-10` relative (built into `RandomAudioPlayer`) |
+
 
 ---
 
@@ -117,47 +124,51 @@ Wire `GameBoard` to pass mute state into `ShopScreen.open()`, or use a group/que
 
 Replace `TBD` with final path(s) under `res://assets/sfx/shop/` (or existing kenney folders). Multiple files per row = add all to that player’s `streams` array.
 
-| ID | Purpose | When it plays | Overlap OK | Suggested character | File(s) |
-|----|---------|---------------|------------|---------------------|---------|
-| `shop_open` | Shop screen revealed | End of enter transition / shop visible | No | Soft curtain whoosh or card deck slide | `TBD` |
-| `shop_close` | Leaving shop | Start of exit transition on Continue | No | Light whoosh out, descending optional | `TBD` |
-| `drag_pickup` | Pick up offer card | `ShopOfferCard._start_drag()` | Yes | Short paper/card lift, tactile | `TBD` |
-| `drop_valid_hover` | Valid target hover | Throttled while dragging over valid piece/relic slot (max 1 per 200ms) | Yes | Quiet tick or soft blip | `TBD` (optional) |
-| `drop_invalid` | Invalid target / deny | Hover invalid slot or release without drop | Yes | Soft thud or muted “bonk”, low volume | `TBD` |
-| `modifier_attach` | Modifier applied | After drop snap on piece, modifier badge appears | No | Positive chime, warm | `TBD` |
-| `piece_type_apply` | Piece type changed | After drop snap, piece shader updates | No | Whoosh + soft crystalline hit | `TBD` |
-| `relic_acquire` | Relic slotted | After drop snap on empty relic slot | No | Distinct two-tone flourish, slightly special | `TBD` |
-| `modifier_remove` | Modifier removed | × button remove confirmed | No | Reverse chip/chime, shorter | `TBD` |
-| `chip_spend` | Chips deducted | Chip tween/flash starts (attach, remove, type, relic, reroll) | Yes | Coin clink or chip tap | `TBD` |
-| `reroll` | Offers replaced | Reroll button pressed, old offers exit | No | Card shuffle / riffle | `TBD` |
-| `cant_afford` | Action blocked | Drag started on unaffordable card (optional) or click disabled reroll | Yes | Muted error, no harsh buzz | `TBD` |
+
+| ID                 | Purpose               | When it plays                                                          | Overlap OK | Suggested character                          | File(s)                                                                                                                                                              |
+| ------------------ | --------------------- | ---------------------------------------------------------------------- | ---------- | -------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `shop_open`        | Shop screen revealed  | End of enter transition / shop visible                                 | No         | Soft curtain whoosh or card deck slide       | `TBD`                                                                                                                                                                |
+| `shop_close`       | Leaving shop          | Start of exit transition on Continue                                   | No         | Light whoosh out, descending optional        | `TBD`                                                                                                                                                                |
+| `drag_pickup`      | Pick up offer card    | `ShopOfferCard._start_drag()`                                          | Yes        | Short paper/card lift, tactile               | `@assets/sfx/817579__silverdubloons__slidecard04.wav`                                                                                                                |
+| `drop_valid_hover` | Valid target hover    | Throttled while dragging over valid piece/relic slot (max 1 per 200ms) | Yes        | Quiet tick or soft blip                      | `@assets/sfx/kenney_ui-audio/Audio/click3.ogg`                                                                                                                       |
+| `drop_invalid`     | Invalid target / deny | Hover invalid slot or release without drop                             | Yes        | Soft thud or muted “bonk”, low volume        | `@assets/sfx/kenney_interface-sounds/Audio/bong_001.ogg`                                                                                                             |
+| `modifier_attach`  | Modifier applied      | After drop snap on piece, modifier badge appears                       | No         | Positive chime, warm                         | `assets/sfx/kenney_interface-sounds/switch30.ogg`                                                                                                                    |
+| `piece_type_apply` | Piece type changed    | After drop snap, piece shader updates                                  | No         | Whoosh + soft crystalline hit                | `assets/sfx/kenney_interface-sounds/switch30.ogg`                                                                                                                    |
+| `relic_acquire`    | Relic slotted         | After drop snap on empty relic slot                                    | No         | Distinct two-tone flourish, slightly special | `assets/sfx/kenney_interface-sounds/switch30.ogg`                                                                                                                    |
+| `modifier_remove`  | Modifier removed      | × button remove confirmed                                              | No         | Reverse chip/chime, shorter                  | `TBD`                                                                                                                                                                |
+| `chip_spend`       | Chips deducted        | Chip tween/flash starts (attach, remove, type, relic, reroll)          | Yes        | Coin clink or chip tap                       | `@assets/sfx/209578__zott820__cash-register-purchase.wav`                                                                                                            |
+| `reroll`           | Offers replaced       | Reroll button pressed, old offers exit                                 | No         | Card shuffle / riffle                        | `@assets/sfx/kenney_casino-audio/Audio/dice-throw-1.ogg`assets/sfx/kenney_casino-audio/Audio/dice-throw-2.oggassets/sfx/kenney_casino-audio/Audio/dice-throw-3.ogg |
+| `cant_afford`      | Action blocked        | Drag started on unaffordable card (optional) or click disabled reroll  | Yes        | Muted error, no harsh buzz                   | `@assets/sfx/kenney_interface-sounds/Audio/bong_001.ogg`                                                                                                             |
+
 
 ### Notes per cue
 
-- **`shop_open` / `shop_close`:** Single stream is fine; pitch vary ±5%.
-- **`drag_pickup`:** Can share stream with `drop_valid_hover` at different pitch ranges if asset budget is tight — prefer separate for clarity.
-- **`modifier_attach` / `piece_type_apply` / `relic_acquire`:** Must be distinguishable; player learns outcome by ear.
-- **`chip_spend`:** Play on every paid transaction; skip when Patron cost is 0.
-- **`reroll`:** Play once per press, not per card dealt.
+- `**shop_open` / `shop_close`:** Single stream is fine; pitch vary ±5%.
+- `**drag_pickup`:** Can share stream with `drop_valid_hover` at different pitch ranges if asset budget is tight — prefer separate for clarity.
+- `**modifier_attach` / `piece_type_apply` / `relic_acquire`:** Must be distinguishable; player learns outcome by ear.
+- `**chip_spend`:** Play on every paid transaction; skip when Patron cost is 0.
+- `**reroll`:** Play once per press, not per card dealt.
 
 ---
 
 ## Trigger map (code locations)
 
-| Sound ID | Call site |
-|----------|-----------|
-| `shop_open` | After feature 15 enter completes + deal-in starts |
-| `shop_close` | `ShopScreen._on_continue` before transition |
-| `drag_pickup` | `ShopOfferCard._start_drag` |
+
+| Sound ID           | Call site                                                                   |
+| ------------------ | --------------------------------------------------------------------------- |
+| `shop_open`        | After feature 15 enter completes + deal-in starts                           |
+| `shop_close`       | `ShopScreen._on_continue` before transition                                 |
+| `drag_pickup`      | `ShopOfferCard._start_drag`                                                 |
 | `drop_valid_hover` | `ShopScreen._process` or slot `mouse_entered` while drag active (throttled) |
-| `drop_invalid` | Invalid slot hover or drag end without purchase |
-| `modifier_attach` | `_apply_modifier_offer` after snap |
-| `piece_type_apply` | `_apply_piece_type_offer` after snap |
-| `relic_acquire` | `_on_relic_dropped` after snap |
-| `modifier_remove` | `_on_remove_modifier` |
-| `chip_spend` | `ShopScreen._animate_chips_to` when `spent_delta > 0` |
-| `reroll` | `_on_reroll` |
-| `cant_afford` | `ShopOfferCard` when `_start_drag` blocked by `not _can_drag` |
+| `drop_invalid`     | Invalid slot hover or drag end without purchase                             |
+| `modifier_attach`  | `_apply_modifier_offer` after snap                                          |
+| `piece_type_apply` | `_apply_piece_type_offer` after snap                                        |
+| `relic_acquire`    | `_on_relic_dropped` after snap                                              |
+| `modifier_remove`  | `_on_remove_modifier`                                                       |
+| `chip_spend`       | `ShopScreen._animate_chips_to` when `spent_delta > 0`                       |
+| `reroll`           | `_on_reroll`                                                                |
+| `cant_afford`      | `ShopOfferCard` when `_start_drag` blocked by `not _can_drag`               |
+
 
 ---
 
@@ -209,12 +220,12 @@ func play_open() -> void:
 
 ## Acceptance criteria
 
-- [ ] Every cue in the sound list has a wired `RandomAudioPlayer` (not raw `AudioStreamPlayer`)
-- [ ] Each player’s `streams` array is used with `play_random()` / `play_random_overlapping()`
-- [ ] `randomize_pitch` is enabled; single-file cues still vary in pitch
-- [ ] Mute flag silences all shop SFX without errors
-- [ ] Purchase sounds fire after drop snap, not on drag start
-- [ ] Filename worksheet updated when assets are imported
+- Every cue in the sound list has a wired `RandomAudioPlayer` (not raw `AudioStreamPlayer`)
+- Each player’s `streams` array is used with `play_random()` / `play_random_overlapping()`
+- `randomize_pitch` is enabled; single-file cues still vary in pitch
+- Mute flag silences all shop SFX without errors
+- Purchase sounds fire after drop snap, not on drag start
+- Filename worksheet updated when assets are imported
 
 ---
 
@@ -223,3 +234,4 @@ func play_open() -> void:
 - 15 — Enter/exit (open/close)
 - 17 — Drag (pickup, valid/invalid, attach timing)
 - 21 — Reroll (reroll cue)
+

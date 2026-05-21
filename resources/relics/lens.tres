@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://lp6dfq8okux6"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_lens"]
+[ext_resource type="Texture2D" uid="uid://j08bcv88thir" path="res://assets/tablerio/eye.png" id="1_jk3vc"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_lens"]
 
 [resource]
 script = ExtResource("1_lens")
 id = "Lens"
 display_name = "Lens"
 description = "Before each match, see the board layout after the first 4 AI drops."
-rarity = "common"
-source = "shop"
+icon = ExtResource("1_jk3vc")

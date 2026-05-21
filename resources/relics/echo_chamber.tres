@@ -1,6 +1,7 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://dir4whmjifk4"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_echo_chamber"]
+[ext_resource type="Texture2D" uid="uid://c3y2yaimavcic" path="res://assets/tablerio/wave-sine.png" id="1_a7sjn"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_echo_chamber"]
 
 [resource]
 script = ExtResource("1_echo_chamber")
@@ -9,3 +10,4 @@ display_name = "Echo Chamber"
 description = "Any piece with the Echo modifier drops 2 copies instead of 1."
 rarity = "rare"
 source = "boss_drop"
+icon = ExtResource("1_a7sjn")

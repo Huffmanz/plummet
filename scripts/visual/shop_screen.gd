@@ -16,8 +16,10 @@ const WEIGHT_RELIC_COMMON: int = 5
 const WEIGHT_RELIC_UNCOMMON: int = 2
 const WEIGHT_RELIC_RARE: int = 1
 
-@onready var _chip_label: Label = %ChipLabel
 const _JUICY_BUTTON_SCENE := preload("res://scenes/ui/juicy_sfx_button.tscn")
+
+@onready var _chip_label: Label = %ChipLabel
+@onready var _offer_fly_in: StaggerFlyInHContainer = %OffersRow
 
 @onready var _continue_btn: JuicySfxButton = %ContinueBtn
 @onready var _reroll_btn: JuicySfxButton = %RerollBtn
@@ -140,8 +142,15 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
 	_offer_dragging = false
 	show()
 	_set_input_enabled(true)
+	for card in _offer_cards:
+		card.reduced_motion = reduced_motion
 	_refresh()
 	_update_shop_cursor()
+	_offer_fly_in.reduced_motion = reduced_motion
+	if TransitionManager.is_transitioning():
+		TransitionManager.transition_finished.connect(_offer_fly_in.play_fly_in, CONNECT_ONE_SHOT)
+	else:
+		_offer_fly_in.play_fly_in.call_deferred()
 
 
 func _roll_offers() -> Array[Dictionary]:

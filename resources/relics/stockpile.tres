@@ -1,11 +1,11 @@
-[gd_resource type="Resource" script_class="RelicData" load_steps=2 format=3]
+[gd_resource type="Resource" script_class="RelicData" format=3 uid="uid://dfigtx5imlk00"]
 
-[ext_resource type="Script" path="res://scripts/data/relic_data.gd" id="1_stockpile"]
+[ext_resource type="Script" uid="uid://ddph2bapqxqlw" path="res://scripts/data/relic_data.gd" id="1_stockpile"]
+[ext_resource type="Texture2D" uid="uid://bvh7a1au8o6dc" path="res://assets/tablerio/moneybag.png" id="1_y0v06"]
 
 [resource]
 script = ExtResource("1_stockpile")
 id = "Stockpile"
 display_name = "Stockpile"
 description = "Chip earnings from clears are doubled (1 chip per clear becomes 2)."
-rarity = "common"
-source = "shop"
+icon = ExtResource("1_y0v06")

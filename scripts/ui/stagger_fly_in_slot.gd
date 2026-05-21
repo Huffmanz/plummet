@@ -87,6 +87,44 @@ func has_value_pop_target() -> bool:
 	return _find_value_control() != null
 
 
+func prepare_fly_in_right(offset: float) -> void:
+	if _pan == null:
+		return
+	_layout_pan()
+	_pan.position = Vector2(offset, 0.0)
+	var mod := _pan.modulate
+	mod.a = 0.0
+	_pan.modulate = mod
+
+
+func prepare_pan_pop() -> void:
+	if _pan == null:
+		return
+	_pan.scale = Vector2.ONE
+	_pan.pivot_offset = _pan.size * 0.5
+
+
+func tween_pan_pop(
+		tween: Tween,
+		fly_duration: float,
+		row_delay: float,
+		pop_duration: float,
+		overshoot: float,
+	) -> void:
+	if _pan == null:
+		return
+	var pop_delay := row_delay + fly_duration
+	var peak := Vector2(overshoot, overshoot)
+	tween.tween_property(_pan, "scale", peak, pop_duration * 0.55) \
+		.set_delay(pop_delay) \
+		.set_trans(Tween.TRANS_BACK) \
+		.set_ease(Tween.EASE_OUT)
+	tween.tween_property(_pan, "scale", Vector2.ONE, pop_duration * 0.45) \
+		.set_delay(pop_delay + pop_duration * 0.55) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_OUT)
+
+
 func _find_value_control() -> Control:
 	var content := get_content()
 	if content == null:

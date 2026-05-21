@@ -10,6 +10,10 @@ Not Started
 
 ## History
 
+### Shop Bag Row Juice
+
+Bag row uses `StaggerFlyInHContainer` (same as offers): pieces stay hidden until deal-in runs after the offer row, then stagger in from the right with slide/pan-pop SFX. `ShopPieceSlot` plays modifier badge pop, piece-type morph (squash + shader flash), and ×-button hover/press with badge shrink-out SFX after drop snap. `StaggerFlyInSlot` hides wrapped content until prepare, preserves fly-in offset through layout resize, and clears prep after tween. Added `RandomAudioPlayer.play_random_overlapping_static` for one-shot slot sounds.
+
 ### Shop Offer Cards Juice
 
 Added `StaggerFlyInHContainer` on the shop offers row for right-to-left staggered deal-in with slide SFX on each shop open (`shop_screen.tscn`). `ShopOfferCard` gains affordable hover scale (1.03) and border brighten (suppressed while dragging), unaffordable alpha pulse loop, relic border shimmer with optional breathe, and consumed shrink/fade (0.85 scale, fade out) before the invisible layout spacer. All animations respect `reduced_motion`. Wired Tabler icons on modifier/piece-type/relic `.tres` resources and committed slide/purchase WAV assets documented in feature 18.

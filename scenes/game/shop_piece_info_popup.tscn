@@ -1,0 +1,136 @@
+[gd_scene format=3 uid="uid://df18mutl56vpj"]
+
+[ext_resource type="Script" path="res://scripts/visual/shop_piece_info_popup.gd" id="1_script"]
+
+[node name="ShopPieceInfoPopup" type="PanelContainer"]
+visible = false
+z_index = 30
+mouse_filter = 2
+custom_minimum_size = Vector2(200, 0)
+script = ExtResource("1_script")
+
+[node name="Margin" type="MarginContainer" parent="."]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="ScrollRoot" type="ScrollContainer" parent="Margin"]
+unique_name_in_owner = true
+layout_mode = 2
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 3
+
+[node name="Body" type="VBoxContainer" parent="Margin/ScrollRoot" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 6
+
+[node name="TypeHeader" type="HBoxContainer" parent="Margin/ScrollRoot/Body"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="TypeIconFrame" type="PanelContainer" parent="Margin/ScrollRoot/Body/TypeHeader" unique_name_in_owner = true]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+
+[node name="TypeIconInner" type="CenterContainer" parent="Margin/ScrollRoot/Body/TypeHeader/TypeIconFrame"]
+layout_mode = 2
+
+[node name="TypeIconTexture" type="TextureRect" parent="Margin/ScrollRoot/Body/TypeHeader/TypeIconFrame/TypeIconInner" unique_name_in_owner = true]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="TypeIconGlyph" type="ColorRect" parent="Margin/ScrollRoot/Body/TypeHeader/TypeIconFrame/TypeIconInner" unique_name_in_owner = true]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+color = Color(0.95, 0.93, 0.9, 1)
+
+[node name="TypeTitleCol" type="VBoxContainer" parent="Margin/ScrollRoot/Body/TypeHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="TypeNameLabel" type="Label" parent="Margin/ScrollRoot/Body/TypeHeader/TypeTitleCol" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Normal"
+
+[node name="TypeKindLabel" type="Label" parent="Margin/ScrollRoot/Body/TypeHeader/TypeTitleCol" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Piece type"
+
+[node name="TypeDescLabel" type="Label" parent="Margin/ScrollRoot/Body" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "Standard piece."
+autowrap_mode = 3
+
+[node name="ModifierBlock" type="VBoxContainer" parent="Margin/ScrollRoot/Body" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ModHeader" type="HBoxContainer" parent="Margin/ScrollRoot/Body/ModifierBlock"]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="ModIconFrame" type="PanelContainer" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader" unique_name_in_owner = true]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+
+[node name="ModIconInner" type="CenterContainer" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModIconFrame"]
+layout_mode = 2
+
+[node name="ModIconTexture" type="TextureRect" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModIconFrame/ModIconInner" unique_name_in_owner = true]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="ModIconGlyph" type="ColorRect" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModIconFrame/ModIconInner" unique_name_in_owner = true]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+color = Color(0.95, 0.93, 0.9, 1)
+
+[node name="ModTitleCol" type="VBoxContainer" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="ModNameLabel" type="Label" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModTitleCol" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Surge"
+
+[node name="ModKindLabel" type="Label" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModTitleCol" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Modifier · land"
+
+[node name="ModDescLabel" type="Label" parent="Margin/ScrollRoot/Body/ModifierBlock" unique_name_in_owner = true]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 9
+text = "Modifier effect."
+autowrap_mode = 3

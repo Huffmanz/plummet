@@ -3,8 +3,6 @@ class_name ShopScreen extends Control
 signal shop_closed(chips_remaining: int)
 
 const COST_ATTACH: int = 10
-const COST_REMOVE: int = 5
-const COST_UPGRADE: int = 20
 const COST_RELIC: int = 25
 const COST_REROLL: int = 5
 
@@ -16,9 +14,9 @@ const WEIGHT_RELIC_COMMON: int = 5
 const WEIGHT_RELIC_UNCOMMON: int = 2
 const WEIGHT_RELIC_RARE: int = 1
 
-const _JUICY_BUTTON_SCENE := preload("res://scenes/ui/juicy_sfx_button.tscn")
 const OFFER_EXIT_DURATION := 0.18
 const DROP_HOVER_SFX_MS := 200
+const PIECE_INFO_DELAY := 0.25
 
 @onready var _audio: ShopAudio = $ShopAudio
 @onready var _chip_label: Label = %ChipLabel
@@ -27,9 +25,7 @@ const DROP_HOVER_SFX_MS := 200
 
 @onready var _continue_btn: JuicySfxButton = %ContinueBtn
 @onready var _reroll_btn: JuicySfxButton = %RerollBtn
-@onready var _upgrade_popover: PanelContainer = %UpgradePopover
-@onready var _popover_title: Label = %PopoverTitle
-@onready var _popover_options: VBoxContainer = %PopoverOptions
+@onready var _piece_info: ShopPieceInfoPopup = %PieceInfoPopup
 
 var _offer_cards: Array[ShopOfferCard] = []
 var _piece_slots: Array[ShopPieceSlot] = []
@@ -42,7 +38,6 @@ var _offers: Array[Dictionary] = []
 var _offer_count: int = 3
 var _offer_used: Array[bool] = []
 var _rerolled: bool = false
-var _popover_piece_idx: int = -1
 
 var _drag_offer_idx: int = -1
 var _offer_dragging: bool = false
@@ -53,6 +48,8 @@ var _displayed_chips: int = 0
 var _chip_tween: Tween
 var _hover_sfx_ms: int = 0
 var _drag_drop_accepted: bool = false
+var _piece_hover_slot: ShopPieceSlot = null
+var _piece_hover_time: float = 0.0
 
 
 func _ready() -> void:
@@ -95,8 +92,6 @@ func _style_ui() -> void:
 		pass
 	_continue_btn.normal_bg_color = UITheme.ACCENT
 	_continue_btn.hover_bg_color = UITheme.ACCENT_HOVER
-	_upgrade_popover.add_theme_stylebox_override("panel", UITheme.make_surface_style())
-	UITheme.style_label_primary(_popover_title, true)
 	var offers_hint: Label = $Root/Body/OffersSection/OffersVBox/OffersHint
 	if offers_hint:
 		UITheme.style_label_muted(offers_hint)
@@ -115,8 +110,8 @@ func _wire_signals() -> void:
 		card.drag_started.connect(_on_offer_drag_started)
 		card.drag_ended.connect(_on_offer_drag_ended)
 	for slot in _piece_slots:
-		slot.remove_pressed.connect(_on_remove_modifier)
-		slot.slot_clicked.connect(_on_piece_clicked)
+		slot.mouse_entered.connect(_on_piece_slot_mouse_entered.bind(slot))
+		slot.mouse_exited.connect(_on_piece_slot_mouse_exited.bind(slot))
 		slot.offer_dropped.connect(_on_piece_offer_dropped)
 	for slot in _relic_slots:
 		slot.relic_dropped.connect(_on_relic_dropped)
@@ -144,8 +139,10 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = fals
 	_offer_used.resize(_offers.size())
 	_offer_used.fill(false)
 	_rerolled = false
-	_hide_popover()
 	_offer_dragging = false
+	_piece_hover_slot = null
+	if _piece_info != null:
+		_piece_info.hide_popup()
 	if _audio != null:
 		_audio.muted = muted
 	for card in _offer_cards:
@@ -345,7 +342,6 @@ func _refresh_bag() -> void:
 		slot.reduced_motion = reduced_motion
 		var piece := _bag.get_piece_at(i)
 		slot.setup(i, piece)
-		slot.set_remove_enabled(_chips >= COST_REMOVE and not piece.modifier.is_empty())
 		slot.set_drop_highlight(false)
 
 
@@ -450,6 +446,7 @@ func _count_empty_mod_slots() -> int:
 func _process(_delta: float) -> void:
 	if visible:
 		_update_shop_cursor()
+		_update_piece_info_popup(_delta)
 	if _offer_dragging:
 		_update_drag_hover_sfx()
 
@@ -491,6 +488,9 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 	_offer_dragging = true
 	_drag_drop_accepted = false
 	_drag_offer_idx = offer_idx
+	_piece_hover_slot = null
+	if _piece_info != null:
+		_piece_info.hide_popup()
 	_update_shop_cursor()
 	for i in _offer_cards.size():
 		if i != offer_idx and is_instance_valid(_offer_cards[i]):
@@ -672,88 +672,14 @@ func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 		apply.call()
 
 
-func _on_remove_modifier(piece_idx: int) -> void:
-	if not _input_enabled:
-		return
-	if _chips < COST_REMOVE:
-		return
-	var piece := _bag.get_piece_at(piece_idx)
-	if piece.modifier.is_empty():
-		return
-	_chips -= COST_REMOVE
-	piece.modifier = ""
-	if _audio != null:
-		_audio.play_modifier_remove()
-	_animate_chips_to(_chips, COST_REMOVE)
-	_refresh()
-
-
-func _on_piece_clicked(piece_idx: int) -> void:
-	if not _input_enabled:
-		return
-	var piece := _bag.get_piece_at(piece_idx)
-	_popover_piece_idx = piece_idx
-	_clear_popover_options()
-	if piece.type == Piece.Type.NORMAL:
-		_popover_title.text = "Upgrade piece"
-		var forge_free := _relic_manager != null and _relic_manager.has_relic("Forge") \
-			and not _relic_manager.is_forge_spent_this_visit()
-		for t in [Piece.Type.PRISM, Piece.Type.COIN, Piece.Type.EMBER, Piece.Type.SHARD]:
-			var btn: JuicySfxButton = _JUICY_BUTTON_SCENE.instantiate()
-			btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			btn.custom_minimum_size = Vector2(0, 32)
-			btn.normal_bg_color = UITheme.SURFACE_LIGHT
-			btn.hover_bg_color = UITheme.SURFACE
-			var data: PieceTypeData = _piece_type_data(t)
-			var type_name := data.display_name if data else "?"
-			btn.button_text = "%s (FREE)" % type_name if forge_free else "%s (%d)" % [type_name, COST_UPGRADE]
-			btn.disabled = (not forge_free) and _chips < COST_UPGRADE
-			var chosen_type: Piece.Type = t
-			btn.pressed.connect(func(): _apply_upgrade(piece_idx, chosen_type))
-			_popover_options.add_child(btn)
-	else:
-		_popover_title.text = _piece_type_name(piece.type)
-		var info := Label.new()
-		var data: PieceTypeData = _piece_type_data(piece.type)
-		info.text = data.description if data else ""
-		info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		UITheme.style_label_primary(info, true)
-		_popover_options.add_child(info)
-	_position_popover(_piece_slots[piece_idx])
-	_upgrade_popover.visible = true
-
-
-func _apply_upgrade(piece_idx: int, new_type: Piece.Type) -> void:
-	if not _input_enabled:
-		return
-	var piece := _bag.get_piece_at(piece_idx)
-	if piece.type != Piece.Type.NORMAL:
-		_hide_popover()
-		return
-	var forge_free := _relic_manager != null and _relic_manager.has_relic("Forge") \
-		and not _relic_manager.is_forge_spent_this_visit()
-	if not forge_free and _chips < COST_UPGRADE:
-		return
-	if forge_free:
-		_relic_manager.try_forge()
-	else:
-		_chips -= COST_UPGRADE
-	piece.type = new_type
-	_hide_popover()
-	if not forge_free:
-		_animate_chips_to(_chips, COST_UPGRADE)
-	if _audio != null:
-		_audio.play_piece_type_apply()
-	_refresh()
-	_piece_slots[piece_idx].play_attach_juice("piece_type")
-
-
 func _on_reroll() -> void:
 	if _rerolled or _chips < COST_REROLL or not _input_enabled:
 		return
-	_hide_popover()
 	_offer_dragging = false
 	_drag_offer_idx = -1
+	_piece_hover_slot = null
+	if _piece_info != null:
+		_piece_info.hide_popup()
 	_set_input_enabled(false)
 	_play_reroll_btn_wiggle()
 	if _audio != null:
@@ -786,8 +712,10 @@ func _on_reroll() -> void:
 func _on_continue() -> void:
 	if not _input_enabled:
 		return
-	_hide_popover()
 	_offer_dragging = false
+	_piece_hover_slot = null
+	if _piece_info != null:
+		_piece_info.hide_popup()
 	GameCursor.apply_default()
 	_set_input_enabled(false)
 	if _audio != null:
@@ -802,23 +730,35 @@ func _on_continue() -> void:
 	)
 
 
-func _hide_popover() -> void:
-	_upgrade_popover.visible = false
-	_popover_piece_idx = -1
-	_clear_popover_options()
+func _on_piece_slot_mouse_entered(slot: ShopPieceSlot) -> void:
+	if not _input_enabled or _offer_dragging:
+		return
+	_piece_hover_slot = slot
+	_piece_hover_time = 0.0
 
 
-func _clear_popover_options() -> void:
-	for child in _popover_options.get_children():
-		child.queue_free()
+func _on_piece_slot_mouse_exited(slot: ShopPieceSlot) -> void:
+	if _piece_hover_slot == slot:
+		_piece_hover_slot = null
+		_piece_hover_time = 0.0
+		if _piece_info != null:
+			_piece_info.hide_popup()
 
 
-func _position_popover(slot: ShopPieceSlot) -> void:
-	var rect := slot.get_global_rect()
-	_upgrade_popover.global_position = Vector2(
-		rect.position.x,
-		rect.position.y - _upgrade_popover.size.y - 8.0
-	)
+func _update_piece_info_popup(delta: float) -> void:
+	if _piece_info == null or not visible or not _input_enabled or _offer_dragging or _bag == null:
+		if _piece_info != null and _piece_info.visible:
+			_piece_info.hide_popup()
+		return
+	if _piece_hover_slot == null or not is_instance_valid(_piece_hover_slot):
+		if _piece_info.visible:
+			_piece_info.hide_popup()
+		return
+	_piece_hover_time += delta
+	if _piece_hover_time < PIECE_INFO_DELAY:
+		return
+	var piece := _bag.get_piece_at(_piece_hover_slot.piece_index)
+	_piece_info.show_for(_piece_hover_slot, piece)
 
 
 func _piece_type_from_id(id: String) -> Piece.Type:
@@ -838,8 +778,3 @@ func _piece_type_data(t: Piece.Type) -> PieceTypeData:
 		Piece.Type.EMBER:  return DataRegistry.get_piece_type("EMBER")
 		Piece.Type.SHARD:  return DataRegistry.get_piece_type("SHARD")
 	return null
-
-
-func _piece_type_name(t: Piece.Type) -> String:
-	var data := _piece_type_data(t)
-	return data.display_name if data else "?"

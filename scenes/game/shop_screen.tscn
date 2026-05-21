@@ -8,6 +8,7 @@
 [ext_resource type="PackedScene" uid="uid://wqifynfc6cvj" path="res://scenes/ui/juicy_sfx_button.tscn" id="6_juicy_btn"]
 [ext_resource type="Script" path="res://scripts/ui/stagger_fly_in_hcontainer.gd" id="7_hfly"]
 [ext_resource type="PackedScene" path="res://scenes/audio/shop_audio.tscn" id="8_shop_audio"]
+[ext_resource type="PackedScene" path="res://scenes/game/shop_piece_info_popup.tscn" id="9_piece_info"]
 
 [node name="ShopScreen" type="Control" unique_id=171700366]
 layout_mode = 3
@@ -19,6 +20,9 @@ grow_vertical = 2
 script = ExtResource("1_shopscr")
 
 [node name="ShopAudio" parent="." instance=ExtResource("8_shop_audio")]
+
+[node name="PieceInfoPopup" parent="." instance=ExtResource("9_piece_info")]
+unique_name_in_owner = true
 
 [node name="Background" parent="." unique_id=825474732 instance=ExtResource("2_bg")]
 z_index = -1
@@ -243,35 +247,3 @@ layout_mode = 2
 [node name="Relic3" parent="Root/Body/RelicsSection/RelicsVBox/RelicsRow" unique_id=2137922673 instance=ExtResource("5_relic")]
 unique_name_in_owner = true
 layout_mode = 2
-
-[node name="UpgradePopover" type="PanelContainer" parent="." unique_id=102367462]
-unique_name_in_owner = true
-visible = false
-layout_mode = 0
-offset_left = 100.0
-offset_top = 200.0
-offset_right = 280.0
-offset_bottom = 320.0
-
-[node name="PopoverMargin" type="MarginContainer" parent="UpgradePopover" unique_id=1892948395]
-layout_mode = 2
-theme_override_constants/margin_left = 10
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 10
-theme_override_constants/margin_bottom = 8
-
-[node name="PopoverVBox" type="VBoxContainer" parent="UpgradePopover/PopoverMargin" unique_id=701600208]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 6
-
-[node name="PopoverTitle" type="Label" parent="UpgradePopover/PopoverMargin/PopoverVBox" unique_id=1754695117]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_font_sizes/font_size = 12
-text = "Upgrade"
-
-[node name="PopoverOptions" type="VBoxContainer" parent="UpgradePopover/PopoverMargin/PopoverVBox" unique_id=476284185]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/separation = 4

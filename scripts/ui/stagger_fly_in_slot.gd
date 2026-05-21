@@ -9,6 +9,7 @@ var _awaiting_fly_in: bool = false
 
 func wrap(content: Control) -> void:
 	_content = content
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	size_flags_vertical = content.size_flags_vertical
 	clip_contents = true

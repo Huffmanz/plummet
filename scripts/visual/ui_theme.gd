@@ -58,6 +58,18 @@ static func make_surface_style(radius: int = RADIUS_CARD, fill: Color = SURFACE)
 	return sb
 
 
+static func make_tooltip_style(radius: int = 8) -> StyleBoxFlat:
+	var sb := make_surface_style(radius, SURFACE)
+	sb.content_margin_left = 10.0
+	sb.content_margin_right = 10.0
+	sb.content_margin_top = 8.0
+	sb.content_margin_bottom = 8.0
+	sb.shadow_color = Color(0.0, 0.0, 0.0, 0.28)
+	sb.shadow_size = 6
+	sb.shadow_offset = Vector2(0, 2)
+	return sb
+
+
 static func make_button_style(normal: Color = ACCENT, hover: Color = ACCENT_HOVER) -> StyleBoxFlat:
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = normal
@@ -150,3 +162,25 @@ static func draw_rounded_rect(
 	canvas.draw_circle(rect.end - Vector2(r, r), r, fill)
 	if border_width > 0.0:
 		canvas.draw_rect(rect, border, false, border_width)
+
+
+static func draw_dashed_circle(
+	canvas: CanvasItem,
+	center: Vector2,
+	radius: float,
+	color: Color,
+	width: float = 5.0,
+	segments: int = 12,
+	dash_fraction: float = 0.58,
+	angle_offset: float = 0.0
+) -> void:
+	var cap_radius := width * 0.5
+	var dash_arc := TAU / float(segments) * dash_fraction
+	for i in segments:
+		var start_angle := float(i) / float(segments) * TAU + angle_offset
+		var end_angle := start_angle + dash_arc
+		canvas.draw_arc(center, radius, start_angle, end_angle, 16, color, width, true)
+		var start_dir := Vector2.from_angle(start_angle)
+		var end_dir := Vector2.from_angle(end_angle)
+		canvas.draw_circle(center + start_dir * radius, cap_radius, color)
+		canvas.draw_circle(center + end_dir * radius, cap_radius, color)

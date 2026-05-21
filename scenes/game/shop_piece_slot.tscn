@@ -1,0 +1,55 @@
+[gd_scene load_steps=4 format=3 uid="uid://b3dbeqqj0jiwu"]
+
+[ext_resource type="Script" path="res://scripts/visual/shop_piece_slot.gd" id="1_slot"]
+[ext_resource type="PackedScene" path="res://scenes/game/shop_piece_preview.tscn" id="2_preview"]
+[ext_resource type="Script" path="res://scripts/visual/shop_drop_ring_overlay.gd" id="3_ring"]
+
+[node name="ShopPieceSlot" type="Control"]
+custom_minimum_size = Vector2(52, 52)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+mouse_filter = 0
+script = ExtResource("1_slot")
+
+[node name="PiecePreview" parent="." instance=ExtResource("2_preview")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ModIconHost" type="CenterContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="DropRing" type="Control" parent="."]
+unique_name_in_owner = true
+z_index = 2
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_ring")
+
+[node name="RemoveBtn" type="Button" parent="."]
+z_index = 3
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 2.0
+offset_top = 0.0
+offset_right = 18.0
+offset_bottom = 16.0
+theme_override_font_sizes/font_size = 10
+text = "×"

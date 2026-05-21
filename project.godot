@@ -19,6 +19,8 @@ config/icon="res://icon.svg"
 
 TransitionManager="*res://scenes/autoload/transition_manager.tscn"
 DataRegistry="*res://scripts/data/data_registry.gd"
+GameCursor="*res://scripts/ui/game_cursor.gd"
+GameTooltip="*res://scripts/ui/game_tooltip.gd"
 
 [display]
 

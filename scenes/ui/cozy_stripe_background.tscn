@@ -1,9 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://ccozy_stripe_bg01"]
+[gd_scene format=3 uid="uid://bi28curqlfdby"]
 
-[ext_resource type="Script" path="res://scripts/visual/cozy_stripe_background.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://n8hodvoh5qtg" path="res://scripts/visual/cozy_stripe_background.gd" id="1_script"]
 
-[node name="CozyStripeBackground" type="ColorRect"]
-layout_mode = 3
+[node name="CozyStripeBackground" type="ColorRect" unique_id=572711905]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -12,7 +11,4 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(0.94902, 0.921569, 0.878431, 1)
 script = ExtResource("1_script")
-stripe_angle = 20.0
-line_count = 10.0
-scroll_speed = 1.5
-stripe_blur = 0.06
+stripe_blur = 0.0

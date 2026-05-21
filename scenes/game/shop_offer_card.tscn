@@ -1,0 +1,78 @@
+[gd_scene format=3 uid="uid://b3b7fs32ol1wu"]
+
+[ext_resource type="Script" uid="uid://yynh5ig2la7x" path="res://scripts/visual/shop_offer_card.gd" id="1_card"]
+
+[node name="ShopOfferCard" type="PanelContainer" unique_id=1819470358]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+script = ExtResource("1_card")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1649051324]
+layout_mode = 2
+theme_override_constants/margin_left = 4
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 4
+theme_override_constants/margin_bottom = 4
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=1515719845]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 5
+
+[node name="Header" type="HBoxContainer" parent="Margin/VBox" unique_id=971433447]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="IconFrame" type="PanelContainer" parent="Margin/VBox/Header" unique_id=1571100786]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(26, 26)
+layout_mode = 2
+size_flags_vertical = 0
+
+[node name="IconInner" type="CenterContainer" parent="Margin/VBox/Header/IconFrame" unique_id=1281158492]
+layout_mode = 2
+
+[node name="IconTexture" type="TextureRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=523125621]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IconGlyph" type="ColorRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=56315964]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+color = Color(0.95, 0.93, 0.9, 1)
+
+[node name="TitleCol" type="VBoxContainer" parent="Margin/VBox/Header" unique_id=1288511719]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/Header/TitleCol" unique_id=465757475]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "Offer"
+
+[node name="TypeLabel" type="Label" parent="Margin/VBox/Header/TitleCol" unique_id=700350621]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Modifier · land effect"
+
+[node name="DescLabel" type="Label" parent="Margin/VBox" unique_id=1382331725]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 9
+text = "Effect description goes here."
+autowrap_mode = 3
+
+[node name="FooterLabel" type="Label" parent="Margin/VBox" unique_id=214632874]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "10 chips · drag onto any piece"

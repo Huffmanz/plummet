@@ -43,7 +43,7 @@ func _ready() -> void:
 		btn.pressed.connect(func(): _select_type(idx))
 		var td := DataRegistry.get_piece_type(PIECE_TYPE_IDS[i])
 		if td:
-			btn.tooltip_text = td.description
+			GameTooltip.bind(btn, td.description)
 
 	# Wire modifier buttons + tooltips
 	var mod_btns := _mod_grid.get_children()
@@ -64,7 +64,7 @@ func _ready() -> void:
 		btn.toggled.connect(func(on: bool): _toggle_relic(relic_id, on))
 		var rd := DataRegistry.get_relic(relic_id)
 		if rd:
-			btn.tooltip_text = rd.description
+			GameTooltip.bind(btn, rd.description)
 
 	_reset_btn.pressed.connect(_reset)
 

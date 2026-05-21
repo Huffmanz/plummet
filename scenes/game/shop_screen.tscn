@@ -1,8 +1,13 @@
 [gd_scene format=3 uid="uid://dh4xav1kpscr3"]
 
 [ext_resource type="Script" uid="uid://cnvr3b5k2dmx1" path="res://scripts/visual/shop_screen.gd" id="1_shopscr"]
+[ext_resource type="PackedScene" uid="uid://bi28curqlfdby" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_bg"]
+[ext_resource type="PackedScene" uid="uid://b3b7fs32ol1wu" path="res://scenes/game/shop_offer_card.tscn" id="3_offer"]
+[ext_resource type="PackedScene" uid="uid://b3dbeqqj0jiwu" path="res://scenes/game/shop_piece_slot.tscn" id="4_piece"]
+[ext_resource type="PackedScene" uid="uid://b3e6lwoj0jiwu" path="res://scenes/game/shop_relic_slot.tscn" id="5_relic"]
+[ext_resource type="PackedScene" uid="uid://wqifynfc6cvj" path="res://scenes/ui/juicy_sfx_button.tscn" id="6_juicy_btn"]
 
-[node name="ShopScreen" type="Control"]
+[node name="ShopScreen" type="Control" unique_id=171700366]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -10,3 +15,254 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_shopscr")
+
+[node name="Background" parent="." unique_id=825474732 instance=ExtResource("2_bg")]
+z_index = -1
+layout_mode = 1
+
+[node name="Root" type="VBoxContainer" parent="." unique_id=1421855162]
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="Topbar" type="MarginContainer" parent="Root" unique_id=1399828000]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 4
+
+[node name="TopRow" type="HBoxContainer" parent="Root/Topbar" unique_id=1462803266]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="TitleCol" type="VBoxContainer" parent="Root/Topbar/TopRow" unique_id=2069464131]
+visible = false
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="TitleLabel" type="RichTextLabel" parent="Root/Topbar/TopRow" unique_id=146164699]
+custom_minimum_size = Vector2(50, 30)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 3
+theme_override_constants/shadow_offset_y = 3
+theme_override_constants/outline_size = 5
+theme_override_font_sizes/normal_font_size = 19
+bbcode_enabled = true
+text = "[wave] SHOP[/wave]"
+fit_content = true
+
+[node name="ChipLabel" type="Label" parent="Root/Topbar/TopRow" unique_id=1727358205]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 2
+theme_override_font_sizes/font_size = 12
+text = "0 chips"
+uppercase = true
+
+[node name="RerollBtn" parent="Root/Topbar/TopRow" unique_id=901160555 instance=ExtResource("6_juicy_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(80, 24)
+layout_mode = 2
+size_flags_horizontal = 10
+size_flags_vertical = 4
+normal_bg_color = Color(0.239216, 0.219608, 0.270588, 1)
+hover_bg_color = Color(0.301961, 0.278431, 0.329412, 1)
+button_text = "Reroll (5)"
+
+[node name="ContinueBtn" parent="Root/Topbar/TopRow" unique_id=1880414966 instance=ExtResource("6_juicy_btn")]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(100, 32)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 4
+button_text = "Continue →"
+
+[node name="Body" type="VBoxContainer" parent="Root" unique_id=1933275907]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 4
+
+[node name="OffersSection" type="MarginContainer" parent="Root/Body" unique_id=168595557]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 1.15
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="OffersVBox" type="VBoxContainer" parent="Root/Body/OffersSection" unique_id=318537110]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 3
+
+[node name="OffersHeader" type="HBoxContainer" parent="Root/Body/OffersSection/OffersVBox" unique_id=1991838156]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="OffersTitle" type="Label" parent="Root/Body/OffersSection/OffersVBox/OffersHeader" unique_id=1114250020]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = "Offers"
+uppercase = true
+
+[node name="OffersRow" type="HBoxContainer" parent="Root/Body/OffersSection/OffersVBox" unique_id=1961747764]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 5
+
+[node name="Offer0" parent="Root/Body/OffersSection/OffersVBox/OffersRow" unique_id=1522280543 instance=ExtResource("3_offer")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Offer1" parent="Root/Body/OffersSection/OffersVBox/OffersRow" unique_id=739344786 instance=ExtResource("3_offer")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Offer2" parent="Root/Body/OffersSection/OffersVBox/OffersRow" unique_id=1042405631 instance=ExtResource("3_offer")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Offer3" parent="Root/Body/OffersSection/OffersVBox/OffersRow" unique_id=1048087120 instance=ExtResource("3_offer")]
+unique_name_in_owner = true
+visible = false
+layout_mode = 2
+
+[node name="OffersHint" type="Label" parent="Root/Body/OffersSection/OffersVBox" unique_id=190384448]
+visible = false
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "Modifiers and piece types drag onto any piece below. Relics drag to your relic row."
+
+[node name="BagSection" type="MarginContainer" parent="Root/Body" unique_id=956528061]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+
+[node name="BagVBox" type="VBoxContainer" parent="Root/Body/BagSection" unique_id=663784381]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 3
+
+[node name="BagTitle" type="Label" parent="Root/Body/BagSection/BagVBox" unique_id=1969235440]
+layout_mode = 2
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = "Your bag"
+uppercase = true
+
+[node name="BagRow" type="HBoxContainer" parent="Root/Body/BagSection/BagVBox" unique_id=144364199]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Piece0" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=1498656068 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Piece1" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=1865260304 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Piece2" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=595619176 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Piece3" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=965426509 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Piece4" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=643648151 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Piece5" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=2008344365 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Piece6" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=59174054 instance=ExtResource("4_piece")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RelicsSection" type="MarginContainer" parent="Root/Body" unique_id=443336257]
+layout_mode = 2
+size_flags_vertical = 3
+size_flags_stretch_ratio = 0.75
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="RelicsVBox" type="VBoxContainer" parent="Root/Body/RelicsSection" unique_id=714426198]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 3
+
+[node name="RelicsTitle" type="Label" parent="Root/Body/RelicsSection/RelicsVBox" unique_id=231218584]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 11
+text = "Relics"
+uppercase = true
+
+[node name="RelicsRow" type="HBoxContainer" parent="Root/Body/RelicsSection/RelicsVBox" unique_id=449744325]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 5
+
+[node name="Relic0" parent="Root/Body/RelicsSection/RelicsVBox/RelicsRow" unique_id=1352047581 instance=ExtResource("5_relic")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Relic1" parent="Root/Body/RelicsSection/RelicsVBox/RelicsRow" unique_id=1094707673 instance=ExtResource("5_relic")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Relic2" parent="Root/Body/RelicsSection/RelicsVBox/RelicsRow" unique_id=217766876 instance=ExtResource("5_relic")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="Relic3" parent="Root/Body/RelicsSection/RelicsVBox/RelicsRow" unique_id=2137922673 instance=ExtResource("5_relic")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="UpgradePopover" type="PanelContainer" parent="." unique_id=102367462]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 100.0
+offset_top = 200.0
+offset_right = 280.0
+offset_bottom = 320.0
+
+[node name="PopoverMargin" type="MarginContainer" parent="UpgradePopover" unique_id=1892948395]
+layout_mode = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 8
+
+[node name="PopoverVBox" type="VBoxContainer" parent="UpgradePopover/PopoverMargin" unique_id=701600208]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="PopoverTitle" type="Label" parent="UpgradePopover/PopoverMargin/PopoverVBox" unique_id=1754695117]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Upgrade"
+
+[node name="PopoverOptions" type="VBoxContainer" parent="UpgradePopover/PopoverMargin/PopoverVBox" unique_id=476284185]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4

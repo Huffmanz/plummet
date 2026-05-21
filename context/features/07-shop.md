@@ -3,26 +3,115 @@
 
 ## Purpose
 
-The shop is the primary expression point between matches. The player spends Chips earned during the match to attach modifiers, upgrade piece types, or remove unwanted modifiers from their bag. It appears after every won match.
+The shop is the primary expression point between matches. The player spends Chips to attach modifiers, upgrade piece types, and acquire relics. It is a full-screen takeover with a drag-to-attach interaction model — no confirmation dialogs, no multi-step menus. Every action is a single gesture.
 
 ---
 
 ## Scope
 
+- Full-screen layout (four sections: topbar, offers, bag, relics)
 - Chip economy (earning and spending)
-- Modifier offers (3 per visit, rerollable once)
-- Attach modifier action
-- Remove modifier action
-- Upgrade piece type action
+- Offers row (modifiers and relics, 3 cards per visit, rerollable once)
+- Drag-to-attach interaction for modifiers and relics
+- Remove modifier action (via × button on piece)
+- Piece type upgrade (via click on piece)
 - Win-only gating
 
-Not in scope: meta-progression unlocks (feature 10), which affect the modifier and piece type pool available in the shop.
+Not in scope: meta-progression unlocks (feature 10), which affect the offer pool. Board cascade animations and sound (feature 11).
+
+### Shop juice (companion specs)
+
+| Feature | Topic |
+|---------|--------|
+| [15-shop-enter-exit](15-shop-enter-exit.md) | Full-screen enter/exit via `TransitionManager` |
+| [16-shop-chip-juice](16-shop-chip-juice.md) | Chip count tween, spend flash, `−N` floaters |
+| [17-shop-drag-juice](17-shop-drag-juice.md) | Drag lift, valid/invalid hover, drop snap |
+| [18-shop-audio](18-shop-audio.md) | All shop SFX via `RandomAudioPlayer` (sound list + filenames TBD) |
+| [19-shop-offer-cards-juice](19-shop-offer-cards-juice.md) | Deal-in, hover, relic shimmer, consumed exit |
+| [20-shop-bag-juice](20-shop-bag-juice.md) | Piece breathe, badge pop, type morph, remove juice |
+| [21-shop-reroll-juice](21-shop-reroll-juice.md) | Reroll exit shuffle + re-deal |
 
 ---
 
 ## When the Shop Appears
 
-The shop opens after a won match only. A lost match skips the shop entirely — the player proceeds directly to the next match (or the run ends if it was the final match).
+The shop opens after a won match only. A lost match skips the shop — the player proceeds directly to the next match or the run ends. The shop does not appear after boss fights.
+
+---
+
+## Layout
+
+The shop is a full-screen takeover. The board is not visible while the shop is open. Four sections read top to bottom:
+
+### 1. Topbar
+- Left: "Shop" title + chip count (always visible, updates immediately on any purchase)
+- Right: "Continue →" button (always reachable, no scroll required)
+
+### 2. Offers row
+Three offer cards displayed side by side. Each card shows:
+- Icon (color-coded by category)
+- Name
+- Type label (modifier + trigger type, or "relic · run-wide")
+- One-sentence description
+- Cost in chips
+- Drag instruction ("drag onto any piece" or "drag to relic row")
+
+Effect summary is shown on the card body (no hover tooltip).
+
+Modifier cards and relic cards are visually distinguished — relics have a teal border accent.
+
+A reroll button sits in the top-right of the offers section. It shows the chip cost and is greyed out after use.
+
+### 3. Bag
+All 7 pieces displayed in a horizontal row. Each piece slot shows:
+- Piece circle (color and shape reflect piece type)
+- Piece type label
+- Modifier badge (shows modifier name, or "no modifier" as a dashed outline badge if empty)
+
+Hovering a piece slot reveals a small × button in the top-right corner to remove its modifier.
+
+When a modifier card is being dragged, eligible piece slots (those without a modifier) highlight as drop targets. Ineligible slots (already have a modifier) do not highlight.
+
+### 4. Relics row
+Four relic slots displayed horizontally below the bag. Each slot shows:
+- Occupied: relic icon + name + one-line summary
+- Empty: dashed outline with "empty slot" label
+
+When a relic card is being dragged, empty relic slots highlight as drop targets.
+
+---
+
+## Interaction Model
+
+### Attaching a modifier
+1. Player drags a modifier offer card.
+2. Eligible piece slots in the bag highlight.
+3. Player drops the card onto a piece slot.
+4. The modifier badge on that piece updates immediately.
+5. Chips are deducted immediately. No confirmation dialog.
+
+### Acquiring a relic
+1. Player drags a relic offer card.
+2. Empty relic slots highlight.
+3. Player drops the card onto an empty relic slot.
+4. The relic slot updates to show the relic name and summary.
+5. Chips are deducted immediately. No confirmation dialog.
+
+### Removing a modifier
+1. Player hovers a piece slot — the × button appears.
+2. Player clicks ×.
+3. The modifier badge resets to "no modifier."
+4. Chips are deducted immediately. No confirmation dialog.
+5. The removed modifier is discarded — it does not return to the offer pool.
+
+### Upgrading a piece type
+1. Player clicks a piece slot (not dragging — a click opens an upgrade popover).
+2. A small popover appears above the piece showing available upgrades for that type and their chip costs.
+3. Player clicks an upgrade option.
+4. The piece circle and type label update immediately.
+5. Chips are deducted. Popover closes.
+
+Only Normal pieces show upgrade options. Non-Normal pieces show an info popover describing the piece type instead.
 
 ---
 
@@ -34,113 +123,92 @@ The shop opens after a won match only. A lost match skips the shop entirely — 
 |---|---|
 | Win a match | 15 |
 | Each clear during the match | 1 |
-| Win streak bonus (2nd consecutive win) | +5 |
-| Win streak bonus (3rd+ consecutive win) | +5 additional per win |
+| Coin piece type clear bonus | +3 per Coin piece in the clear |
+| Deposit modifier land bonus | +5 per Deposit piece on landing |
+| Win streak (2nd consecutive win) | +5 |
+| Win streak (3rd+ consecutive win) | +5 additional per win |
 
-Chips accumulate across the run. Unspent chips carry over to the next shop visit.
+Chips accumulate across the run. Unspent chips carry over.
 
 ### Spending chips
 
 | Action | Cost |
 |---|---|
-| Attach a modifier to a piece | 10 chips |
-| Remove a modifier from a piece | 5 chips |
-| Upgrade a piece type (Normal → Weighted or Ghost) | 20 chips |
-| Reroll modifier offers | 5 chips (once per shop visit) |
+| Attach a modifier | 10 chips |
+| Remove a modifier | 5 chips |
+| Upgrade piece type (Normal → any) | 20 chips |
+| Acquire a relic | 25 chips |
+| Reroll offers | 5 chips (once per visit) |
 
 ---
 
-## Modifier Offers
+## Offer Generation
 
-The shop presents 3 modifiers for the player to choose from. The player may attach one of them to any piece in their bag that has fewer than 3 modifiers.
+Draw 3 items at random from the available pool. The pool contains modifiers and relics weighted as follows:
 
-### Offer generation
+- Base modifiers: high weight (appear most often)
+- Tier II modifiers (meta-progression unlocks): low weight (roughly ⅓ as likely as base)
+- Common relics: medium weight
+- Uncommon relics: low weight
+- Rare relics: very low weight (roughly ½ as likely as uncommon)
 
-Draw 3 modifiers at random from the available pool. The pool is determined by:
+The 3 offers may be any mix of modifiers and relics — the pool is not partitioned. A visit showing 3 relics is unlikely but valid.
 
-- Which modifiers have been unlocked in meta-progression (feature 10)
-- Which act the player is on (some modifiers only appear from act 2 onward)
-
-Higher-tier modifiers (Tier II, unlocked via meta-progression) have a lower appearance weight than base modifiers.
-
-### Reroll
-
-The player may reroll the 3 offers once per shop visit for 5 chips. Rerolling replaces all 3 offers with 3 new draws from the pool. Offers already dismissed cannot be recovered.
-
-### Attaching a modifier
-
-After selecting a modifier offer, the player selects which piece in their bag to attach it to. A piece that already holds 3 modifiers cannot be selected. The chip cost is deducted on confirmation.
+Rerolling replaces all 3 offers with 3 new draws. The reroll button is unavailable after use and after the player has 0 chips (unless the reroll is the only action they can afford).
 
 ---
 
-## Remove Modifier Action
+## Offer Availability Rules
 
-The player may remove any modifier from any piece in their bag for 5 chips. This is useful for clearing a piece slot to make room for a better modifier, or for removing a modifier that has become a liability.
-
-Removed modifiers are discarded — they do not return to the pool or go to the player's inventory.
-
----
-
-## Upgrade Piece Type Action
-
-The player may upgrade any Normal piece in their bag to Weighted or Ghost (if Ghost is unlocked) for 20 chips.
-
-- Only Normal pieces can be upgraded.
-- The piece retains all its existing modifiers after upgrading.
-- Volatile pieces cannot be created via upgrade — they appear as separate shop offers (a new piece is added to the bag, making the bag temporarily 8 pieces, then normalizing at the start of the next match by removing the oldest Normal piece if the bag exceeds 7).
-
----
-
-## Shop State
-
-The shop must display:
-
-- The player's current chip count
-- The 3 modifier offers
-- The player's full piece bag with current types and modifiers on each piece
-- Which pieces are eligible for modifier attachment (fewer than 3 modifiers)
-- Which pieces are eligible for type upgrade (Normal type only)
-- The cost of each available action
-- Whether the reroll has been used this visit
+- A modifier offer is unavailable to attach if all 7 pieces already have a modifier. The card is still shown but all piece slots are ineligible drop targets — the player must remove a modifier first.
+- A relic offer is unavailable if all 4 relic slots are occupied. The card is still shown but relic slots do not highlight as drop targets.
+- A piece type upgrade is unavailable if the piece is not Normal type, or if the target upgrade type is not yet unlocked in meta-progression.
+- If the player cannot afford an action, the offer card and relevant interactive elements are visually dimmed. Drag is disabled. The chip cost is shown in a muted color.
 
 ---
 
 ## Leaving the Shop
 
-The player confirms they are done with the shop to proceed to the next match. There is no time limit. Unspent chips carry over.
+The "Continue →" button is always visible in the topbar. Clicking it closes the shop and begins the next match. There is no time limit. Unspent chips carry over.
 
 ---
 
 ## Edge Cases
 
-- If the player has 0 chips, all paid actions are disabled. The shop still opens — the player can view their bag even if they cannot afford anything.
-- If all pieces in the bag already have 3 modifiers, the modifier attach action is unavailable even if the player selects an offer.
-- If no Normal pieces remain in the bag, the upgrade action is unavailable.
-- Ghost upgrade must check that Ghost is unlocked in meta-progression before appearing as an option.
-- If the modifier pool has fewer than 3 available modifiers (very early runs, few unlocks), show as many as available without padding.
+- If the player has 0 chips and cannot afford any action, the shop still opens. Offer cards are dimmed. The bag and relics are visible for review. The player can continue immediately.
+- If all 7 pieces already have a modifier and no relic slots are open, all offer cards are effectively inert — the player can only reroll (if affordable) or continue.
+- If the modifier pool has fewer than 3 available items (very early runs), show as many as available. Do not pad with duplicates.
+- Dragging a relic card onto a piece slot (wrong target) should have no effect — the slot does not highlight and the drop is ignored.
+- Dragging a modifier card onto a relic slot (wrong target) has no effect.
+- If the player upgrades a piece type that already has a modifier, the modifier is preserved on the upgraded piece.
+- Reroll after a partial purchase (e.g. one offer already purchased): the remaining 2 offers are replaced along with the purchased slot — the player gets 3 fresh offers.
 
 ---
 
 ## Acceptance Criteria
 
-- The shop does not appear after a lost match.
-- Chips earned during a match are correctly totalled and available at the shop.
-- A win streak of 3 adds 25 chips total (15 + 5 + 5).
-- Attaching a modifier costs 10 chips and correctly places it on the chosen piece.
-- A piece with 3 modifiers cannot receive a 4th.
-- Removing a modifier costs 5 chips and removes it from the piece.
-- Upgrading a piece type costs 20 chips and correctly changes the type while preserving modifiers.
-- Rerolling costs 5 chips and replaces all 3 offers. Reroll is unavailable after being used once.
-- Unspent chips carry over to the next shop.
+- The shop does not appear after a lost match or after a boss fight.
+- Chip count in the topbar updates immediately after every purchase.
+- Dragging a modifier card onto an eligible piece slot attaches the modifier and deducts 10 chips.
+- Dragging a modifier card onto a piece that already has a modifier has no effect.
+- Dragging a relic card onto an empty relic slot acquires the relic and deducts 25 chips.
+- Clicking × on a piece removes its modifier and deducts 5 chips.
+- Clicking a Normal piece opens an upgrade popover with available upgrades.
+- Upgrading a piece type preserves its existing modifier.
+- Rerolling costs 5 chips, replaces all 3 offers, and disables the reroll button for the rest of the visit.
+- Offer cards are visually dimmed and non-interactive when the player cannot afford them.
+- Unspent chips carry over to the next shop visit.
+- The "Continue →" button is always visible and functional regardless of shop state.
 
 ---
 
 ## Dependencies
 
-- Feature 05 — Piece bag + modifiers
-- Feature 06 — Piece types
+- Feature 05 — Piece types, modifiers, and relics (definitions and bag structure)
+- Feature 03 — Scoring system (chip earning from clears)
 
 ## Required by
 
-- Feature 09 — Run loop
-- Feature 10 — Meta-progression (affects available pool)
+- Feature 09 — Run loop (shop gating, boss drop relic flow)
+- Feature 10 — Meta-progression (affects available offer pool)
+- Feature 12 — Visual layer (shop screen layout and drag interaction rendering)

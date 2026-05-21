@@ -1,34 +1,22 @@
-# Current Feature — Feature 15: Shop Enter / Exit Transition
+# Current Feature
 
 ## Status
 
-In Progress
+Not Started
 
 ## Goals
 
-- After a won match, the shop does not pop in instantly; a full-screen diagonal wipe transition plays first
-- Continue → plays a closing transition before the next match starts
-- Player cannot drag offers or spend chips while the enter/exit wipe is in progress
-- Standalone shop preview (`ShopScreen` as main scene) still opens without requiring `TransitionManager`
-- Transition style matches main menu / run (`DIAGONAL_WIPE` by default)
-- Shop open/close sounds (feature 18) fire at reveal/hide if audio is implemented
+<!-- Bullet points of what success looks like for the active feature -->
 
 ## Notes
 
-Spec: `context/features/15-shop-enter-exit.md`
-
-**Dependencies:** Feature 07 (Shop layout, `ShopScreen.open` / `shop_closed`), `TransitionManager` autoload
-
-**Files to touch:**
-- `scripts/visual/game_board.gd` — wrap `_shop_screen.open(...)` in `transition_screen`
-- `scripts/visual/shop_screen.gd` — wrap `_on_continue` exit; skip transition in preview mode (`get_parent() == root`)
-
-**Enter sequence:** match end overlay hides → `TransitionManager.transition_screen(func(): shop.open(...))` → enable input after transition
-**Exit sequence:** disable input → `TransitionManager.transition_screen(func(): hide(); shop_closed.emit(chips))` → RunController resumes
-
-Add `_input_enabled: bool` to `ShopScreen`; offer cards and buttons check flag before acting. Reduced motion → use FADE at 0.15s or skip transition.
+<!-- Spec path, constraints, dependencies -->
 
 ## History
+
+### Shop Enter / Exit Transition
+
+Wrapped shop open/close in `TransitionManager.transition_screen()` so a diagonal wipe plays before the shop appears (in `game_board.gd` after match win overlay dismisses) and again on Continue before the next match starts (in `shop_screen.gd` `_on_continue`). Added `_input_enabled: bool` to `ShopScreen` with `_set_input_enabled()` helper — disables Continue/Reroll buttons and gates `_on_offer_drag_started` while false. `open()` calls `_set_input_enabled(true)` on each visit. Standalone shop preview (`ShopScreen` as main scene, `get_parent() == root`) skips the transition and closes immediately so F6 test stays fast.
 
 ### Shop
 

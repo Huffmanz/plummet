@@ -10,6 +10,10 @@ Not Started
 
 ## History
 
+### Shop Bag Piece Info
+
+Replaced the × remove button and click upgrade popover with `ShopPieceInfoPopup` — an offer-card-style hover sheet showing piece type and modifier (icon, title, kind, wrapped description). Anchors above or below the hovered slot with viewport clamping and scroll for long text. Removed `GameTooltip` bindings on bag pieces; popover and remove/upgrade click flows removed from `ShopScreen`.
+
 ### Shop Audio
 
 Added `ShopAudio` (`scripts/audio/shop_audio.gd`, `scenes/audio/shop_audio.tscn`) on `ShopScreen` with `RandomAudioPlayer` nodes for open/close, drag pickup, valid/invalid drop hover, modifier attach, piece-type apply, relic acquire, modifier remove, reroll, chip spend, cant-afford, and offer hover (pan-pop impacts matching deal-in). `ShopScreen` delegates all cues; purchase sounds fire after drop snap. `GameBoard` passes `AnimLayer.muted` into `shop.open()`. Throttled valid-slot tick while dragging; cancelled drags play invalid. Consolidated inline reroll SFX from feature 21. Filename worksheet updated in spec.

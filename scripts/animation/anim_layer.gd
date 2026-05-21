@@ -49,6 +49,8 @@ var _drop_landing_y: float = 0.0
 var _drop_vel: float = 0.0
 var _drop_cs: float = 48.0
 var _drop_owner: CellState.Occupant = CellState.Occupant.PLAYER
+var _drop_piece_type: CellState.PieceType = CellState.PieceType.NORMAL
+var _drop_modifier: String = ""
 var _drop_phase: int = 0  # 0=fall 1=squash 2=bounce_up 3=bounce_down 4=settle
 var _drop_phase_t: float = 0.0
 var _drop_scale_y: float = 1.0
@@ -67,6 +69,7 @@ class _GravPiece:
 	var cs: float = 48.0
 	var occupant: CellState.Occupant = CellState.Occupant.PLAYER
 	var piece_type: CellState.PieceType = CellState.PieceType.NORMAL
+	var modifier: String = ""
 
 var _grav_active: bool = false
 var _grav_pieces: Array = []
@@ -500,6 +503,18 @@ func _draw_clear_anim() -> void:
 			draw_circle(shifted.get_center(), rect.size.x * 0.42 * s, Color(1.0, 1.0, 1.0, s * 0.9))
 
 
+func _draw_falling_piece(
+	canvas: CanvasItem,
+	piece_rect: Rect2,
+	color: Color,
+	piece_type: CellState.PieceType,
+	modifier: String
+) -> void:
+	if renderer == null:
+		return
+	renderer.theme.draw_piece(canvas, piece_rect, color, piece_type, modifier)
+
+
 func _draw_grav() -> void:
 	if not _grav_active or renderer == null:
 		return
@@ -507,7 +522,7 @@ func _draw_grav() -> void:
 		var color: Color = renderer.theme.color_player \
 			if gp.occupant == CellState.Occupant.PLAYER else renderer.theme.color_ai
 		var piece_rect := Rect2(gp.x + shake_offset.x, gp.cur_y + shake_offset.y, gp.cs, gp.cs)
-		renderer.theme.draw_piece(self, piece_rect, color)
+		_draw_falling_piece(self, piece_rect, color, gp.piece_type, gp.modifier)
 		if gp.occupant == CellState.Occupant.AI:
 			var dot_size := gp.cs * 0.15
 			var center := piece_rect.get_center()
@@ -540,9 +555,10 @@ func _draw_drop_anim() -> void:
 			var trail_alpha := frac * 0.6
 			var trail_size := _drop_cs * (0.35 + frac * 0.55)
 			var trail_pos: Vector2 = _drop_trail[i] + shake_offset
-			renderer.theme.draw_piece(self,
+			_draw_falling_piece(self,
 				Rect2(trail_pos.x - trail_size * 0.5, trail_pos.y - trail_size * 0.5, trail_size, trail_size),
-				Color(color.r, color.g, color.b, trail_alpha))
+				Color(color.r, color.g, color.b, trail_alpha),
+				_drop_piece_type, _drop_modifier)
 
 	# Land glow bloom — oversized circle fades out after impact
 	if _land_glow > 0.0 and not reduced_motion:
@@ -553,9 +569,9 @@ func _draw_drop_anim() -> void:
 
 	var half_w := _drop_cs * 0.5
 	var half_h := half_w * _drop_scale_y
-	renderer.theme.draw_piece(self,
+	_draw_falling_piece(self,
 		Rect2(center.x - half_w, center.y - half_h, _drop_cs, _drop_cs * _drop_scale_y),
-		color)
+		color, _drop_piece_type, _drop_modifier)
 
 
 func _draw_grav_to(canvas: CanvasItem) -> void:
@@ -565,7 +581,7 @@ func _draw_grav_to(canvas: CanvasItem) -> void:
 		var color: Color = renderer.theme.color_player \
 			if gp.occupant == CellState.Occupant.PLAYER else renderer.theme.color_ai
 		var piece_rect := Rect2(gp.x, gp.cur_y, gp.cs, gp.cs)
-		renderer.theme.draw_piece(canvas, piece_rect, color)
+		_draw_falling_piece(canvas, piece_rect, color, gp.piece_type, gp.modifier)
 
 
 func _draw_drop_to(canvas: CanvasItem) -> void:
@@ -592,9 +608,10 @@ func _draw_drop_to(canvas: CanvasItem) -> void:
 			var trail_alpha := frac * 0.6
 			var trail_size := _drop_cs * (0.35 + frac * 0.55)
 			var trail_pos: Vector2 = _drop_trail[i]
-			renderer.theme.draw_piece(canvas,
+			_draw_falling_piece(canvas,
 				Rect2(trail_pos.x - trail_size * 0.5, trail_pos.y - trail_size * 0.5, trail_size, trail_size),
-				Color(color.r, color.g, color.b, trail_alpha))
+				Color(color.r, color.g, color.b, trail_alpha),
+				_drop_piece_type, _drop_modifier)
 
 	if _land_glow > 0.0 and not reduced_motion:
 		var glow_r := radius * (1.0 + _land_glow * 0.4)
@@ -604,9 +621,9 @@ func _draw_drop_to(canvas: CanvasItem) -> void:
 
 	var half_w := _drop_cs * 0.5
 	var half_h := half_w * _drop_scale_y
-	renderer.theme.draw_piece(canvas,
+	_draw_falling_piece(canvas,
 		Rect2(center.x - half_w, center.y - half_h, _drop_cs, _drop_cs * _drop_scale_y),
-		color)
+		color, _drop_piece_type, _drop_modifier)
 
 
 func _draw_bursts() -> void:
@@ -688,11 +705,14 @@ func _tick_mod_flashes(delta: float) -> void:
 
 func _draw_mod_flashes() -> void:
 	for f: _ModFlash in _mod_flashes:
-		var t := f.elapsed / _MOD_FLASH_DUR
-		var alpha := sin(t * PI) * 0.75
-		var shifted := Rect2(f.rect.position + shake_offset, f.rect.size)
-		draw_rect(shifted, Color(f.color.r, f.color.g, f.color.b, alpha), false, 3.0)
-		draw_rect(shifted.grow(-2.0), Color(f.color.r, f.color.g, f.color.b, alpha * 0.35))
+		var t := clampf(f.elapsed / _MOD_FLASH_DUR, 0.0, 1.0)
+		var alpha := (1.0 - t) * 0.9
+		var center := f.rect.get_center() + shake_offset
+		var base_r := minf(f.rect.size.x, f.rect.size.y) * 0.42
+		var radius := base_r * lerpf(1.0, 1.28, t)
+		var ring := Color(f.color.r, f.color.g, f.color.b, alpha)
+		draw_arc(center, radius, 0.0, TAU, 48, ring, 3.0)
+		draw_circle(center, radius, Color(f.color.r, f.color.g, f.color.b, alpha * 0.18))
 
 
 func _draw_cascade_badge() -> void:
@@ -748,7 +768,14 @@ func _draw_milestone_text() -> void:
 
 # ---- Public API ----
 
-func play_drop(col: int, landing_row: int, owner: CellState.Occupant, gravity_flipped: bool) -> void:
+func play_drop(
+	col: int,
+	landing_row: int,
+	owner: CellState.Occupant,
+	gravity_flipped: bool,
+	piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	modifier: String = ""
+) -> void:
 	if reduced_motion or renderer == null or renderer.layout == null:
 		return
 	var target_rect := renderer.cell_rect(col, landing_row, gravity_flipped)
@@ -763,6 +790,8 @@ func play_drop(col: int, landing_row: int, owner: CellState.Occupant, gravity_fl
 	_drop_burst_owner = owner
 	_drop_cs = cs
 	_drop_owner = owner
+	_drop_piece_type = piece_type
+	_drop_modifier = modifier
 	_drop_phase = 0
 	_drop_phase_t = 0.0
 	_drop_scale_y = 1.0
@@ -788,6 +817,7 @@ func play_gravity(moves: Array, gravity_flipped: bool) -> void:
 		gp.cs = renderer.layout.cell_size
 		gp.occupant = m.occupant
 		gp.piece_type = m.piece_type
+		gp.modifier = m.get("modifier", "")
 		_grav_pieces.append(gp)
 	if _grav_pieces.is_empty():
 		return

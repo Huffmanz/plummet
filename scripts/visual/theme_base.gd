@@ -26,11 +26,22 @@ func draw_ai_piece(_canvas: CanvasItem, _rect: Rect2, _piece_type: CellState.Pie
 	pass
 
 
-func draw_ghost_piece(_canvas: CanvasItem, _rect: Rect2) -> void:
+func draw_ghost_piece(
+	_canvas: CanvasItem,
+	_rect: Rect2,
+	_piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	_modifier: String = ""
+) -> void:
 	pass
 
 
-func draw_piece(_canvas: CanvasItem, _rect: Rect2, _color: Color) -> void:
+func draw_piece(
+	_canvas: CanvasItem,
+	_rect: Rect2,
+	_color: Color,
+	_piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	_modifier: String = ""
+) -> void:
 	pass
 
 

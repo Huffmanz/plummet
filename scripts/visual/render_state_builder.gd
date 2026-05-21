@@ -5,6 +5,7 @@ func build(
 	board: BoardEngine,
 	score_tracker: ScoreTracker,
 	turn_manager: TurnManager,
+	active_piece: Piece,
 	player_queue_pieces: Array,
 	frozen_columns_data: Array,
 	locked_cells: Array[Vector2i],
@@ -41,6 +42,8 @@ func build(
 		for r in RenderState.ROWS:
 			rs.get_cell(fc_col, r).frozen = true
 		rs.frozen_columns.append(FrozenColumn.new(fc_col, fc_turns))
+
+	rs.active_piece = PieceVisualUtil.queue_entry_from_piece(active_piece)
 
 	for piece in player_queue_pieces:
 		var qe := QueueEntry.new()

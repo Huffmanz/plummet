@@ -82,7 +82,9 @@ func render_ghost(state: RenderState, canvas: CanvasItem) -> void:
 	# Column hover highlight — subtle vertical strip
 	var col_rect := _column_rect(hovered_col)
 	canvas.draw_rect(col_rect, Color(UITheme.ACCENT.r, UITheme.ACCENT.g, UITheme.ACCENT.b, 0.14))
-	theme.draw_ghost_piece(canvas, cell_rect(hovered_col, landing_row, state.gravity_flipped))
+	var ghost_rect := cell_rect(hovered_col, landing_row, state.gravity_flipped)
+	var entry: QueueEntry = state.active_piece
+	theme.draw_ghost_piece(canvas, ghost_rect, entry.piece_type, entry.modifier)
 
 
 func render_queue(state: RenderState, canvas: CanvasItem, origin: Vector2) -> void:

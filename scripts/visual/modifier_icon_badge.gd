@@ -35,15 +35,15 @@ func setup_modifier(modifier_id: String) -> void:
 		bg_color = md.badge_color
 		initial = md.initial if not md.initial.is_empty() else modifier_id[0]
 	else:
-		var fallback: Dictionary = ThemeCozy.MODIFIER_DATA.get(modifier_id, {})
-		initial = fallback.get("initial", "?")
-		bg_color = fallback.get("color", UITheme.ACCENT)
+		initial = PieceVisualUtil.modifier_initial(modifier_id)
+		bg_color = PieceVisualUtil.modifier_badge_color(modifier_id)
 
 	var sb := StyleBoxFlat.new()
 	sb.bg_color = bg_color
 	sb.border_color = UITheme.SURFACE_BORDER
 	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(8)
+	var corner := int(minf(size.x, size.y) * 0.5)
+	sb.set_corner_radius_all(corner)
 	add_theme_stylebox_override("panel", sb)
 
 	if texture != null:

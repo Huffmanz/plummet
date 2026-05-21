@@ -113,12 +113,11 @@ func test_cozy_theme_all_modifier_initials_defined() -> void:
 
 
 func test_cozy_theme_modifier_colors_all_defined() -> void:
-	var t := ThemeCozy.new()
 	var all_defined := true
 	for name in MODIFIER_NAMES:
-		if not ThemeCozy.MODIFIER_DATA.has(name):
+		if DataRegistry.get_modifier(name) == null:
 			all_defined = false
-	_assert("All modifiers have entries in MODIFIER_DATA", all_defined)
+	_assert("All modifiers have resource data", all_defined)
 
 
 func test_cozy_theme_piece_types_have_distinct_border_styles() -> void:
@@ -219,7 +218,7 @@ func test_render_state_builder_maps_84_cells() -> void:
 	var tm := TurnManager.new()
 	tm.start()
 	var builder := RenderStateBuilder.new()
-	var rs := builder.build(b, st, tm, [], [], [], false, 1, 1, "", "", 0, false)
+	var rs := builder.build(b, st, tm, null, [], [], [], false, 1, 1, "", "", 0, false)
 	_assert("Builder produces 84 cells from empty board", rs.cells.size() == 84)
 
 
@@ -231,7 +230,7 @@ func test_render_state_builder_maps_player_pieces() -> void:
 	var tm := TurnManager.new()
 	tm.start()
 	var builder := RenderStateBuilder.new()
-	var rs := builder.build(b, st, tm, [], [], [], false, 1, 1, "", "", 0, false)
+	var rs := builder.build(b, st, tm, null, [], [], [], false, 1, 1, "", "", 0, false)
 	_assert("Builder maps PLAYER piece at (0,0)", rs.get_cell(0, 0).occupant == CellState.Occupant.PLAYER)
 	_assert("Builder maps AI piece at (1,0)", rs.get_cell(1, 0).occupant == CellState.Occupant.AI)
 	_assert("Builder leaves (2,0) empty", rs.get_cell(2, 0).occupant == CellState.Occupant.EMPTY)
@@ -244,7 +243,7 @@ func test_render_state_builder_maps_frozen_columns() -> void:
 	tm.start()
 	var fc_data := [FrozenColumn.new(3, 2)]
 	var builder := RenderStateBuilder.new()
-	var rs := builder.build(b, st, tm, [], fc_data, [], false, 1, 1, "", "", 0, false)
+	var rs := builder.build(b, st, tm, null, [], fc_data, [], false, 1, 1, "", "", 0, false)
 	_assert("Builder maps frozen column 3", rs.frozen_columns.size() == 1)
 	_assert("Frozen column index is 3", rs.frozen_columns[0].col == 3)
 	_assert("Frozen column turns is 2", rs.frozen_columns[0].turns_remaining == 2)
@@ -257,7 +256,7 @@ func test_render_state_builder_maps_locked_cells() -> void:
 	tm.start()
 	var locked: Array[Vector2i] = [Vector2i(2, 0)]
 	var builder := RenderStateBuilder.new()
-	var rs := builder.build(b, st, tm, [], [], locked, false, 1, 1, "", "", 0, false)
+	var rs := builder.build(b, st, tm, null, [], [], locked, false, 1, 1, "", "", 0, false)
 	_assert("Builder marks (2,0) as locked", rs.get_cell(2, 0).locked)
 	_assert("Builder does not mark (3,0) as locked", not rs.get_cell(3, 0).locked)
 
@@ -272,7 +271,7 @@ func test_render_state_builder_maps_scores() -> void:
 	var tm := TurnManager.new()
 	tm.start()
 	var builder := RenderStateBuilder.new()
-	var rs := builder.build(b, st, tm, [], [], [], false, 1, 1, "", "", 0, false)
+	var rs := builder.build(b, st, tm, null, [], [], [], false, 1, 1, "", "", 0, false)
 	_assert("Builder maps player_score=100", rs.player_score == 100)
 	_assert("Builder maps ai_score=50", rs.ai_score == 50)
 
@@ -285,6 +284,6 @@ func test_render_state_builder_maps_landing_rows() -> void:
 	var tm := TurnManager.new()
 	tm.start()
 	var builder := RenderStateBuilder.new()
-	var rs := builder.build(b, st, tm, [], [], [], false, 1, 1, "", "", 0, false)
+	var rs := builder.build(b, st, tm, null, [], [], [], false, 1, 1, "", "", 0, false)
 	_assert("Landing row for col 0 with 2 pieces is row 2", rs.landing_rows[0] == 2)
 	_assert("Landing row for empty col 1 is row 0", rs.landing_rows[1] == 0)

@@ -43,13 +43,28 @@ func draw_ai_piece(canvas: CanvasItem, rect: Rect2, piece_type: CellState.PieceT
 	_draw_piece(canvas, rect, color_ai, piece_type)
 
 
-func draw_ghost_piece(canvas: CanvasItem, rect: Rect2) -> void:
+func draw_ghost_piece(
+	canvas: CanvasItem,
+	rect: Rect2,
+	piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	modifier: String = ""
+) -> void:
 	var ghost := Color(color_player.r, color_player.g, color_player.b, 0.35)
-	_draw_piece(canvas, rect, ghost, CellState.PieceType.NORMAL, true)
+	_draw_piece(canvas, rect, ghost, piece_type, true)
+	if not modifier.is_empty():
+		draw_modifier_badge(canvas, rect, modifier)
 
 
-func draw_piece(canvas: CanvasItem, rect: Rect2, color: Color) -> void:
-	_draw_piece(canvas, rect, color, CellState.PieceType.NORMAL)
+func draw_piece(
+	canvas: CanvasItem,
+	rect: Rect2,
+	color: Color,
+	piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	modifier: String = ""
+) -> void:
+	_draw_piece(canvas, rect, color, piece_type)
+	if not modifier.is_empty():
+		draw_modifier_badge(canvas, rect, modifier)
 
 
 func draw_locked_cell(canvas: CanvasItem, rect: Rect2) -> void:
@@ -94,19 +109,27 @@ func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int)
 func draw_modifier_badge(canvas: CanvasItem, rect: Rect2, modifier_name: String) -> void:
 	if modifier_name.is_empty():
 		return
-	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
-	if data.is_empty():
-		return
 
-	var badge_color: Color = data.get("color", Color.WHITE)
-	var initial: String = data.get("initial", "?")
+	var badge_color := PieceVisualUtil.modifier_badge_color(modifier_name)
+	var initial := PieceVisualUtil.modifier_initial(modifier_name)
+	var icon := PieceVisualUtil.modifier_icon(modifier_name)
 
-	var font_size: int = int(rect.size.x * 0.48)
-	var text_w: float = _font.get_string_size(initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
-	var text_h: float = _font.get_ascent(font_size)
+	var side := minf(rect.size.x, rect.size.y) * 0.42
 	var center := rect.get_center()
-	var text_pos := Vector2(center.x - text_w * 0.5, center.y + text_h * 0.35)
-	canvas.draw_string(_font, text_pos, initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, badge_color)
+	var radius := side * 0.5
+	canvas.draw_circle(center, radius, badge_color)
+	canvas.draw_arc(center, radius, 0.0, TAU, 48, UITheme.SURFACE_BORDER, 2.0)
+
+	if icon != null:
+		var icon_side := side * 0.72
+		var icon_rect := Rect2(center - Vector2(icon_side, icon_side) * 0.5, Vector2(icon_side, icon_side))
+		canvas.draw_texture_rect(icon, icon_rect, false)
+	else:
+		var font_size: int = int(side * 0.45)
+		var text_w: float = _font.get_string_size(initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var text_h: float = _font.get_ascent(font_size)
+		var text_pos := Vector2(center.x - text_w * 0.5, center.y + text_h * 0.35)
+		canvas.draw_string(_font, text_pos, initial, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, UITheme.TEXT_ON_SURFACE)
 
 
 func draw_queue_entry(canvas: CanvasItem, rect: Rect2, entry: QueueEntry) -> void:
@@ -115,16 +138,39 @@ func draw_queue_entry(canvas: CanvasItem, rect: Rect2, entry: QueueEntry) -> voi
 
 
 func get_modifier_initial(modifier_name: String) -> String:
-	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
-	return data.get("initial", "?")
+	return PieceVisualUtil.modifier_initial(modifier_name)
 
 
 func get_modifier_color(modifier_name: String) -> Color:
-	var data: Dictionary = MODIFIER_DATA.get(modifier_name, {})
-	return data.get("color", UITheme.TEXT_MUTED)
+	return PieceVisualUtil.modifier_badge_color(modifier_name)
+
+
+func get_piece_border_style(piece_type: CellState.PieceType) -> int:
+	return PieceVisualUtil.shader_style_index(piece_type)
 
 
 func _draw_piece(
+	canvas: CanvasItem,
+	rect: Rect2,
+	color: Color,
+	piece_type: CellState.PieceType,
+	ghost_outline: bool = false
+) -> void:
+	var pixel_size := maxi(8, int(minf(rect.size.x, rect.size.y)))
+	var tex := PieceShaderTextureCache.get_texture_sync(color, piece_type, pixel_size)
+	if tex != null:
+		var side := minf(rect.size.x, rect.size.y) * 0.9
+		var draw_rect := Rect2(rect.get_center() - Vector2(side, side) * 0.5, Vector2(side, side))
+		var modulate := Color.WHITE
+		if ghost_outline:
+			modulate = Color(1.0, 1.0, 1.0, 0.35)
+		canvas.draw_texture_rect(tex, draw_rect, false, modulate)
+		return
+
+	_draw_piece_fallback(canvas, rect, color, piece_type, ghost_outline)
+
+
+func _draw_piece_fallback(
 	canvas: CanvasItem,
 	rect: Rect2,
 	color: Color,
@@ -137,11 +183,9 @@ func _draw_piece(
 	if ghost_outline:
 		outline = Color(outline.r, outline.g, outline.b, 0.5)
 
-	# Base circle
 	canvas.draw_circle(center, radius, color)
 	canvas.draw_arc(center, radius, 0.0, TAU, 32, outline, 2.5)
 
-	# Type-specific overlay drawn on top of the base
 	match piece_type:
 		CellState.PieceType.PRISM:
 			# Rainbow ring — spectral color bands rotating

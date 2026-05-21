@@ -4,6 +4,7 @@ const COLS: int = 7
 const ROWS: int = BoardEngine.ROWS
 
 var cells: Array[CellState] = []
+var active_piece: QueueEntry = QueueEntry.new()
 var player_queue: Array[QueueEntry] = []
 var player_score: int = 0
 var ai_score: int = 0

@@ -41,12 +41,23 @@ func draw_ai_piece(canvas: CanvasItem, rect: Rect2, piece_type: CellState.PieceT
 	_draw_piece_shape(canvas, rect, color_ai, piece_type)
 
 
-func draw_ghost_piece(canvas: CanvasItem, rect: Rect2) -> void:
+func draw_ghost_piece(
+	canvas: CanvasItem,
+	rect: Rect2,
+	_piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	_modifier: String = ""
+) -> void:
 	var ghost_color := Color(color_player.r, color_player.g, color_player.b, 0.35)
 	canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, ghost_color)
 
 
-func draw_piece(canvas: CanvasItem, rect: Rect2, color: Color) -> void:
+func draw_piece(
+	canvas: CanvasItem,
+	rect: Rect2,
+	color: Color,
+	_piece_type: CellState.PieceType = CellState.PieceType.NORMAL,
+	_modifier: String = ""
+) -> void:
 	canvas.draw_texture_rect_region(_spritesheet, rect, _PIECE_REGION, color)
 
 

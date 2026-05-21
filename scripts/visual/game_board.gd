@@ -199,7 +199,7 @@ func update_state(rs: RenderState) -> void:
 func _build_state() -> RenderState:
 	return _builder.build(
 		_board, _score_tracker, _turn_manager,
-		_player_bag.get_queue_pieces(2), [], [], false,
+		_player_bag.current(), _player_bag.get_queue_pieces(2), [], [], false,
 		_match_act, _match_num, _match_enemy_name, _match_enemy_gimmick,
 		_chip_count, _animating
 	)
@@ -225,7 +225,10 @@ func _on_column_selected(col: int) -> void:
 		_refresh_all()
 		return
 	_modifier_resolver.set_landed(col, landing_row, p_piece)
-	await _anim_layer.play_drop(col, landing_row, CellState.Occupant.PLAYER, gf)
+	await _anim_layer.play_drop(
+		col, landing_row, CellState.Occupant.PLAYER, gf,
+		PieceVisualUtil.cell_piece_type(p_piece.type), p_piece.modifier
+	)
 	_check_col_fill_flash(col)
 	if _is_block_move(col, landing_row, Piece.Owner.PLAYER):
 		_spawn_blocked_popup(col, landing_row, gf)
@@ -294,7 +297,11 @@ func _run_ai_turn_animated() -> void:
 	var gf := _state.gravity_flipped if _state != null else false
 	var ai_landing_row := _board.get_landing_row(ai_col)
 	_board.drop_piece(ai_col, _ai.current_piece)
-	await _anim_layer.play_drop(ai_col, ai_landing_row, CellState.Occupant.AI, gf)
+	var ai_piece := _ai.current_piece
+	await _anim_layer.play_drop(
+		ai_col, ai_landing_row, CellState.Occupant.AI, gf,
+		PieceVisualUtil.cell_piece_type(ai_piece.type), ai_piece.modifier
+	)
 	_check_col_fill_flash(ai_col)
 	if _is_block_move(ai_col, ai_landing_row, Piece.Owner.AI):
 		_spawn_blocked_popup(ai_col, ai_landing_row, gf)
@@ -455,7 +462,10 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner, surge_w
 				var echo_row: int = board.drop_piece(echo_col, echo_piece)
 				if echo_row < 0:
 					continue
-				await _anim_layer.play_drop(echo_col, echo_row, CellState.Occupant.PLAYER, gf2)
+				await _anim_layer.play_drop(
+					echo_col, echo_row, CellState.Occupant.PLAYER, gf2,
+					PieceVisualUtil.cell_piece_type(echo_piece.type), echo_piece.modifier
+				)
 				_state = _build_state()
 				_refresh_all()
 
@@ -595,15 +605,24 @@ func _compute_gravity_moves(pre: RenderState, post: RenderState) -> Array:
 			var pre_cs := pre.get_cell(col, row)
 			var post_cs := post.get_cell(col, row)
 			if pre_cs.occupant != CellState.Occupant.EMPTY and not pre_cs.locked:
-				pre_pieces.append({col = col, row = row, occupant = pre_cs.occupant, piece_type = pre_cs.piece_type})
+				pre_pieces.append({
+					col = col, row = row, occupant = pre_cs.occupant,
+					piece_type = pre_cs.piece_type, modifier = pre_cs.modifier,
+				})
 			if post_cs.occupant != CellState.Occupant.EMPTY and not post_cs.locked:
-				post_pieces.append({col = col, row = row, occupant = post_cs.occupant, piece_type = post_cs.piece_type})
+				post_pieces.append({
+					col = col, row = row, occupant = post_cs.occupant,
+					piece_type = post_cs.piece_type, modifier = post_cs.modifier,
+				})
 		var n := mini(pre_pieces.size(), post_pieces.size())
 		for i in n:
 			var pp: Dictionary = pre_pieces[i]
 			var np: Dictionary = post_pieces[i]
 			if pp.row != np.row:
-				moves.append({col = col, from_row = pp.row, to_row = np.row, occupant = pp.occupant, piece_type = pp.piece_type})
+				moves.append({
+					col = col, from_row = pp.row, to_row = np.row,
+					occupant = pp.occupant, piece_type = pp.piece_type, modifier = pp.modifier,
+				})
 	return moves
 
 
@@ -676,9 +695,18 @@ func _check_score_milestone() -> void:
 			_anim_layer.play_milestone(m)
 
 
+func _rewarm_piece_shader_cache() -> void:
+	if _layout == null or _theme == null:
+		return
+	var pixel_size := maxi(8, int(_layout.cell_size))
+	PieceShaderTextureCache.clear()
+	PieceShaderTextureCache.warm_for_layout_async(pixel_size, _theme.color_player, _theme.color_ai)
+
+
 func _on_viewport_resized() -> void:
 	_layout = _layout_mgr.compute(get_viewport().get_visible_rect().size)
 	_renderer.layout = _layout
+	_rewarm_piece_shader_cache()
 	_rotate_prompt.visible = _layout.mode == LayoutManager.LayoutMode.TOO_SMALL
 
 	var vp := _layout.viewport_size

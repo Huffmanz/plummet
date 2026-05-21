@@ -45,7 +45,7 @@ func _build_relic(relic_id: String) -> void:
 	add_child(_badge)
 
 
-func _make_simple_badge(bg_color: Color, initial: String, corner_radius: int = 8) -> ModifierIconBadge:
+func _make_simple_badge(bg_color: Color, initial: String, corner_radius: int = -1) -> ModifierIconBadge:
 	var badge := ModifierIconBadge.new()
 	badge.custom_minimum_size = BADGE_SIZE
 	badge.size = BADGE_SIZE
@@ -53,7 +53,8 @@ func _make_simple_badge(bg_color: Color, initial: String, corner_radius: int = 8
 	sb.bg_color = bg_color
 	sb.border_color = UITheme.SURFACE_BORDER
 	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(corner_radius)
+	var corner := corner_radius if corner_radius >= 0 else int(minf(BADGE_SIZE.x, BADGE_SIZE.y) * 0.5)
+	sb.set_corner_radius_all(corner)
 	badge.add_theme_stylebox_override("panel", sb)
 	var label := Label.new()
 	label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

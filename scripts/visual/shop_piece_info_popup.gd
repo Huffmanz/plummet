@@ -169,10 +169,4 @@ func _reposition() -> void:
 
 
 static func _piece_type_data(t: Piece.Type) -> PieceTypeData:
-	match t:
-		Piece.Type.NORMAL: return DataRegistry.get_piece_type("NORMAL")
-		Piece.Type.PRISM:  return DataRegistry.get_piece_type("PRISM")
-		Piece.Type.COIN:   return DataRegistry.get_piece_type("COIN")
-		Piece.Type.EMBER:  return DataRegistry.get_piece_type("EMBER")
-		Piece.Type.SHARD:  return DataRegistry.get_piece_type("SHARD")
-	return null
+	return PieceVisualUtil.piece_type_data_from_piece(t)

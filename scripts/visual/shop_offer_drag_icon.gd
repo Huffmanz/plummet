@@ -4,6 +4,7 @@ class_name ShopOfferDragIcon extends PanelContainer
 const BADGE_SIZE := Vector2(40, 40)
 
 var _badge: ModifierIconBadge = null
+var _snapping: bool = false
 
 
 static func create_for_offer(kind: String, id: String) -> ShopOfferDragIcon:
@@ -67,4 +68,24 @@ func _make_simple_badge(bg_color: Color, initial: String, corner_radius: int = 8
 
 
 func follow_cursor(viewport: Viewport) -> void:
+	if _snapping:
+		return
 	position = viewport.get_mouse_position() - size * 0.5
+
+
+func snap_to(target_global_pos: Vector2, callback: Callable, reduced_motion: bool = false) -> void:
+	_snapping = true
+	if reduced_motion:
+		queue_free()
+		callback.call()
+		return
+	var t := create_tween()
+	t.set_parallel(true)
+	t.tween_property(self, "global_position", target_global_pos - size * 0.5, 0.16) \
+		.set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	t.tween_property(self, "scale", Vector2(0.4, 0.4), 0.16).set_ease(Tween.EASE_OUT)
+	t.tween_property(self, "modulate:a", 0.0, 0.14).set_ease(Tween.EASE_IN)
+	t.chain().tween_callback(func() -> void:
+		queue_free()
+		callback.call()
+	)

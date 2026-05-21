@@ -1,25 +1,24 @@
-[gd_scene load_steps=2 format=3 uid="uid://b3e6lwoj0jiwu"]
+[gd_scene format=3 uid="uid://b3e6lwoj0jiwu"]
 
-[ext_resource type="Script" path="res://scripts/visual/shop_relic_slot.gd" id="1_slot"]
+[ext_resource type="Script" uid="uid://daq3o7kje7jh1" path="res://scripts/visual/shop_relic_slot.gd" id="1_slot"]
 
-[node name="ShopRelicSlot" type="PanelContainer"]
+[node name="ShopRelicSlot" type="PanelContainer" unique_id=1983432133]
 size_flags_horizontal = 3
 size_flags_vertical = 3
-mouse_filter = 0
 script = ExtResource("1_slot")
 
-[node name="Margin" type="MarginContainer" parent="."]
+[node name="Margin" type="MarginContainer" parent="." unique_id=1693120914]
 layout_mode = 2
 theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 4
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 4
 
-[node name="HBox" type="HBoxContainer" parent="Margin"]
+[node name="HBox" type="HBoxContainer" parent="Margin" unique_id=1702980996]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Icon" type="ColorRect" parent="Margin/HBox"]
+[node name="Icon" type="ColorRect" parent="Margin/HBox" unique_id=24644485]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(20, 20)
@@ -27,13 +26,13 @@ layout_mode = 2
 size_flags_vertical = 4
 color = Color(0.302, 0.659, 0.69, 1)
 
-[node name="TextCol" type="VBoxContainer" parent="Margin/HBox"]
+[node name="TextCol" type="VBoxContainer" parent="Margin/HBox" unique_id=726204732]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
 theme_override_constants/separation = 1
 
-[node name="NameLabel" type="Label" parent="Margin/HBox/TextCol"]
+[node name="NameLabel" type="Label" parent="Margin/HBox/TextCol" unique_id=1672977521]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
@@ -41,22 +40,21 @@ theme_override_font_sizes/font_size = 10
 text = "Relic"
 clip_text = true
 
-[node name="SummaryLabel" type="Label" parent="Margin/HBox/TextCol"]
+[node name="SummaryLabel" type="Label" parent="Margin/HBox/TextCol" unique_id=12652214]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_override_font_sizes/font_size = 8
-max_lines_visible = 2
 text = "Summary"
 clip_text = true
+max_lines_visible = 2
 
-[node name="EmptyLabel" type="Label" parent="Margin/HBox"]
+[node name="EmptyLabel" type="Label" parent="Margin/HBox" unique_id=705903961]
 unique_name_in_owner = true
 layout_mode = 2
 size_flags_horizontal = 3
-size_flags_vertical = 4
 theme_override_font_sizes/font_size = 9
+text = "empty slot"
 horizontal_alignment = 1
 vertical_alignment = 1
-text = "empty slot"
 clip_text = true

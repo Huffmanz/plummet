@@ -64,7 +64,6 @@ func play_fly_in() -> void:
 		slot.prepare_fly_in_right(fly_offset)
 		if play_pan_pop:
 			slot.prepare_pan_pop()
-	await get_tree().process_frame
 	_tween = create_tween().set_parallel(true)
 	var count := slots.size()
 	for i in count:
@@ -78,6 +77,8 @@ func play_fly_in() -> void:
 			if play_pan_pop_sfx:
 				_tween.tween_callback(_play_pan_pop_sfx).set_delay(delay + duration)
 	await _tween.finished
+	for slot in slots:
+		slot.clear_fly_in_prep()
 	finished.emit()
 
 

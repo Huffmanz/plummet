@@ -18,7 +18,22 @@ func play_random_overlapping(parent: Node) -> void:
 
 
 func play_random_overlapping_from(parent: Node, source: Array[AudioStream]) -> void:
-	var picked := _pick_random_stream(source)
+	play_random_overlapping_static(
+		parent, source, bus, volume_db, overlapping_volume_db, randomize_pitch, min_pitch, max_pitch
+	)
+
+
+static func play_random_overlapping_static(
+	parent: Node,
+	source: Array[AudioStream],
+	bus_name: StringName = &"Master",
+	base_volume_db: float = 0.0,
+	overlapping_volume_db: float = -10.0,
+	randomize_pitch: bool = true,
+	min_pitch: float = 0.9,
+	max_pitch: float = 1.1
+) -> void:
+	var picked := pick_random_stream(source)
 	if picked == null:
 		return
 	var host: Node = parent
@@ -28,8 +43,8 @@ func play_random_overlapping_from(parent: Node, source: Array[AudioStream]) -> v
 		return
 	var player := AudioStreamPlayer.new()
 	player.stream = picked
-	player.bus = bus
-	player.volume_db = volume_db + overlapping_volume_db
+	player.bus = bus_name
+	player.volume_db = base_volume_db + overlapping_volume_db
 	if randomize_pitch:
 		player.pitch_scale = randf_range(min_pitch, max_pitch)
 	host.add_child(player)

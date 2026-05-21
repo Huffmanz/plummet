@@ -20,6 +20,7 @@ const _JUICY_BUTTON_SCENE := preload("res://scenes/ui/juicy_sfx_button.tscn")
 
 @onready var _chip_label: Label = %ChipLabel
 @onready var _offer_fly_in: StaggerFlyInHContainer = %OffersRow
+@onready var _bag_fly_in: StaggerFlyInHContainer = %BagRow
 
 @onready var _continue_btn: JuicySfxButton = %ContinueBtn
 @onready var _reroll_btn: JuicySfxButton = %RerollBtn
@@ -144,13 +145,15 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager) -> void:
 	_set_input_enabled(true)
 	for card in _offer_cards:
 		card.reduced_motion = reduced_motion
+	for slot in _piece_slots:
+		slot.reduced_motion = reduced_motion
 	_refresh()
+	_set_bag_row_visible_for_fly_in(false)
 	_update_shop_cursor()
-	_offer_fly_in.reduced_motion = reduced_motion
 	if TransitionManager.is_transitioning():
-		TransitionManager.transition_finished.connect(_offer_fly_in.play_fly_in, CONNECT_ONE_SHOT)
+		TransitionManager.transition_finished.connect(_play_shop_intro_animations, CONNECT_ONE_SHOT)
 	else:
-		_offer_fly_in.play_fly_in.call_deferred()
+		_play_shop_intro_animations.call_deferred()
 
 
 func _roll_offers() -> Array[Dictionary]:
@@ -325,10 +328,28 @@ func _refresh_bag() -> void:
 		return
 	for i in _piece_slots.size():
 		var slot := _piece_slots[i]
+		slot.reduced_motion = reduced_motion
 		var piece := _bag.get_piece_at(i)
 		slot.setup(i, piece)
 		slot.set_remove_enabled(_chips >= COST_REMOVE and not piece.modifier.is_empty())
 		slot.set_drop_highlight(false)
+
+
+func _play_shop_intro_animations() -> void:
+	_offer_fly_in.reduced_motion = reduced_motion
+	_bag_fly_in.reduced_motion = reduced_motion
+	await _offer_fly_in.play_fly_in()
+	if not is_inside_tree():
+		return
+	_set_bag_row_visible_for_fly_in(true)
+	await _bag_fly_in.play_fly_in()
+
+
+func _set_bag_row_visible_for_fly_in(visible_for_anim: bool) -> void:
+	if reduced_motion:
+		_bag_fly_in.modulate = Color.WHITE
+		return
+	_bag_fly_in.modulate = Color.WHITE if visible_for_anim else Color(1, 1, 1, 0)
 
 
 func _refresh_relics() -> void:
@@ -448,8 +469,10 @@ func _on_piece_offer_dropped(piece_idx: int, data: Dictionary) -> void:
 	var apply := func() -> void:
 		if kind == "modifier":
 			_apply_modifier_offer(offer_idx, piece_idx, offer)
+			_piece_slots[piece_idx].play_attach_juice("modifier")
 		elif kind == "piece_type":
 			_apply_piece_type_offer(offer_idx, piece_idx, offer)
+			_piece_slots[piece_idx].play_attach_juice("piece_type")
 	if icon != null and is_instance_valid(icon):
 		icon.snap_to(target_center, apply, reduced_motion)
 	else:
@@ -586,6 +609,7 @@ func _apply_upgrade(piece_idx: int, new_type: Piece.Type) -> void:
 	if not forge_free:
 		_animate_chips_to(_chips, COST_UPGRADE)
 	_refresh()
+	_piece_slots[piece_idx].play_attach_juice("piece_type")
 
 
 func _on_reroll() -> void:

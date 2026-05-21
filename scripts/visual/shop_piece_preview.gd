@@ -20,6 +20,17 @@ func setup(piece: Piece) -> void:
 		await ready
 	_apply_material()
 	_sync_piece_size()
+	if _piece_rect != null:
+		_piece_rect.modulate = Color.WHITE
+
+
+func flash_type_change() -> void:
+	if _piece_rect == null:
+		return
+	var flash := create_tween()
+	_piece_rect.modulate = Color(1.4, 1.4, 1.4, 1.0)
+	flash.tween_property(_piece_rect, "modulate", Color.WHITE, 0.1) \
+		.set_ease(Tween.EASE_OUT)
 
 
 func _sync_piece_size() -> void:

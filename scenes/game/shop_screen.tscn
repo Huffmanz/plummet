@@ -165,8 +165,11 @@ text = "Your bag"
 uppercase = true
 
 [node name="BagRow" type="HBoxContainer" parent="Root/Body/BagSection/BagVBox" unique_id=144364199]
+unique_name_in_owner = true
 layout_mode = 2
+size_flags_vertical = 3
 theme_override_constants/separation = 4
+script = ExtResource("7_hfly")
 
 [node name="Piece0" parent="Root/Body/BagSection/BagVBox/BagRow" unique_id=1498656068 instance=ExtResource("4_piece")]
 unique_name_in_owner = true

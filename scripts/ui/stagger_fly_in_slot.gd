@@ -3,6 +3,8 @@ class_name StaggerFlyInSlot extends Control
 
 var _content: Control
 var _pan: Control
+var _prepared_fly_offset: float = 0.0
+var _awaiting_fly_in: bool = false
 
 
 func wrap(content: Control) -> void:
@@ -16,6 +18,12 @@ func wrap(content: Control) -> void:
 	_pan.add_child(content)
 	_layout_content_in_pan()
 	_sync_minimum_size()
+	_pan.modulate = Color(1, 1, 1, 0)
+
+
+func clear_fly_in_prep() -> void:
+	_awaiting_fly_in = false
+	_prepared_fly_offset = 0.0
 
 
 func get_content() -> Control:
@@ -90,8 +98,9 @@ func has_value_pop_target() -> bool:
 func prepare_fly_in_right(offset: float) -> void:
 	if _pan == null:
 		return
+	_awaiting_fly_in = true
+	_prepared_fly_offset = offset
 	_layout_pan()
-	_pan.position = Vector2(offset, 0.0)
 	var mod := _pan.modulate
 	mod.a = 0.0
 	_pan.modulate = mod
@@ -149,8 +158,11 @@ func _layout_content_in_pan() -> void:
 func _layout_pan() -> void:
 	if _pan == null:
 		return
-	_pan.position = Vector2.ZERO
 	_pan.size = size
+	if _awaiting_fly_in:
+		_pan.position = Vector2(_prepared_fly_offset, 0.0)
+	else:
+		_pan.position = Vector2.ZERO
 
 
 func _notification(what: int) -> void:

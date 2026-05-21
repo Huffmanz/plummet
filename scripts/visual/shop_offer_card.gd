@@ -131,6 +131,23 @@ func set_affordable(affordable: bool) -> void:
 		_stop_unaffordable_pulse()
 
 
+const EXIT_DURATION := 0.18
+
+
+func play_exit() -> void:
+	_kill_all_tweens()
+	_stop_hover_immediate()
+	_stop_relic_shimmer()
+	if reduced_motion or modulate.a <= 0.01:
+		modulate = Color(1, 1, 1, 0)
+		return
+	pivot_offset = size * 0.5
+	var t := create_tween().set_parallel(true)
+	t.tween_property(self, "scale", Vector2(0.8, 0.8), EXIT_DURATION) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	t.tween_property(self, "modulate:a", 0.0, EXIT_DURATION).set_ease(Tween.EASE_IN)
+
+
 func set_consumed(consumed: bool) -> void:
 	_consumed = consumed
 	_drop_accepted = false

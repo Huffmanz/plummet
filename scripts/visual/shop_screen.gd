@@ -17,6 +17,12 @@ const WEIGHT_RELIC_UNCOMMON: int = 2
 const WEIGHT_RELIC_RARE: int = 1
 
 const _JUICY_BUTTON_SCENE := preload("res://scenes/ui/juicy_sfx_button.tscn")
+const _REROLL_SFX: Array[AudioStream] = [
+	preload("res://assets/sfx/kenney_casino-audio/Audio/dice-throw-1.ogg"),
+	preload("res://assets/sfx/kenney_casino-audio/Audio/dice-throw-2.ogg"),
+	preload("res://assets/sfx/kenney_casino-audio/Audio/dice-throw-3.ogg"),
+]
+const OFFER_EXIT_DURATION := 0.18
 
 @onready var _chip_label: Label = %ChipLabel
 @onready var _offer_fly_in: StaggerFlyInHContainer = %OffersRow
@@ -338,11 +344,52 @@ func _refresh_bag() -> void:
 func _play_shop_intro_animations() -> void:
 	_offer_fly_in.reduced_motion = reduced_motion
 	_bag_fly_in.reduced_motion = reduced_motion
-	await _offer_fly_in.play_fly_in()
+	await _play_offer_deal_in()
 	if not is_inside_tree():
 		return
 	_set_bag_row_visible_for_fly_in(true)
 	await _bag_fly_in.play_fly_in()
+
+
+func _play_offer_deal_in() -> void:
+	_offer_fly_in.reduced_motion = reduced_motion
+	await _offer_fly_in.play_fly_in()
+
+
+func _play_offer_exit() -> void:
+	if reduced_motion:
+		return
+	var exit_count := mini(_offer_count, _offers.size())
+	var any := false
+	for i in exit_count:
+		var card := _offer_cards[i]
+		var used := i < _offer_used.size() and _offer_used[i]
+		if used:
+			continue
+		card.play_exit()
+		any = true
+	if any:
+		await get_tree().create_timer(OFFER_EXIT_DURATION).timeout
+
+
+func _play_reroll_sfx() -> void:
+	RandomAudioPlayer.play_random_overlapping_static(
+		self, _REROLL_SFX, &"sfx", -4.0, -10.0, true, 0.92, 1.08
+	)
+
+
+func _play_reroll_btn_wiggle() -> void:
+	if reduced_motion:
+		return
+	var visual := _reroll_btn.get_node_or_null("VisualPivot") as Control
+	if visual == null:
+		return
+	visual.pivot_offset = visual.size * 0.5
+	var angle := deg_to_rad(4.0)
+	var t := create_tween()
+	t.tween_property(visual, "rotation", angle, 0.05).set_trans(Tween.TRANS_SINE)
+	t.tween_property(visual, "rotation", -angle, 0.05).set_trans(Tween.TRANS_SINE)
+	t.tween_property(visual, "rotation", 0.0, 0.05).set_trans(Tween.TRANS_BACK)
 
 
 func _set_bag_row_visible_for_fly_in(visible_for_anim: bool) -> void:
@@ -455,6 +502,8 @@ func _on_offer_drag_ended() -> void:
 
 
 func _on_piece_offer_dropped(piece_idx: int, data: Dictionary) -> void:
+	if not _input_enabled:
+		return
 	var offer_idx: int = data.get("index", -1)
 	if offer_idx < 0 or offer_idx >= _offers.size():
 		return
@@ -507,6 +556,8 @@ func _apply_piece_type_offer(offer_idx: int, piece_idx: int, offer: Dictionary) 
 
 
 func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
+	if not _input_enabled:
+		return
 	var offer_idx: int = data.get("index", -1)
 	if offer_idx < 0 or offer_idx >= _offers.size():
 		return
@@ -547,6 +598,8 @@ func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 
 
 func _on_remove_modifier(piece_idx: int) -> void:
+	if not _input_enabled:
+		return
 	if _chips < COST_REMOVE:
 		return
 	var piece := _bag.get_piece_at(piece_idx)
@@ -559,6 +612,8 @@ func _on_remove_modifier(piece_idx: int) -> void:
 
 
 func _on_piece_clicked(piece_idx: int) -> void:
+	if not _input_enabled:
+		return
 	var piece := _bag.get_piece_at(piece_idx)
 	_popover_piece_idx = piece_idx
 	_clear_popover_options()
@@ -592,6 +647,8 @@ func _on_piece_clicked(piece_idx: int) -> void:
 
 
 func _apply_upgrade(piece_idx: int, new_type: Piece.Type) -> void:
+	if not _input_enabled:
+		return
 	var piece := _bag.get_piece_at(piece_idx)
 	if piece.type != Piece.Type.NORMAL:
 		_hide_popover()
@@ -613,15 +670,35 @@ func _apply_upgrade(piece_idx: int, new_type: Piece.Type) -> void:
 
 
 func _on_reroll() -> void:
-	if _rerolled or _chips < COST_REROLL:
+	if _rerolled or _chips < COST_REROLL or not _input_enabled:
 		return
+	_hide_popover()
+	_set_input_enabled(false)
+	_play_reroll_btn_wiggle()
+	_play_reroll_sfx()
 	_chips -= COST_REROLL
+	_animate_chips_to(_chips, COST_REROLL)
+	if reduced_motion:
+		_offers = _roll_offers()
+		_offer_used.resize(_offers.size())
+		_offer_used.fill(false)
+		_rerolled = true
+		_refresh()
+		_set_input_enabled(true)
+		return
+	await _play_offer_exit()
+	if not is_inside_tree():
+		return
 	_offers = _roll_offers()
 	_offer_used.resize(_offers.size())
 	_offer_used.fill(false)
 	_rerolled = true
-	_animate_chips_to(_chips, COST_REROLL)
+	_refresh_offers()
+	await _play_offer_deal_in()
+	if not is_inside_tree():
+		return
 	_refresh()
+	_set_input_enabled(true)
 
 
 func _on_continue() -> void:

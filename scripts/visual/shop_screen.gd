@@ -394,6 +394,9 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 	_offer_dragging = true
 	_drag_offer_idx = offer_idx
 	_update_shop_cursor()
+	for i in _offer_cards.size():
+		if i != offer_idx:
+			_offer_cards[i].set_drag_dim(true)
 	if offer_idx >= _offers.size():
 		return
 	var kind: String = _offers[offer_idx].get("kind", "")
@@ -417,6 +420,8 @@ func _on_offer_drag_ended() -> void:
 		slot.set_drop_highlight(false)
 	for slot in _relic_slots:
 		slot.set_drop_highlight(false)
+	for card in _offer_cards:
+		card.set_drag_dim(false)
 
 
 func _on_piece_offer_dropped(piece_idx: int, data: Dictionary) -> void:
@@ -427,10 +432,19 @@ func _on_piece_offer_dropped(piece_idx: int, data: Dictionary) -> void:
 		return
 	var offer := _offers[offer_idx]
 	var kind: String = offer.get("kind", "")
-	if kind == "modifier":
-		_apply_modifier_offer(offer_idx, piece_idx, offer)
-	elif kind == "piece_type":
-		_apply_piece_type_offer(offer_idx, piece_idx, offer)
+	var target_center := _piece_slots[piece_idx].get_global_rect().get_center()
+	var icon: ShopOfferDragIcon = null
+	if offer_idx < _offer_cards.size():
+		icon = _offer_cards[offer_idx].take_cursor_icon()
+	var apply := func() -> void:
+		if kind == "modifier":
+			_apply_modifier_offer(offer_idx, piece_idx, offer)
+		elif kind == "piece_type":
+			_apply_piece_type_offer(offer_idx, piece_idx, offer)
+	if icon != null and is_instance_valid(icon):
+		icon.snap_to(target_center, apply, reduced_motion)
+	else:
+		apply.call()
 
 
 func _apply_modifier_offer(offer_idx: int, piece_idx: int, offer: Dictionary) -> void:
@@ -479,16 +493,25 @@ func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 	var cost := _relic_purchase_cost()
 	if _chips < cost:
 		return
-	if cost == 0:
-		if not _relic_manager.try_patron():
+	var target_center := _relic_slots[slot_idx].get_global_rect().get_center()
+	var icon: ShopOfferDragIcon = null
+	if offer_idx < _offer_cards.size():
+		icon = _offer_cards[offer_idx].take_cursor_icon()
+	var apply := func() -> void:
+		if cost == 0:
+			if not _relic_manager.try_patron():
+				return
+		else:
+			_chips -= cost
+		if not _relic_manager.add_relic(offer.get("id", ""), slot_idx):
 			return
+		_offer_used[offer_idx] = true
+		_animate_chips_to(_chips, cost)
+		_refresh()
+	if icon != null and is_instance_valid(icon):
+		icon.snap_to(target_center, apply, reduced_motion)
 	else:
-		_chips -= cost
-	if not _relic_manager.add_relic(offer.get("id", "")):
-		return
-	_offer_used[offer_idx] = true
-	_animate_chips_to(_chips, cost)
-	_refresh()
+		apply.call()
 
 
 func _on_remove_modifier(piece_idx: int) -> void:

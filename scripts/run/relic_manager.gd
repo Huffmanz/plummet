@@ -2,17 +2,23 @@ class_name RelicManager extends RefCounted
 
 const MAX_RELICS: int = 4
 
-var _relics: Array[String] = []
+var _relics: Array[String] = ["", "", "", ""]
 var _cushion_used: bool = false
 var _patron_used: bool = false
 var _forge_used_this_shop: bool = false
 
 
-func add_relic(relic_id: String) -> bool:
-	if _relics.size() >= MAX_RELICS:
-		return false
-	_relics.append(relic_id)
-	return true
+func add_relic(relic_id: String, slot_idx: int = -1) -> bool:
+	if slot_idx >= 0 and slot_idx < MAX_RELICS:
+		if not _relics[slot_idx].is_empty():
+			return false
+		_relics[slot_idx] = relic_id
+		return true
+	for i in MAX_RELICS:
+		if _relics[i].is_empty():
+			_relics[i] = relic_id
+			return true
+	return false
 
 
 func has_relic(relic_id: String) -> bool:
@@ -24,11 +30,18 @@ func get_active_relics() -> Array[String]:
 
 
 func relic_count() -> int:
-	return _relics.size()
+	var n := 0
+	for r in _relics:
+		if not r.is_empty():
+			n += 1
+	return n
 
 
 func can_add_relic() -> bool:
-	return _relics.size() < MAX_RELICS
+	for r in _relics:
+		if r.is_empty():
+			return true
+	return false
 
 
 # Cushion: absorb one loss. Returns true if it activated.

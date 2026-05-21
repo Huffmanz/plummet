@@ -28,8 +28,10 @@ var _consumed: bool = false
 var _press_pos: Vector2 = Vector2.ZERO
 var _pressed: bool = false
 var _hidden_for_drag: bool = false
+var _drop_accepted: bool = false
 var _affordable: bool = true
 var _cursor_icon: PanelContainer = null
+var _shrink_tween: Tween = null
 
 
 func _ready() -> void:
@@ -115,6 +117,7 @@ func set_affordable(affordable: bool) -> void:
 
 func set_consumed(consumed: bool) -> void:
 	_consumed = consumed
+	_drop_accepted = false
 	if consumed:
 		_apply_consumed_appearance()
 		return
@@ -183,7 +186,13 @@ func _start_drag() -> void:
 		return
 	_hidden_for_drag = true
 	GameCursor.apply_closed()
-	modulate = Color(1, 1, 1, 0)
+	pivot_offset = size * 0.5
+	if _shrink_tween != null and _shrink_tween.is_valid():
+		_shrink_tween.kill()
+	_shrink_tween = create_tween().set_parallel(true)
+	_shrink_tween.tween_property(self, "scale", Vector2.ZERO, 0.12) \
+		.set_ease(Tween.EASE_IN).set_trans(Tween.TRANS_QUAD)
+	_shrink_tween.tween_property(self, "modulate:a", 0.0, 0.09).set_ease(Tween.EASE_IN)
 	_spawn_cursor_icon()
 	drag_started.emit(offer_index)
 	force_drag(data, _make_drag_preview())
@@ -235,10 +244,15 @@ func _make_drag_preview() -> Control:
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_DRAG_END:
+		if _shrink_tween != null and _shrink_tween.is_valid():
+			_shrink_tween.kill()
+		_shrink_tween = null
+		scale = Vector2.ONE
+		pivot_offset = Vector2.ZERO
 		_clear_cursor_icon()
 		_hidden_for_drag = false
-		if _consumed:
-			_apply_consumed_appearance()
+		if _drop_accepted or _consumed:
+			modulate = Color(1, 1, 1, 0)
 		else:
 			set_affordable(_affordable)
 		drag_ended.emit()
@@ -274,6 +288,22 @@ func _ignore_mouse_on_children(node: Node) -> void:
 		if child is Control:
 			(child as Control).mouse_filter = Control.MOUSE_FILTER_PASS
 		_ignore_mouse_on_children(child)
+
+
+func set_drag_dim(on: bool) -> void:
+	if _consumed or _hidden_for_drag or _drop_accepted:
+		return
+	if on:
+		modulate = Color(1, 1, 1, 0.45)
+	else:
+		set_affordable(_affordable)
+
+
+func take_cursor_icon() -> ShopOfferDragIcon:
+	var icon := _cursor_icon as ShopOfferDragIcon
+	_cursor_icon = null
+	_drop_accepted = true
+	return icon
 
 
 func _apply_border(is_relic: bool) -> void:

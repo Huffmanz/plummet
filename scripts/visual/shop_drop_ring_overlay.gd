@@ -18,6 +18,7 @@ func set_active(on: bool) -> void:
 	_active = on
 	visible = on
 	set_process(on)
+	modulate = Color(1.2, 1.2, 1.2, 1.0) if on else Color.WHITE
 	if on:
 		queue_redraw()
 
@@ -25,7 +26,7 @@ func set_active(on: bool) -> void:
 func _process(delta: float) -> void:
 	if not _active:
 		return
-	_angle = fmod(_angle + delta * ROT_SPEED, TAU)
+	_angle = fmod(_angle + delta * ROT_SPEED * 1.4, TAU)
 	queue_redraw()
 
 

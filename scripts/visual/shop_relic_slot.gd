@@ -10,6 +10,7 @@ signal relic_dropped(slot_index: int, data: Dictionary)
 var slot_index: int = 0
 var _occupied: bool = false
 var _drop_highlight: bool = false
+var _pulse_tween: Tween = null
 
 
 func _ready() -> void:
@@ -50,6 +51,7 @@ func setup(index: int, relic_id: String) -> void:
 func set_drop_highlight(on: bool) -> void:
 	_drop_highlight = on
 	_update_highlight()
+	_update_pulse(on)
 
 
 func _can_drop_data(_at_position: Vector2, data: Variant) -> bool:
@@ -90,6 +92,17 @@ func _update_highlight() -> void:
 		add_theme_stylebox_override("panel", sb)
 	else:
 		_apply_empty_style()
+
+
+func _update_pulse(on: bool) -> void:
+	if _pulse_tween != null and _pulse_tween.is_valid():
+		_pulse_tween.kill()
+	_pulse_tween = null
+	modulate = Color.WHITE
+	if on and not _occupied:
+		_pulse_tween = create_tween().set_loops()
+		_pulse_tween.tween_property(self, "modulate", Color(1.15, 1.15, 1.15, 1.0), 0.5)
+		_pulse_tween.tween_property(self, "modulate", Color.WHITE, 0.5)
 
 
 func _ignore_mouse_on_children(node: Node) -> void:

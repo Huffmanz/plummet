@@ -115,6 +115,10 @@ func _format_footer(cost: int, hint: String) -> String:
 	return "%d chips · %s" % [cost, hint]
 
 
+func restore_visibility_for_deal_in() -> void:
+	set_affordable(_affordable)
+
+
 func set_affordable(affordable: bool) -> void:
 	if _consumed:
 		return

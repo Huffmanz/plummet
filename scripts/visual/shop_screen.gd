@@ -276,7 +276,7 @@ func _refresh() -> void:
 	_refresh_relics()
 
 
-func _refresh_offers() -> void:
+func _refresh_offers(hide_until_deal_in: bool = false) -> void:
 	for i in _offer_cards.size():
 		var card := _offer_cards[i]
 		if i >= _offer_count or i >= _offers.size():
@@ -331,6 +331,10 @@ func _refresh_offers() -> void:
 		if not used and kind == "relic" and not _relic_manager.can_add_relic():
 			can_use = false
 		card.set_affordable(can_use)
+		if hide_until_deal_in and not used:
+			var hidden := card.modulate
+			hidden.a = 0.0
+			card.modulate = hidden
 
 
 func _refresh_bag() -> void:
@@ -359,7 +363,17 @@ func _play_shop_intro_animations() -> void:
 
 func _play_offer_deal_in() -> void:
 	_offer_fly_in.reduced_motion = reduced_motion
+	_reset_offer_cards_for_deal_in()
 	await _offer_fly_in.play_fly_in()
+
+
+func _reset_offer_cards_for_deal_in() -> void:
+	for i in mini(_offer_count, _offer_cards.size()):
+		var card := _offer_cards[i]
+		if not card.visible:
+			continue
+		card.scale = Vector2.ONE
+		card.pivot_offset = Vector2.ZERO
 
 
 func _play_offer_exit() -> void:
@@ -453,6 +467,8 @@ func _update_shop_cursor() -> void:
 
 func _is_any_offer_dragging() -> bool:
 	for card in _offer_cards:
+		if not is_instance_valid(card):
+			continue
 		if card.is_dragging():
 			return true
 	return false
@@ -461,6 +477,8 @@ func _is_any_offer_dragging() -> bool:
 func _get_hovered_offer_card() -> ShopOfferCard:
 	var node: Node = get_viewport().gui_get_hovered_control()
 	while node != null:
+		if not is_instance_valid(node):
+			break
 		if node is ShopOfferCard:
 			return node as ShopOfferCard
 		node = node.get_parent()
@@ -475,7 +493,7 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 	_drag_offer_idx = offer_idx
 	_update_shop_cursor()
 	for i in _offer_cards.size():
-		if i != offer_idx:
+		if i != offer_idx and is_instance_valid(_offer_cards[i]):
 			_offer_cards[i].set_drag_dim(true)
 	if offer_idx >= _offers.size():
 		return
@@ -510,7 +528,8 @@ func _on_offer_drag_ended() -> void:
 	for slot in _relic_slots:
 		slot.set_drop_highlight(false)
 	for card in _offer_cards:
-		card.set_drag_dim(false)
+		if is_instance_valid(card):
+			card.set_drag_dim(false)
 
 
 func _update_drag_hover_sfx() -> void:
@@ -733,6 +752,8 @@ func _on_reroll() -> void:
 	if _rerolled or _chips < COST_REROLL or not _input_enabled:
 		return
 	_hide_popover()
+	_offer_dragging = false
+	_drag_offer_idx = -1
 	_set_input_enabled(false)
 	_play_reroll_btn_wiggle()
 	if _audio != null:
@@ -754,7 +775,7 @@ func _on_reroll() -> void:
 	_offer_used.resize(_offers.size())
 	_offer_used.fill(false)
 	_rerolled = true
-	_refresh_offers()
+	_refresh_offers(true)
 	await _play_offer_deal_in()
 	if not is_inside_tree():
 		return

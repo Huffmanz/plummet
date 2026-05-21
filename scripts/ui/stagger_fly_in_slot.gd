@@ -104,6 +104,9 @@ func prepare_fly_in_right(offset: float) -> void:
 	var mod := _pan.modulate
 	mod.a = 0.0
 	_pan.modulate = mod
+	var content := get_content()
+	if content is ShopOfferCard:
+		(content as ShopOfferCard).restore_visibility_for_deal_in()
 
 
 func prepare_pan_pop() -> void:

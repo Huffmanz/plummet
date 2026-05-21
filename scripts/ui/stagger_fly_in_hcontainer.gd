@@ -51,6 +51,8 @@ func play_fly_in() -> void:
 		finished.emit()
 		return
 	_kill_tween()
+	_unwrap_children()
+	await get_tree().process_frame
 	_wrap_children()
 	var slots := _gather_animatable_slots()
 	if slots.is_empty():
@@ -82,6 +84,25 @@ func play_fly_in() -> void:
 	finished.emit()
 
 
+func _unwrap_children() -> void:
+	for child in get_children().duplicate():
+		if not (child is StaggerFlyInSlot):
+			continue
+		var slot := child as StaggerFlyInSlot
+		var content := slot.get_content()
+		var idx := slot.get_index()
+		if content != null:
+			var content_parent := content.get_parent()
+			if content_parent != null:
+				content_parent.remove_child(content)
+		remove_child(slot)
+		slot.free()
+		if content == null:
+			continue
+		add_child(content)
+		move_child(content, idx)
+
+
 func _wrap_children() -> void:
 	for child in get_children().duplicate():
 		if child is StaggerFlyInSlot:
@@ -108,7 +129,7 @@ func _gather_animatable_slots() -> Array[StaggerFlyInSlot]:
 			continue
 		var slot := child as StaggerFlyInSlot
 		var content := slot.get_content()
-		if content == null or content.modulate.a <= 0.01:
+		if content == null or not content.visible:
 			continue
 		slots.append(slot)
 	return slots

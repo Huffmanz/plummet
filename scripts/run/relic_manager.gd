@@ -1,11 +1,16 @@
 class_name RelicManager extends RefCounted
 
-const MAX_RELICS: int = 4
+const MAX_RELICS: int = 10
 
-var _relics: Array[String] = ["", "", "", ""]
+var _relics: Array[String] = []
 var _cushion_used: bool = false
 var _patron_used: bool = false
 var _forge_used_this_shop: bool = false
+
+
+func _init() -> void:
+	_relics.resize(MAX_RELICS)
+	_relics.fill("")
 
 
 func add_relic(relic_id: String, slot_idx: int = -1) -> bool:
@@ -27,6 +32,14 @@ func has_relic(relic_id: String) -> bool:
 
 func get_active_relics() -> Array[String]:
 	return _relics.duplicate()
+
+
+func get_owned_relic_ids() -> Array[String]:
+	var ids: Array[String] = []
+	for relic_id in _relics:
+		if not relic_id.is_empty():
+			ids.append(relic_id)
+	return ids
 
 
 func relic_count() -> int:

@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bfac4d1126vuc"]
+
+[ext_resource type="Script" path="res://scripts/visual/piece_queue_preview.gd" id="1_preview"]
+
+[node name="PieceQueuePreview" type="Control"]
+custom_minimum_size = Vector2(0, 0)
+layout_mode = 2
+size_flags_vertical = 4
+mouse_filter = 2
+script = ExtResource("1_preview")

@@ -168,6 +168,7 @@ func _toggle_relic(relic_id: String, on: bool) -> void:
 			if (relic_btns[i] as Button).button_pressed:
 				_relic_manager.add_relic(RELICS[i])
 		_game_board._relic_manager = _relic_manager
+	_game_board._refresh_all()
 	_log("Relic %s: %s" % ["ON" if on else "OFF", relic_id])
 
 

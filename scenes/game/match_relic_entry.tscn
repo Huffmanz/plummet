@@ -1,0 +1,32 @@
+[gd_scene format=3 uid="uid://di8ojgfsudnoo"]
+
+[ext_resource type="Script" path="res://scripts/visual/match_relic_entry.gd" id="1_entry"]
+
+[node name="MatchRelicEntry" type="PanelContainer"]
+custom_minimum_size = Vector2(22, 22)
+size_flags_horizontal = 0
+mouse_filter = 0
+script = ExtResource("1_entry")
+
+[node name="IconFrame" type="PanelContainer" parent="."]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 4
+size_flags_vertical = 4
+
+[node name="IconInner" type="CenterContainer" parent="IconFrame"]
+layout_mode = 2
+
+[node name="IconTexture" type="TextureRect" parent="IconFrame/IconInner"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IconGlyph" type="ColorRect" parent="IconFrame/IconInner"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(8, 8)
+layout_mode = 2
+color = Color(0.95, 0.93, 0.9, 1)

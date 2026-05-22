@@ -724,10 +724,12 @@ func _on_continue() -> void:
 		hide()
 		shop_closed.emit(_chips)
 		return
+	if TransitionManager.is_transitioning():
+		await TransitionManager.transition_finished
 	await TransitionManager.transition_screen(func():
 		hide()
-		shop_closed.emit(_chips)
 	)
+	shop_closed.emit(_chips)
 
 
 func _on_piece_slot_mouse_entered(slot: ShopPieceSlot) -> void:

@@ -63,6 +63,7 @@ func _start_match() -> void:
 	add_child(_game_board)
 	move_child(_game_board, -1)
 	_game_board.match_complete.connect(_on_match_complete)
+	_game_board.run_shop_finished.connect(_on_run_shop_finished)
 	# Momentum relic: starting score bonus for consecutive wins
 	var momentum_bonus := _run_state.relic_manager.momentum_bonus(_run_state.win_streak)
 
@@ -121,6 +122,8 @@ func _on_match_complete(
 			call_deferred("_end_run", false)
 		return
 
+	var was_regular_win := not _run_state.is_boss_match()
+
 	# Award fragments for this match
 	if _run_state.is_boss_match():
 		_run_state.bosses_defeated += 1
@@ -141,8 +144,16 @@ func _on_match_complete(
 	elif _run_state.match_in_act == 1:
 		# Just entered a new act (via boss win) — offer boss relic drop
 		call_deferred("_offer_boss_relic")
+	elif was_regular_win:
+		# Run state advanced; shop on current board then _on_run_shop_finished starts next match.
+		pass
 	else:
 		call_deferred("_start_match")
+
+
+func _on_run_shop_finished(chips: int) -> void:
+	_run_state.chip_count = chips
+	call_deferred("_start_match")
 
 
 const _BOSS_DROP_RELICS: Array[String] = ["Cushion", "Patron", "EchoChamber", "Cartographer"]
@@ -182,6 +193,8 @@ func _teardown_game_board() -> void:
 		return
 	if _game_board.match_complete.is_connected(_on_match_complete):
 		_game_board.match_complete.disconnect(_on_match_complete)
+	if _game_board.run_shop_finished.is_connected(_on_run_shop_finished):
+		_game_board.run_shop_finished.disconnect(_on_run_shop_finished)
 	_game_board.queue_free()
 	_game_board = null
 

@@ -1,0 +1,51 @@
+[gd_scene format=3 uid="uid://cwg51v31xf15b"]
+
+[ext_resource type="Script" uid="uid://ebrww0x50k2r" path="res://scripts/visual/match_pieces_panel.gd" id="1_panel"]
+[ext_resource type="PackedScene" uid="uid://dlfv4insocxo3" path="res://scenes/game/match_piece_row.tscn" id="2_row"]
+
+[node name="MatchPiecesPanel" type="VBoxContainer" unique_id=340602441]
+theme_override_constants/separation = 2
+script = ExtResource("1_panel")
+
+[node name="SectionTitle" type="Label" parent="." unique_id=121973080]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 14
+text = "PIECES"
+
+[node name="HBoxContainer" type="HBoxContainer" parent="." unique_id=1329767032]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="HBoxContainer" unique_id=2082268745]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="CurrentLabel" type="Label" parent="HBoxContainer/VBoxContainer" unique_id=2041763641]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.604, 0.58, 0.533, 1)
+theme_override_font_sizes/font_size = 7
+text = "Current"
+
+[node name="CurrentRow" parent="HBoxContainer/VBoxContainer" unique_id=518978540 instance=ExtResource("2_row")]
+unique_name_in_owner = true
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="HBoxContainer" unique_id=320254183]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="NextBlock" type="VBoxContainer" parent="HBoxContainer/VBoxContainer2" unique_id=428847418]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="NextLabel" type="Label" parent="HBoxContainer/VBoxContainer2/NextBlock" unique_id=1200594700]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_color = Color(0.604, 0.58, 0.533, 1)
+theme_override_font_sizes/font_size = 7
+text = "Next"
+
+[node name="NextRow" parent="HBoxContainer/VBoxContainer2/NextBlock" unique_id=1841618803 instance=ExtResource("2_row")]
+unique_name_in_owner = true

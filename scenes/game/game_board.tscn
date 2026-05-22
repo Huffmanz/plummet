@@ -1,11 +1,11 @@
 [gd_scene format=3 uid="uid://bnxkfv3qm0t4p"]
 
 [ext_resource type="Script" uid="uid://ddkojelartdav" path="res://scripts/visual/game_board.gd" id="1_gamebrd"]
-[ext_resource type="PackedScene" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_1idxs"]
+[ext_resource type="PackedScene" uid="uid://bi28curqlfdby" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_1idxs"]
 [ext_resource type="Shader" uid="uid://1tkgcbcxpqvt" path="res://shaders/connected_dots.gdshader" id="2_64pfw"]
 [ext_resource type="Script" uid="uid://rc02r6wdhkry" path="res://scripts/visual/board_canvas.gd" id="2_boardcvs"]
 [ext_resource type="Script" uid="uid://dt8p18ujv6rb0" path="res://scripts/visual/ghost_canvas.gd" id="3_ghostcvs"]
-[ext_resource type="Script" uid="uid://rmame1hoea4x" path="res://scripts/visual/queue_canvas.gd" id="4_queuecvs"]
+[ext_resource type="PackedScene" uid="uid://cwg51v31xf15b" path="res://scenes/game/match_pieces_panel.tscn" id="4_pieces"]
 [ext_resource type="Script" uid="uid://b4d44rx2wjhhe" path="res://scripts/animation/anim_layer.gd" id="5_animlyr"]
 [ext_resource type="PackedScene" uid="uid://bf0ry22k4o0ey" path="res://scenes/game/match_end_overlay.tscn" id="6_matchend"]
 [ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="7_rap"]
@@ -26,6 +26,7 @@
 [ext_resource type="AudioStream" uid="uid://cyb4ieglen0t8" path="res://assets/sfx/218461__thomasjaunism__wood-block.wav" id="22_woodblock"]
 [ext_resource type="AudioStream" uid="uid://de3ybywjupdi3" path="res://assets/sfx/571581__el_boss__playing-card-slide-right.wav" id="23_cardslide"]
 [ext_resource type="PackedScene" uid="uid://bqxakp7mr3n5t" path="res://scenes/ui/score_accumulator_overlay.tscn" id="24_accumoverlay"]
+[ext_resource type="PackedScene" uid="uid://bid1oolhdwpeo" path="res://scenes/game/match_relic_display.tscn" id="25_relicdisp"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_1idxs"]
 frequency = 0.062
@@ -79,7 +80,6 @@ script = ExtResource("1_gamebrd")
 [node name="Background2" parent="." unique_id=998394697 instance=ExtResource("2_1idxs")]
 layout_mode = 1
 color_two = Color(0.810273, 0.74657047, 0.6599681, 1)
-stripe_blur = 0.0
 
 [node name="Background" type="ColorRect" parent="." unique_id=2001824056]
 visible = false
@@ -131,100 +131,6 @@ theme_override_constants/margin_left = 5
 theme_override_constants/margin_top = 5
 theme_override_constants/margin_right = 5
 theme_override_constants/margin_bottom = 5
-
-[node name="PlayerPanel" type="PanelContainer" parent="MarginContainer" unique_id=515973347]
-layout_mode = 2
-size_flags_horizontal = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_8sfkx")
-
-[node name="LeftPanel" type="VBoxContainer" parent="MarginContainer/PlayerPanel" unique_id=1549813536]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(150, 200)
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="Panel" type="PanelContainer" parent="MarginContainer/PlayerPanel/LeftPanel" unique_id=449531608]
-layout_mode = 2
-size_flags_vertical = 0
-theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
-
-[node name="PlayerTitle" type="RichTextLabel" parent="MarginContainer/PlayerPanel/LeftPanel/Panel" unique_id=1823059932]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_colors/default_color = Color(0.9490196, 0.92156863, 0.8784314, 1)
-theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
-theme_override_constants/shadow_outline_size = 2
-theme_override_constants/shadow_offset_x = 2
-theme_override_constants/shadow_offset_y = 2
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/bold_font_size = 16
-bbcode_enabled = true
-text = "[wave][center]PLAYER[/center][/wave]"
-fit_content = true
-
-[node name="MarginContainer" type="MarginContainer" parent="MarginContainer/PlayerPanel/LeftPanel" unique_id=522896556]
-layout_mode = 2
-theme_override_constants/margin_left = 4
-
-[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer" unique_id=734774851]
-layout_mode = 2
-
-[node name="PlayerScore" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=1941758077]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 8
-text = "Score: 0"
-
-[node name="PlayerTurns" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=102212865]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 8
-text = "Turns: 40"
-
-[node name="ChipCount" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=1364442066]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 8
-text = "Chips: 0"
-
-[node name="QueueTitle" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=1032767253]
-unique_name_in_owner = true
-layout_mode = 2
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 8
-text = "Next:"
-
-[node name="QueueCanvas" type="Control" parent="MarginContainer/PlayerPanel/LeftPanel/MarginContainer/VBoxContainer" unique_id=399047196]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(112, 112)
-layout_mode = 2
-size_flags_horizontal = 3
-script = ExtResource("4_queuecvs")
-
-[node name="BottomStrip" type="Control" parent="MarginContainer/PlayerPanel/LeftPanel" unique_id=869220148]
-unique_name_in_owner = true
-layout_mode = 2
-size_flags_horizontal = 4
-size_flags_vertical = 10
-
-[node name="TurnIndicator" type="Label" parent="MarginContainer/PlayerPanel/LeftPanel/BottomStrip" unique_id=1471655483]
-unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -21.0
-grow_horizontal = 2
-grow_vertical = 0
-theme_override_colors/font_outline_color = Color(0, 0, 0, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 12
-text = "YOUR TURN"
-horizontal_alignment = 1
 
 [node name="AIPanel" type="PanelContainer" parent="MarginContainer" unique_id=2030132308]
 layout_mode = 2
@@ -295,27 +201,179 @@ theme_override_font_sizes/font_size = 8
 horizontal_alignment = 2
 autowrap_mode = 2
 
-[node name="BottomStrip" type="Control" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer" unique_id=1792540380]
+[node name="LeftPanel" type="ScrollContainer" parent="." unique_id=1549813536]
+unique_name_in_owner = true
+layout_mode = 0
+offset_right = 160.0
+offset_bottom = 352.0
+horizontal_scroll_mode = 0
+
+[node name="SidebarVBox" type="VBoxContainer" parent="LeftPanel" unique_id=1549813537]
 layout_mode = 2
-size_flags_horizontal = 4
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ScorePanel" type="PanelContainer" parent="LeftPanel/SidebarVBox" unique_id=449531608]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
+
+[node name="Margin" type="MarginContainer" parent="LeftPanel/SidebarVBox/ScorePanel" unique_id=1419604536]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 5
+
+[node name="VBox" type="VBoxContainer" parent="LeftPanel/SidebarVBox/ScorePanel/Margin" unique_id=362574171]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Header" type="RichTextLabel" parent="LeftPanel/SidebarVBox/ScorePanel/Margin/VBox" unique_id=801762266]
+layout_mode = 2
+theme_override_colors/default_color = Color(0.9490196, 0.92156863, 0.8784314, 1)
+theme_override_font_sizes/normal_font_size = 18
+bbcode_enabled = true
+text = "[wave]YOU[/wave]"
+fit_content = true
+
+[node name="PlayerScore" type="Label" parent="LeftPanel/SidebarVBox/ScorePanel/Margin/VBox" unique_id=1941758077]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 27
+text = "0"
+
+[node name="ScoreDelta" type="Label" parent="LeftPanel/SidebarVBox/ScorePanel/Margin/VBox" unique_id=884120401]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 7
+
+[node name="TurnPill" type="PanelContainer" parent="LeftPanel/SidebarVBox/ScorePanel/Margin/VBox" unique_id=1502113987]
+layout_mode = 2
+size_flags_horizontal = 0
 size_flags_vertical = 10
 
-[node name="MatchInfo" type="Label" parent="MarginContainer/AIPanel/RightPanel/MarginContainer/VBoxContainer/BottomStrip" unique_id=1745543183]
+[node name="TurnIndicator" type="Label" parent="LeftPanel/SidebarVBox/ScorePanel/Margin/VBox/TurnPill" unique_id=1471655483]
 unique_name_in_owner = true
-layout_mode = 1
-anchors_preset = 12
-anchor_top = 1.0
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_top = -16.0
-grow_horizontal = 2
-grow_vertical = 0
-size_flags_horizontal = 4
-size_flags_vertical = 10
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 12
-text = "Act 1 · Match 1"
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Your turn"
+horizontal_alignment = 1
+
+[node name="ChipsPanel" type="PanelContainer" parent="LeftPanel/SidebarVBox" unique_id=884120402]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
+
+[node name="Margin" type="MarginContainer" parent="LeftPanel/SidebarVBox/ChipsPanel" unique_id=631686984]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 5
+
+[node name="VBox" type="VBoxContainer" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin" unique_id=1038794724]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin/VBox" unique_id=1895834035]
+layout_mode = 2
+
+[node name="Header" type="Label" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin/VBox/HBoxContainer" unique_id=2002997670]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9490196, 0.92156863, 0.8784314, 1)
+theme_override_font_sizes/font_size = 8
+text = "CHIPS"
+uppercase = true
+
+[node name="TurnHeader" type="Label" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin/VBox/HBoxContainer" unique_id=602617967]
+layout_mode = 2
+size_flags_horizontal = 10
+theme_override_colors/font_color = Color(0.9490196, 0.92156863, 0.8784314, 1)
+theme_override_font_sizes/font_size = 8
+text = "TURNS"
 horizontal_alignment = 2
+uppercase = true
+
+[node name="StatsRow" type="HBoxContainer" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin/VBox" unique_id=1581085185]
+layout_mode = 2
+theme_override_constants/separation = 6
+alignment = 1
+
+[node name="ChipCount" type="Label" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin/VBox/StatsRow" unique_id=1364442066]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 18
+text = "0"
+
+[node name="PlayerTurns" type="Label" parent="LeftPanel/SidebarVBox/ChipsPanel/Margin/VBox/StatsRow" unique_id=102212865]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 8
+theme_override_font_sizes/font_size = 18
+text = "40"
+horizontal_alignment = 2
+
+[node name="PiecesPanelWrap" type="PanelContainer" parent="LeftPanel/SidebarVBox" unique_id=884120403]
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
+
+[node name="Margin" type="MarginContainer" parent="LeftPanel/SidebarVBox/PiecesPanelWrap" unique_id=1770902274]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 9
+theme_override_constants/margin_bottom = 4
+
+[node name="PiecesPanel" parent="LeftPanel/SidebarVBox/PiecesPanelWrap/Margin" unique_id=399047196 instance=ExtResource("4_pieces")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="RelicsPanel" type="PanelContainer" parent="LeftPanel/SidebarVBox" unique_id=884120404]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 90)
+layout_mode = 2
+size_flags_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
+
+[node name="Margin" type="MarginContainer" parent="LeftPanel/SidebarVBox/RelicsPanel" unique_id=1012328537]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="RelicDisplay" parent="LeftPanel/SidebarVBox/RelicsPanel/Margin" unique_id=884120400 instance=ExtResource("25_relicdisp")]
+unique_name_in_owner = true
+layout_mode = 2
+
+[node name="MatchProgressPanel" type="PanelContainer" parent="." unique_id=1792540381]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 5.0
+offset_top = 329.0
+offset_right = 165.0
+offset_bottom = 355.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
+
+[node name="Margin" type="MarginContainer" parent="MatchProgressPanel" unique_id=1475438263]
+layout_mode = 2
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 4
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 4
+
+[node name="MatchInfo" type="Label" parent="MatchProgressPanel/Margin" unique_id=1745543183]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "Act 1 · Match 1"
+autowrap_mode = 3
 
 [node name="MatchEndOverlay" parent="." unique_id=1903911458 instance=ExtResource("6_matchend")]
 visible = false

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://dlfv4insocxo3"]
+
+[ext_resource type="Script" path="res://scripts/visual/match_piece_row.gd" id="1_row"]
+[ext_resource type="PackedScene" uid="uid://cpiecequeuepreview1" path="res://scenes/game/piece_queue_preview.tscn" id="2_preview"]
+
+[node name="MatchPieceRow" type="Control"]
+layout_mode = 2
+size_flags_horizontal = 0
+mouse_filter = 0
+script = ExtResource("1_row")
+
+[node name="Preview" parent="." instance=ExtResource("2_preview")]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2

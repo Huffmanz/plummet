@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://bid1oolhdwpeo"]
+
+[ext_resource type="Script" uid="uid://dywm8cj450e8n" path="res://scripts/visual/match_relic_display.gd" id="1_display"]
+
+[node name="MatchRelicDisplay" type="VBoxContainer" unique_id=1584878777]
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/separation = 3
+script = ExtResource("1_display")
+
+[node name="SectionTitle" type="Label" parent="." unique_id=373149070]
+layout_mode = 2
+theme_override_constants/outline_size = 2
+theme_override_font_sizes/font_size = 8
+text = "Relics"
+uppercase = true
+
+[node name="Grid" type="GridContainer" parent="." unique_id=2147266869]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/h_separation = 3
+theme_override_constants/v_separation = 3
+columns = 4
+
+[node name="EmptyLabel" type="Label" parent="." unique_id=452558947]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 8
+text = "None"
+horizontal_alignment = 1

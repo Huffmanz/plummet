@@ -64,7 +64,7 @@ static func _cache_key_for_style(base_color: Color, style: int, pixel_size: int)
 static func _ensure_baker() -> PieceShaderBaker:
 	if _baker == null or not is_instance_valid(_baker):
 		_baker = PieceShaderBaker.new()
+	if _baker.get_parent() == null:
 		var root: Node = Engine.get_main_loop().root
-		root.add_child(_baker)
-		_baker._initialize()
+		root.add_child.call_deferred(_baker)
 	return _baker

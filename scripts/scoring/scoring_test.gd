@@ -10,6 +10,8 @@ func _ready() -> void:
 	test_no_clears_zero_points()
 	test_single_4_in_a_row_depth_0()
 	test_single_4_in_a_row_depth_1()
+	test_four_embers_linear_multiplier()
+	test_one_ember_linear_multiplier()
 	test_single_5_in_a_row_depth_0()
 	test_single_6_in_a_row_depth_0()
 	test_two_simultaneous_4_in_a_row_depth_0()
@@ -67,6 +69,24 @@ func test_single_4_in_a_row_depth_1() -> void:
 	r.clears.append(TaggedClear.new(_run(Piece.Owner.PLAYER, 4), 1))
 	var turn := _calc.calculate(r, 0)
 	_assert("4-in-a-row depth 1 = 200", turn.player_points == 200)
+
+
+func test_four_embers_linear_multiplier() -> void:
+	var r := _result(Piece.Owner.PLAYER)
+	var tc := TaggedClear.new(_run(Piece.Owner.PLAYER, 4), 0)
+	tc.ember_bonus = 4
+	r.clears.append(tc)
+	var turn := _calc.calculate(r, 0)
+	_assert("4 Embers at cascade 0 = 100 × 4 = 400", turn.player_points == 400)
+
+
+func test_one_ember_linear_multiplier() -> void:
+	var r := _result(Piece.Owner.PLAYER)
+	var tc := TaggedClear.new(_run(Piece.Owner.PLAYER, 4), 0)
+	tc.ember_bonus = 1
+	r.clears.append(tc)
+	var turn := _calc.calculate(r, 0)
+	_assert("1 Ember at cascade 0 = 100 × 2 = 200", turn.player_points == 200)
 
 
 func test_single_5_in_a_row_depth_0() -> void:

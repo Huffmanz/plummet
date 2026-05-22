@@ -12,14 +12,15 @@ func _ready() -> void:
 	test_single_modifier_on_piece()
 	test_piece_has_modifier_false_when_empty()
 	test_piece_has_modifier_true_when_set()
-	test_ignite_sets_bonus_for_piece_below()
+	test_ignite_bonus_for_cells_beyond_four()
 	test_magnet_slides_nearest_same_color_toward_self()
 	test_deposit_returns_five_chips()
-	test_ripple_pushes_pieces_above()
+	test_ripple_pushes_adjacent_pieces_away()
 	test_echo_queues_copy_in_gravity()
 	test_detonate_removes_entire_row()
 	test_bounty_counts_opponent_pieces_in_row()
 	test_shard_removes_two_pieces_above()
+	test_shard_and_detonate_on_same_piece()
 	print("-----------------------------")
 	print("Results: %d passed, %d failed" % [_passed, _failed])
 
@@ -49,7 +50,7 @@ func test_prism_doubles_base_in_tagged_clear() -> void:
 	var calc := ScoreCalculator.new()
 	var result := CascadeResult.new(Piece.Owner.PLAYER)
 	result.clears.append(tc)
-	var turn := calc.calculate(result, 0, false)
+	var turn := calc.calculate(result, 0)
 	_assert("prism doubles base value: 100 × 2 = 200", turn.player_points == 200)
 
 
@@ -89,18 +90,23 @@ func test_piece_has_modifier_true_when_set() -> void:
 
 # --- Ignite modifier ---
 
-func test_ignite_sets_bonus_for_piece_below() -> void:
+func test_ignite_bonus_for_cells_beyond_four() -> void:
 	var b := _make_board()
-	var below := Piece.new(Piece.Owner.AI)
-	b.set_cell(3, 0, below)
+	var cells: Array[Vector2i] = []
+	for i in 6:
+		cells.append(Vector2i(i, 0))
 	var ignite_piece := Piece.new(Piece.Owner.PLAYER)
 	ignite_piece.modifier = "Ignite"
-	b.set_cell(3, 1, ignite_piece)
+	b.set_cell(0, 0, ignite_piece)
+	for i in range(1, 6):
+		b.set_cell(i, 0, Piece.new(Piece.Owner.PLAYER))
+	var run := MatchedRun.new(Piece.Owner.PLAYER, cells)
+	var runs: Array[MatchedRun] = [run]
 	var r := _make_resolver()
-	r.set_landed(3, 1, ignite_piece)
-	r.on_land(b)
-	var bonus := r.consume_ignite_bonus(3, 0)
-	_assert("ignite sets +1 depth bonus for piece below", bonus == 1)
+	var bonus := r.on_clear(b, runs, 1)
+	_assert("ignite: +100 per cell beyond 4 in line (6 cells = 200)", bonus == 200)
+	var popups := r.ignite_popup_cells_for_run(b, run)
+	_assert("ignite: popup on 5th and 6th cells", popups.size() == 2)
 
 
 # --- Magnet modifier ---
@@ -134,20 +140,27 @@ func test_deposit_returns_five_chips() -> void:
 
 # --- Ripple modifier ---
 
-func test_ripple_pushes_pieces_above() -> void:
+func test_ripple_pushes_adjacent_pieces_away() -> void:
 	var b := _make_board()
-	var above1 := Piece.new(Piece.Owner.PLAYER)
-	var above2 := Piece.new(Piece.Owner.AI)
-	b.set_cell(3, 1, above1)
-	b.set_cell(3, 2, above2)
+	var support := Piece.new(Piece.Owner.AI)
+	for cell: Vector2i in [Vector2i(1, 0), Vector2i(1, 1), Vector2i(5, 0), Vector2i(5, 1), Vector2i(3, 0), Vector2i(3, 1)]:
+		b.set_cell(cell.x, cell.y, support)
+	var left_neighbor := Piece.new(Piece.Owner.PLAYER)
+	var right_neighbor := Piece.new(Piece.Owner.AI)
+	var above_neighbor := Piece.new(Piece.Owner.PLAYER)
+	b.set_cell(2, 2, left_neighbor)
+	b.set_cell(4, 2, right_neighbor)
+	b.set_cell(3, 3, above_neighbor)
 	var ripple_piece := Piece.new(Piece.Owner.PLAYER)
 	ripple_piece.modifier = "Ripple"
-	b.set_cell(3, 0, ripple_piece)
+	b.set_cell(3, 2, ripple_piece)
 	var r := _make_resolver()
-	r.set_landed(3, 0, ripple_piece)
+	r.set_landed(3, 2, ripple_piece)
 	r.on_land(b)
-	_assert("ripple: above1 no longer at col 3 row 1", b.get_cell(3, 1) == null)
-	_assert("ripple: above1 pushed to col 2", b.get_cell(2, 0) == above1)
+	_assert("ripple: left neighbor pushed to col 1", b.get_cell(1, 2) == left_neighbor)
+	_assert("ripple: right neighbor pushed to col 5", b.get_cell(5, 2) == right_neighbor)
+	_assert("ripple: above neighbor pushed to row 4", b.get_cell(3, 4) == above_neighbor)
+	_assert("ripple: landing cell unchanged", b.get_cell(3, 2) == ripple_piece)
 
 
 # --- Echo modifier ---
@@ -184,7 +197,7 @@ func test_detonate_removes_entire_row() -> void:
 	var run := MatchedRun.new(Piece.Owner.PLAYER, run_cells)
 	var runs: Array[MatchedRun] = [run]
 	var r := _make_resolver()
-	r.on_clear(b, runs, 1)
+	r.apply_detonate_from_runs(b, runs)
 	var row_clear := true
 	for c in BoardEngine.COLS:
 		if b.get_cell(c, 5) != null:
@@ -207,6 +220,9 @@ func test_bounty_counts_opponent_pieces_in_row() -> void:
 	var r := _make_resolver()
 	var bonus := r.on_clear(b, runs, 1)
 	_assert("bounty: +10 per opponent piece in row (3 opponents = 30)", bonus == 30)
+	_assert("bounty: match total includes round bonus", r.get_accumulated_bonus_points() == 30)
+	var popups := r.bounty_popup_cells_for_run(b, run)
+	_assert("bounty: one popup cell per opponent in row", popups.size() == 3)
 
 
 # --- Shard type effect ---
@@ -227,3 +243,31 @@ func test_shard_removes_two_pieces_above() -> void:
 	_assert("shard removes piece at row+1", b.get_cell(3, 3) == null)
 	_assert("shard removes piece at row+2", b.get_cell(3, 4) == null)
 	_assert("shard itself not removed by this effect", b.get_cell(3, 2) == shard)
+
+
+func test_shard_and_detonate_on_same_piece() -> void:
+	var b := _make_board()
+	for i in 4:
+		var p := Piece.new(Piece.Owner.PLAYER, Piece.Type.SHARD if i == 0 else Piece.Type.NORMAL)
+		if i == 0:
+			p.modifier = "Detonate"
+		b.set_cell(i, 2, p)
+	b.set_cell(0, 3, Piece.new(Piece.Owner.AI))
+	b.set_cell(0, 4, Piece.new(Piece.Owner.AI))
+	b.set_cell(6, 2, Piece.new(Piece.Owner.AI))
+	var runs: Array[MatchedRun] = b.detect_clears()
+	_assert("shard+detonate: clear detected", runs.size() > 0)
+	for shard_pos: Vector2i in [Vector2i(0, 2)]:
+		for offset: int in [1, 2]:
+			var above_row: int = shard_pos.y + offset
+			if above_row < BoardEngine.ROWS:
+				b.set_cell(shard_pos.x, above_row, null)
+	var r := _make_resolver()
+	r.apply_detonate_from_runs(b, runs)
+	_assert("shard+detonate: removes pieces above shard column", b.get_cell(0, 3) == null)
+	_assert("shard+detonate: removes pieces two above", b.get_cell(0, 4) == null)
+	var row_clear := true
+	for c in BoardEngine.COLS:
+		if b.get_cell(c, 2) != null:
+			row_clear = false
+	_assert("shard+detonate: detonate clears entire row", row_clear)

@@ -1,7 +1,7 @@
 class_name ScoreCalculator extends RefCounted
 
 
-func calculate(result: CascadeResult, modifier_bonus_points: int, surge_active: bool) -> TurnScore:
+func calculate(result: CascadeResult, modifier_bonus_points: int) -> TurnScore:
 	var turn := TurnScore.new()
 
 	# Group clear points by (owner, depth) using Vector2i(owner, depth) as key.
@@ -16,11 +16,7 @@ func calculate(result: CascadeResult, modifier_bonus_points: int, surge_active: 
 		if tc.has_prism:
 			base *= 2
 
-		# Surge: ×3 base if this is the surge-active piece clearing on landing (depth 0)
-		if tc.has_surge and tc.depth == 0 and surge_active:
-			base *= 3
-
-		var pts: int = base * _depth_multiplier(tc.depth)
+		var pts: int = base * clear_multiplier(tc.depth, tc.ember_bonus)
 		depth_points[key] = depth_points.get(key, 0) + pts
 		depth_count[key] = depth_count.get(key, 0) + 1
 
@@ -53,5 +49,12 @@ func _base_value(cell_count: int) -> int:
 	return 100
 
 
-func _depth_multiplier(depth: int) -> int:
-	return 1 << depth
+func clear_multiplier(cascade_depth: int, ember_bonus: int) -> int:
+	var cascade_mult := 1 << cascade_depth
+	if ember_bonus <= 0:
+		return cascade_mult
+	var combined := cascade_mult + ember_bonus
+	# At ×1 cascade, 4 Embers score ×4 (not ×5): linear +1 each replaces stacking on the base.
+	if ember_bonus >= 4:
+		return ember_bonus
+	return combined

@@ -9,5 +9,5 @@ id = "Ripple"
 display_name = "Ripple"
 initial = "R"
 badge_color = Color(0.25, 0.72, 0.68, 1)
-description = "On landing, pushes the two pieces above into adjacent columns if space exists."
+description = "On landing, pushes adjacent pieces one cell away if that space is empty."
 icon = ExtResource("1_a1apw")

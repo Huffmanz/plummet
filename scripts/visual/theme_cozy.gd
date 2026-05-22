@@ -156,7 +156,7 @@ func _draw_piece(
 	piece_type: CellState.PieceType,
 	ghost_outline: bool = false
 ) -> void:
-	var pixel_size := maxi(8, int(minf(rect.size.x, rect.size.y)))
+	var pixel_size := PieceShaderTextureCache.layout_pixel_size(minf(rect.size.x, rect.size.y))
 	var tex := PieceShaderTextureCache.get_texture_sync(color, piece_type, pixel_size)
 	if tex != null:
 		var side := minf(rect.size.x, rect.size.y) * 0.9

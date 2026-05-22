@@ -4,20 +4,19 @@ var _last_col: int = -1
 var _last_row: int = -1
 var _last_piece: Piece = null
 
-# Ignite: maps cell position -> bonus depth for next clear
-var _ignite_bonuses: Dictionary = {}
-
 # Echo: pending copies to drop after current clear resolves
 var _echo_pending: Array = []
 
-# Surge: if active, the next piece's base clear value is ×3 if it clears on landing
-var _surge_active: bool = false
-
 # Chips earned this turn from landing modifiers (Deposit)
 var _landing_chip_bonus: int = 0
+# Chips earned from clear modifiers this cascade round (Surge)
+var _clear_chip_bonus: int = 0
+var _match_clear_chips: int = 0
 
-# Bounty points earned from clear modifiers
+# Bounty points earned from clear modifiers (current cascade round)
 var _clear_point_bonus: int = 0
+# Sum of clear modifier points for the active player drop (all cascade rounds)
+var _match_clear_bonus: int = 0
 
 # Callback: func(chips: int) - called when landing chips are earned
 var on_chips_earned: Callable = Callable()
@@ -29,6 +28,9 @@ func set_landed(col: int, row: int, piece: Piece) -> void:
 	_last_piece = piece
 	_landing_chip_bonus = 0
 	_clear_point_bonus = 0
+	_match_clear_bonus = 0
+	_clear_chip_bonus = 0
+	_match_clear_chips = 0
 
 
 # Returns chips earned from landing modifiers.
@@ -37,8 +39,6 @@ func on_land(board: BoardEngine) -> int:
 	if _last_piece == null or not _last_piece.has_modifier():
 		return 0
 	match _last_piece.modifier:
-		"Ignite":
-			_apply_ignite(board)
 		"Magnet":
 			if _apply_magnet(board):
 				board.apply_gravity()
@@ -52,7 +52,8 @@ func on_land(board: BoardEngine) -> int:
 # Returns bonus points earned from clear modifiers.
 # echo_copy_count controls how many copies Echo drops (1 normally, 2 with Echo Chamber relic).
 func on_clear(board: BoardEngine, runs: Array[MatchedRun], echo_copy_count: int = 1) -> int:
-	_clear_point_bonus = 0
+	var round_bonus := 0
+	var round_chips := 0
 	for run in runs:
 		for cell_pos: Vector2i in run.cells:
 			var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
@@ -62,13 +63,17 @@ func on_clear(board: BoardEngine, runs: Array[MatchedRun], echo_copy_count: int 
 				"Echo":
 					for _i in echo_copy_count:
 						_echo_pending.append(Piece.new(Piece.Owner.PLAYER, piece.type))
-				"Detonate":
-					_apply_detonate(board, cell_pos.y)
 				"Bounty":
-					_clear_point_bonus += _count_bounty(board, cell_pos.y)
-				"Surge":
-					_surge_active = true
-	return _clear_point_bonus
+					round_bonus += _count_bounty(board, cell_pos.y)
+	for run in runs:
+		if run.owner == Piece.Owner.PLAYER:
+			round_bonus += _ignite_overlength_bonus(board, run)
+			round_chips += surge_chips_for_run(board, run)
+	_clear_point_bonus = round_bonus
+	_match_clear_bonus += round_bonus
+	_clear_chip_bonus = round_chips
+	_match_clear_chips += round_chips
+	return round_bonus
 
 
 func on_pre_gravity(_board: BoardEngine) -> void:
@@ -90,40 +95,76 @@ func find_echo_target(board: BoardEngine) -> int:
 	return _find_echo_target(board)
 
 
-# Returns the Ignite bonus depth for a piece at (col, row). Consumes the bonus.
-func consume_ignite_bonus(col: int, row: int) -> int:
-	var key := Vector2i(col, row)
-	var bonus: int = _ignite_bonuses.get(key, 0)
-	if bonus > 0:
-		_ignite_bonuses.erase(key)
-	return bonus
+func detonate_rows_from_runs(board: BoardEngine, runs: Array[MatchedRun]) -> Array[int]:
+	var rows: Dictionary = {}
+	for run in runs:
+		for cell_pos: Vector2i in run.cells:
+			var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+			if piece != null and piece.owner == Piece.Owner.PLAYER and piece.modifier == "Detonate":
+				rows[cell_pos.y] = true
+	var row_list: Array[int] = []
+	for row: int in rows:
+		row_list.append(row)
+	return row_list
+
+
+func apply_detonate_from_runs(board: BoardEngine, runs: Array[MatchedRun]) -> void:
+	for row: int in detonate_rows_from_runs(board, runs):
+		_apply_detonate(board, row)
 
 
 func get_accumulated_bonus_points() -> int:
-	return _clear_point_bonus
+	return _match_clear_bonus
 
 
-# Surge: check if the pending surge should apply, then clear it.
-func consume_surge() -> bool:
-	if _surge_active:
-		_surge_active = false
-		return true
+func get_accumulated_clear_chips() -> int:
+	return _match_clear_chips
+
+
+# Chips earned when a Surge piece is part of this clear (= line length).
+func surge_chips_for_run(board: BoardEngine, run: MatchedRun) -> int:
+	if run.owner != Piece.Owner.PLAYER or not _run_has_modifier(board, run, "Surge"):
+		return 0
+	return run.cells.size()
+
+
+func _run_has_modifier(board: BoardEngine, run: MatchedRun, modifier_id: String) -> bool:
+	for cell_pos: Vector2i in run.cells:
+		var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+		if piece != null and piece.owner == Piece.Owner.PLAYER and piece.modifier == modifier_id:
+			return true
 	return false
 
 
-func has_surge_pending() -> bool:
-	return _surge_active
+# AI cell positions for +10 Bounty popups (call before on_clear — Detonate may clear the row).
+# Cells in this clear beyond the 4th (5th, 6th, …) when an Ignite piece is in the run.
+func ignite_popup_cells_for_run(board: BoardEngine, run: MatchedRun) -> Array[Vector2i]:
+	var targets: Array[Vector2i] = []
+	if _ignite_overlength_bonus(board, run) <= 0:
+		return targets
+	for i in range(4, run.cells.size()):
+		targets.append(run.cells[i])
+	return targets
 
 
-func _apply_ignite(board: BoardEngine) -> void:
-	if _last_col < 0 or _last_row <= 0:
-		return
-	var below_row := _last_row - 1
-	var target: Piece = board.get_cell(_last_col, below_row)
-	if target == null:
-		return
-	var key := Vector2i(_last_col, below_row)
-	_ignite_bonuses[key] = _ignite_bonuses.get(key, 0) + 1
+func bounty_popup_cells_for_run(board: BoardEngine, run: MatchedRun) -> Array[Vector2i]:
+	var targets: Array[Vector2i] = []
+	for cell_pos: Vector2i in run.cells:
+		var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+		if piece == null or piece.owner != Piece.Owner.PLAYER or piece.modifier != "Bounty":
+			continue
+		for c in BoardEngine.COLS:
+			var opponent: Piece = board.get_cell(c, cell_pos.y)
+			if opponent != null and opponent.owner == Piece.Owner.AI:
+				targets.append(Vector2i(c, cell_pos.y))
+	return targets
+
+
+func _ignite_overlength_bonus(board: BoardEngine, run: MatchedRun) -> int:
+	if run.owner != Piece.Owner.PLAYER or not _run_has_modifier(board, run, "Ignite"):
+		return 0
+	var excess := maxi(0, run.cells.size() - 4)
+	return excess * 100
 
 
 # Slides the nearest same-color piece in the same row one step toward this piece.
@@ -165,26 +206,37 @@ func _apply_magnet(board: BoardEngine) -> bool:
 	return true
 
 
-# Pushes the two pieces below the landing position (the top of the existing stack)
-# into adjacent columns — one left, one right.
+# Pushes each orthogonal neighbor one cell away from the landing position if that cell is empty.
 func _apply_ripple(board: BoardEngine) -> void:
-	if _last_col < 0 or _last_row <= 0:
+	if _last_col < 0 or _last_row < 0:
 		return
-	var below1_row := _last_row - 1
-	var below2_row := _last_row - 2
-	var piece1: Piece = board.get_cell(_last_col, below1_row)
-	var piece2: Piece = board.get_cell(_last_col, below2_row) if below2_row >= 0 else null
-	if piece1 != null:
-		var left_col := _last_col - 1
-		if left_col >= 0 and not board.is_column_full(left_col):
-			board.set_cell(_last_col, below1_row, null)
-			board.drop_piece(left_col, piece1)
-	if piece2 != null:
-		var right_col := _last_col + 1
-		if right_col < BoardEngine.COLS and not board.is_column_full(right_col):
-			board.set_cell(_last_col, below2_row, null)
-			board.drop_piece(right_col, piece2)
+	var dirs: Array[Vector2i] = [
+		Vector2i(-1, 0),
+		Vector2i(1, 0),
+		Vector2i(0, -1),
+		Vector2i(0, 1),
+	]
+	for dir: Vector2i in dirs:
+		var adj_col: int = _last_col + dir.x
+		var adj_row: int = _last_row + dir.y
+		if not _cell_in_bounds(adj_col, adj_row):
+			continue
+		var piece: Piece = board.get_cell(adj_col, adj_row)
+		if piece == null:
+			continue
+		var dest_col: int = adj_col + dir.x
+		var dest_row: int = adj_row + dir.y
+		if not _cell_in_bounds(dest_col, dest_row):
+			continue
+		if board.get_cell(dest_col, dest_row) != null:
+			continue
+		board.set_cell(dest_col, dest_row, piece)
+		board.set_cell(adj_col, adj_row, null)
 	board.apply_gravity()
+
+
+func _cell_in_bounds(col: int, row: int) -> bool:
+	return col >= 0 and col < BoardEngine.COLS and row >= 0 and row < BoardEngine.ROWS
 
 
 # Removes all pieces in the specified row.

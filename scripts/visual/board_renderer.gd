@@ -4,6 +4,7 @@ var theme: ThemeBase
 var layout: LayoutManager.LayoutResult
 var hovered_col: int = -1
 var gravity_hidden_cells: Array[Vector2i] = []
+var dissolve_hidden_cells: Array[Vector2i] = []
 var idle_breathe_scale: float = 1.0
 var cascade_heat: float = 0.0
 
@@ -33,7 +34,7 @@ func render_board_under(state: RenderState, canvas: CanvasItem) -> void:
 	for c in RenderState.COLS:
 		for r in RenderState.ROWS:
 			var cs: CellState = state.get_cell(c, r)
-			if gravity_hidden_cells.has(Vector2i(c, r)) or cs.locked:
+			if gravity_hidden_cells.has(Vector2i(c, r)) or dissolve_hidden_cells.has(Vector2i(c, r)) or cs.locked:
 				continue
 			var rect := cell_rect(c, r, state.gravity_flipped)
 			if cs.occupant == CellState.Occupant.PLAYER:
@@ -49,7 +50,7 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 		for r in RenderState.ROWS:
 			var cs: CellState = state.get_cell(c, r)
 			var rect := cell_rect(c, r, state.gravity_flipped)
-			if gravity_hidden_cells.has(Vector2i(c, r)):
+			if gravity_hidden_cells.has(Vector2i(c, r)) or dissolve_hidden_cells.has(Vector2i(c, r)):
 				continue
 			if cs.locked:
 				theme.draw_locked_cell(canvas, rect)
@@ -118,6 +119,21 @@ func col_from_position(x: float) -> int:
 	if x < board_left or x >= board_right:
 		return -1
 	return clamp(int((x - board_left) / step), 0, RenderState.COLS - 1)
+
+
+func cell_from_position(pos: Vector2, gravity_flipped: bool = false) -> Vector2i:
+	var col := col_from_position(pos.x)
+	if col < 0 or layout == null:
+		return Vector2i(-1, -1)
+	var step: float = layout.cell_size + LayoutManager.CELL_GAP
+	var board_top: float = layout.board_origin.y
+	var board_bottom: float = board_top + RenderState.ROWS * layout.cell_size + \
+		(RenderState.ROWS - 1) * LayoutManager.CELL_GAP
+	if pos.y < board_top or pos.y >= board_bottom:
+		return Vector2i(-1, -1)
+	var display_row := clampi(int((pos.y - board_top) / step), 0, RenderState.ROWS - 1)
+	var row: int = display_row if gravity_flipped else (RenderState.ROWS - 1 - display_row)
+	return Vector2i(col, row)
 
 
 func is_col_valid(state: RenderState, col: int) -> bool:

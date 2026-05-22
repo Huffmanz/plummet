@@ -43,14 +43,14 @@ Piece types define the passive scoring identity of a piece. They do not change d
 ### Ember
 **Passive:** When this piece is part of a clear, add +1 to the current cascade depth multiplier for all subsequent clears in this chain.
 **Shader:** Smoldering orange-red with a heat shimmer distortion effect around the edges. Glows brighter as cascade depth increases.
-**Notes:** Ember accelerates the cascade multiplier — a depth-1 clear with an Ember piece effectively scores at depth 2. Multiple Embers in the same clear stack: 2 Embers at depth 1 scores at depth 3.
+**Notes:** Each Ember adds +1 to the clear multiplier (linear: 1 Ember → ×2, 4 Embers → ×4). Ember carry from earlier clears in the chain also adds +1 each to later clears. Cascade combo depth still uses the normal ×2/×4/×8 exponential ladder separately.
 
 ---
 
 ### Shard
 **Passive:** When this piece is part of a clear, it shatters — removing itself and the two pieces directly above it from the board (regardless of owner). The removed pieces do not score and do not trigger clears.
 **Shader:** Fractured crystal with internal cracks visible. On clear, shatters into fragments with a burst particle effect.
-**Notes:** Shard's removal can expose pieces beneath them, potentially setting up cascades. The two pieces removed above do not count as cleared — they simply vanish. If fewer than two pieces exist above, only those present are removed.  If more than two, the other pieces fall
+**Notes:** Shard's removal can expose pieces beneath them, potentially setting up cascades. The two pieces removed above do not count as cleared — they dissolve away visually. If fewer than two pieces exist above, only those present are removed.
 
 ---
 
@@ -61,15 +61,6 @@ Modifiers attach to individual pieces (one per piece). They trigger on a specifi
 ### Landing modifiers
 
 These trigger the moment the piece contacts its resting position, before the cascade loop runs.
-
----
-
-#### Ignite
-**Trigger:** On landing
-**Effect:** The piece directly below this one (if any) has its cascade depth treated as +1 higher for its next clear.
-**Badge:** Red flame icon
-**Synergy:** Stack Ignite with Ember piece type for aggressive cascade depth inflation.
-**Notes:** The bonus applies to the piece below, not this piece. If the piece below never clears this match, the bonus is unused.
 
 ---
 
@@ -92,9 +83,9 @@ These trigger the moment the piece contacts its resting position, before the cas
 
 #### Ripple
 **Trigger:** On landing
-**Effect:** The two pieces directly above the landing position (stacked in the same column) are each pushed into adjacent columns — one left, one right — if those columns have space. They fall to their new resting positions and trigger a clear check.
+**Effect:** Each piece orthogonally adjacent to the landing cell is pushed one cell farther away from the landing position (left, right, up, or down) if that destination is empty. Gravity runs afterward.
 **Badge:** Teal wave icon
-**Notes:** If either adjacent column is full, that piece is not moved. The pushed pieces retain their type and modifier. Ripple can set up cross-column lines the opponent didn't anticipate.
+**Notes:** Blocked if the push destination is occupied or off the board. The pushed pieces retain their type and modifier.
 
 ---
 
@@ -117,7 +108,7 @@ These trigger when the piece is part of a clear, after the clear is detected but
 **Trigger:** On clear
 **Effect:** Removes all pieces in the same row as this piece (both colors). Removed pieces do not score. Triggers gravity and a cascade check after removal.
 **Badge:** Orange explosion burst icon
-**Notes:** Detonate clears an entire row — powerful for disruption but removes your own pieces too. Best used in rows where the opponent has more pieces than you.
+**Notes:** Detonate clears an entire row — powerful for disruption but removes your own pieces too. Best used in rows where the opponent has more pieces than you. Non-matched pieces in the row dissolve away visually; matched cells still use the normal clear animation.
 
 ---
 
@@ -130,11 +121,19 @@ These trigger when the piece is part of a clear, after the clear is detected but
 
 ---
 
+#### Ignite
+**Trigger:** On clear
+**Effect:** When this piece is part of a clear, each cell in that line beyond the first four (5th, 6th, etc.) earns a flat +100 bonus on top of normal scoring.
+**Badge:** Red flame icon
+**Notes:** A 5-in-a-row with Ignite earns +100 extra; a 6-in-a-row earns +200. The first four cells score normally (including length-based base value for 5+ lines).
+
+---
+
 #### Surge
 **Trigger:** On clear
-**Effect:** The next piece you drop this match has its base clear value multiplied by ×3 if it clears on the same turn it lands.
+**Effect:** Earn chips equal to the length of the cleared line (4-in-a-row = +4 chips, 5-in-a-row = +5 chips, etc.) when this piece is part of that clear.
 **Badge:** Yellow lightning bolt icon
-**Notes:** Surge is a setup modifier — it rewards planning two moves ahead. The ×3 applies to base value before cascade multipliers. If the next piece does not clear on the same turn, the bonus is lost.
+**Notes:** Chips are awarded on top of normal clear scoring. Multiple Surge pieces in the same line still pay out once per clear.
 
 ---
 
@@ -234,7 +233,7 @@ Relics are found two ways:
 
 **Piece type interaction priority:** Prism doubles base value before cascade multipliers apply. Ember adds to the cascade depth counter. Coin and Deposit are purely additive chip generators. Shard is the only type with a board-altering effect.
 
-**Modifier interaction priority:** Landing modifiers (Ignite, Magnet, Deposit, Ripple) resolve before the cascade loop starts. Clear modifiers (Echo, Detonate, Bounty, Surge) resolve after clear detection, before removal.
+**Modifier interaction priority:** Landing modifiers (Magnet, Deposit, Ripple) resolve before the cascade loop starts. Clear modifiers (Echo, Detonate, Bounty, Ignite, Surge) resolve after clear detection, before removal.
 
 **Relic acquisition rate:** A full run (3 acts, 3 boss fights) yields 3 free boss-drop relics. Shop relics are available every won match — roughly 6–8 shop visits per full run at 25 chips each. Expect a well-played run to end with 3–5 relics total.
 
@@ -252,14 +251,14 @@ Relics are found two ways:
 - Shard removes itself and the two pieces above on clear; missing pieces above are handled gracefully.
 
 **Modifiers**
-- Ignite boosts the piece below's next clear by +1 depth.
+- Ignite awards +100 per cell cleared beyond four in the same line.
 - Magnet slides the nearest same-color row piece toward itself and triggers a clear check.
 - Deposit awards +5 chips on landing every time.
-- Ripple pushes the two pieces above into adjacent columns on landing.
+- Ripple pushes orthogonal neighbors one cell away on landing when the destination is empty.
 - Echo drops a copy into the column with fewest pieces on clear.
 - Detonate removes the entire row on clear.
 - Bounty scores +10 per opponent piece in the row on clear.
-- Surge multiplies the next piece's base clear value by ×3 if it clears on landing.
+- Surge awards chips equal to the cleared line length when the Surge piece is in that clear.
 
 **Relics**
 - Cushion correctly absorbs one loss and is consumed.

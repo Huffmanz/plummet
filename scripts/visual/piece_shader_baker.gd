@@ -1,5 +1,5 @@
 class_name PieceShaderBaker extends Node
-## Renders piece_type.gdshader into a SubViewport texture for canvas drawing.
+## Renders piece_type.gdshader into a unique ImageTexture for canvas drawing.
 
 const _PIECE_SHADER := preload("res://shaders/piece_type.gdshader")
 
@@ -43,4 +43,11 @@ func bake(base_color: Color, style: int, pixel_size: int) -> Texture2D:
 	_viewport.render_target_update_mode = SubViewport.UPDATE_ONCE
 	await get_tree().process_frame
 	await get_tree().process_frame
-	return _viewport.get_texture()
+
+	var viewport_tex := _viewport.get_texture()
+	if viewport_tex == null:
+		return null
+	var img := viewport_tex.get_image()
+	if img == null or img.is_empty():
+		return null
+	return ImageTexture.create_from_image(img)

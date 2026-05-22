@@ -10,5 +10,5 @@ display_name = "Surge"
 initial = "Z"
 badge_color = Color(0.92, 0.85, 0.12, 1)
 trigger = "clear"
-description = "On clear, the next piece you drop has its base clear value ×3 if it clears on the same turn."
+description = "On clear, earn chips equal to the length of the cleared line."
 icon = ExtResource("1_t7c7s")

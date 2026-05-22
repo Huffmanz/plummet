@@ -90,13 +90,15 @@ func _test_modifiers() -> void:
 func _test_ignite() -> void:
 	var b := BoardEngine.new()
 	var r := ModifierResolver.new()
-	b.set_cell(3, 0, _ap())
-	var piece := _pp("Ignite")
-	b.set_cell(3, 1, piece)
-	r.set_landed(3, 1, piece)
-	r.on_land(b)
-	_assert("Ignite: bonus stored at cell below landing", r.consume_ignite_bonus(3, 0) == 1)
-	_assert("Ignite: bonus consumed on read", r.consume_ignite_bonus(3, 0) == 0)
+	var cells: Array[Vector2i] = []
+	for i in 5:
+		cells.append(Vector2i(i, 0))
+		b.set_cell(i, 0, _pp("Ignite" if i == 0 else ""))
+	var run := MatchedRun.new(Piece.Owner.PLAYER, cells)
+	var runs: Array[MatchedRun] = [run]
+	var bonus := r.on_clear(b, runs)
+	_assert("Ignite: 5-in-a-row earns +100 for 5th cell", bonus == 100)
+	_assert("Ignite: one popup cell beyond four", r.ignite_popup_cells_for_run(b, run).size() == 1)
 
 
 func _test_magnet() -> void:
@@ -125,18 +127,16 @@ func _test_deposit() -> void:
 func _test_ripple() -> void:
 	var b := BoardEngine.new()
 	var r := ModifierResolver.new()
-	b.set_cell(3, 0, _pp())
-	b.set_cell(3, 1, _pp())
+	var left := _pp()
+	b.set_cell(1, 0, _ap())
+	b.set_cell(1, 1, _ap())
+	b.set_cell(2, 2, left)
 	var piece := _pp("Ripple")
 	b.set_cell(3, 2, piece)
 	r.set_landed(3, 2, piece)
 	r.on_land(b)
-	var displaced := false
-	for c in [2, 4]:
-		for row in BoardEngine.ROWS:
-			if b.get_cell(c, row) != null:
-				displaced = true
-	_assert("Ripple: pieces below pushed to adjacent columns", displaced)
+	_assert("Ripple: left neighbor pushed one cell away", b.get_cell(1, 2) == left)
+	_assert("Ripple: original left slot cleared", b.get_cell(2, 2) == null)
 
 
 func _test_echo() -> void:
@@ -176,7 +176,7 @@ func _test_detonate() -> void:
 		b.set_cell(i, 0, _ap())
 	var runs := b.detect_clears()
 	_assert("Detonate: 4-in-a-row detected for test setup", runs.size() > 0)
-	r.on_clear(b, runs)
+	r.apply_detonate_from_runs(b, runs)
 	var row_empty := true
 	for c in BoardEngine.COLS:
 		if b.get_cell(c, 0) != null:
@@ -201,14 +201,12 @@ func _test_bounty() -> void:
 func _test_surge() -> void:
 	var b := BoardEngine.new()
 	var r := ModifierResolver.new()
-	_assert("Surge: not pending before any clear", not r.has_surge_pending())
-	for i in 4:
+	for i in 5:
 		b.set_cell(i, 0, _pp("Surge" if i == 0 else ""))
 	var runs := b.detect_clears()
 	r.on_clear(b, runs)
-	_assert("Surge: pending after clearing piece with Surge modifier", r.has_surge_pending())
-	_assert("Surge: consume_surge returns true and clears flag", r.consume_surge())
-	_assert("Surge: not pending after consume", not r.has_surge_pending())
+	_assert("Surge: 5-in-a-row earns 5 chips", r.get_accumulated_clear_chips() == 5)
+	_assert("Surge: chips equal to line length", r.surge_chips_for_run(b, runs[0]) == 5)
 
 
 # ---------------------------------------------------------------------------
@@ -224,11 +222,10 @@ func _test_piece_types_and_scoring() -> void:
 	_test_score_cascade_depth()
 	_test_score_simultaneous()
 	_test_score_cross_color()
-	_test_score_surge_triple()
 	_test_piece_types_placed_on_board()
 
 
-func _make_result(owner: Piece.Owner, cell_count: int, depth: int, has_prism: bool = false, has_surge: bool = false, cross_color: bool = false) -> CascadeResult:
+func _make_result(owner: Piece.Owner, cell_count: int, depth: int, has_prism: bool = false, cross_color: bool = false) -> CascadeResult:
 	var result := CascadeResult.new(owner)
 	var cells: Array[Vector2i] = []
 	for i in cell_count:
@@ -236,34 +233,33 @@ func _make_result(owner: Piece.Owner, cell_count: int, depth: int, has_prism: bo
 	var mr := MatchedRun.new(owner, cells)
 	var tc := TaggedClear.new(mr, depth)
 	tc.has_prism = has_prism
-	tc.has_surge = has_surge
 	result.clears.append(tc)
 	result.cross_color = cross_color
 	return result
 
 
 func _test_score_normal_4() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0), 0, false)
+	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0), 0)
 	_assert("Normal 4-in-row = 100 pts", turn.player_points == 100)
 
 
 func _test_score_5_in_row() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 5, 0), 0, false)
+	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 5, 0), 0)
 	_assert("5-in-row = 250 pts", turn.player_points == 250)
 
 
 func _test_score_6_plus() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 6, 0), 0, false)
+	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 6, 0), 0)
 	_assert("6-in-row = 500 pts", turn.player_points == 500)
 
 
 func _test_score_prism_double() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0, true), 0, false)
+	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0, true), 0)
 	_assert("Prism doubles base: 200 pts", turn.player_points == 200)
 
 
 func _test_score_cascade_depth() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 2), 0, false)
+	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 2), 0)
 	_assert("Cascade depth 2: 100 × 4 = 400 pts", turn.player_points == 400)
 
 
@@ -274,19 +270,14 @@ func _test_score_simultaneous() -> void:
 		for i in 4:
 			cells.append(Vector2i(i, row))
 		result.clears.append(TaggedClear.new(MatchedRun.new(PLAYER, cells), 0))
-	var turn := ScoreCalculator.new().calculate(result, 0, false)
+	var turn := ScoreCalculator.new().calculate(result, 0)
 	# 200 × 1.5 = 300 (integer: 200 * 3 / 2).
 	_assert("Simultaneous 2× clears = 300 pts", turn.player_points == 300)
 
 
 func _test_score_cross_color() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0, false, false, true), 0, false)
+	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0, false, true), 0)
 	_assert("Cross-color bonus adds +150: 250 pts", turn.player_points == 250)
-
-
-func _test_score_surge_triple() -> void:
-	var turn := ScoreCalculator.new().calculate(_make_result(PLAYER, 4, 0, false, true), 0, true)
-	_assert("Surge at depth 0 triples base: 300 pts", turn.player_points == 300)
 
 
 func _test_piece_types_placed_on_board() -> void:
@@ -552,9 +543,9 @@ func _test_full_run() -> void:
 					clears_this_match += result.clears.size()
 					var turn_score := calc.calculate(
 						result,
-						resolver.get_accumulated_bonus_points(),
-						resolver.consume_surge()
+						resolver.get_accumulated_bonus_points()
 					)
+					chips += resolver.get_accumulated_clear_chips()
 					score_tracker.add_turn(turn_score)
 
 				# Chips per clear (applying Stockpile relic rate).

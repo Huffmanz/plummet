@@ -46,17 +46,31 @@ func reset_and_show() -> void:
 	show()
 
 
-func add_clear(owner: Piece.Owner, base_pts: int, depth: int) -> void:
+func add_clear(owner: Piece.Owner, base_pts: int, multiplier: int) -> void:
 	if owner == Piece.Owner.PLAYER:
 		_player_base += base_pts
-		_player_max_depth = maxi(_player_max_depth, depth)
-		_player_mult_label.text = "×%d" % (1 << _player_max_depth)
+		_player_max_depth = maxi(_player_max_depth, multiplier)
+		_player_mult_label.text = "×%d" % _player_max_depth
 		_player_row.show()
 		_count_up_player()
 	else:
 		_ai_base += base_pts
-		_ai_max_depth = maxi(_ai_max_depth, depth)
-		_ai_mult_label.text = "×%d" % (1 << _ai_max_depth)
+		_ai_max_depth = maxi(_ai_max_depth, multiplier)
+		_ai_mult_label.text = "×%d" % _ai_max_depth
+		_ai_row.show()
+		_count_up_ai()
+	_divider.visible = _player_row.visible and _ai_row.visible
+
+
+func add_bonus(owner: Piece.Owner, bonus_pts: int) -> void:
+	if bonus_pts <= 0:
+		return
+	if owner == Piece.Owner.PLAYER:
+		_player_base += bonus_pts
+		_player_row.show()
+		_count_up_player()
+	else:
+		_ai_base += bonus_pts
 		_ai_row.show()
 		_count_up_ai()
 	_divider.visible = _player_row.visible and _ai_row.visible

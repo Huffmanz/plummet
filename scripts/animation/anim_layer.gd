@@ -146,7 +146,19 @@ class _ModFlash:
 	var elapsed: float = 0.0
 
 const _MOD_FLASH_DUR: float = 0.22
+const _DISSOLVE_DUR: float = 0.38
+const _DISSOLVE_SHADER := preload("res://shaders/dissolve_piece.gdshader")
 var _mod_flashes: Array = []
+
+# --- Dissolve (Detonate / Shard removals) ---
+class _DissolveVisual:
+	var node: ColorRect
+	var board_rect: Rect2
+	var progress: float = 0.0
+
+var _dissolve_active: bool = false
+var _dissolve_visuals: Array = []
+signal _dissolve_done
 
 # --- Cascade counter badge ---
 const _CASCADE_BADGE_FADE: float = 0.4
@@ -175,6 +187,10 @@ func _process(delta: float) -> void:
 
 	if _clear_active:
 		_tick_clear(delta)
+		dirty = true
+
+	if _dissolve_active:
+		_tick_dissolve(delta)
 		dirty = true
 
 	if not _burst_dots.is_empty():
@@ -351,6 +367,33 @@ func _tick_grav(delta: float) -> void:
 		_grav_done.emit()
 
 
+func _tick_dissolve(delta: float) -> void:
+	var all_done := true
+	for vis: _DissolveVisual in _dissolve_visuals:
+		vis.progress = minf(vis.progress + delta / _DISSOLVE_DUR, 1.0)
+		var mat: ShaderMaterial = vis.node.material as ShaderMaterial
+		if mat != null:
+			mat.set_shader_parameter("dissolve", vis.progress)
+		var side := minf(vis.board_rect.size.x, vis.board_rect.size.y) * 0.9
+		var draw_size := Vector2(side, side)
+		var pos := vis.board_rect.position + (vis.board_rect.size - draw_size) * 0.5 + shake_offset
+		vis.node.position = pos
+		vis.node.size = draw_size
+		if vis.progress < 1.0:
+			all_done = false
+	if all_done:
+		_finish_dissolve()
+
+
+func _finish_dissolve() -> void:
+	_dissolve_active = false
+	for vis: _DissolveVisual in _dissolve_visuals:
+		if is_instance_valid(vis.node):
+			vis.node.queue_free()
+	_dissolve_visuals.clear()
+	_dissolve_done.emit()
+
+
 func _tick_clear(delta: float) -> void:
 	if _clear_phase == -1:
 		_clear_t = minf(_clear_t + delta / _SWEEP_DUR, 1.0)
@@ -436,7 +479,7 @@ func _draw() -> void:
 
 
 func has_active_pieces() -> bool:
-	return _drop_active or _grav_active
+	return _drop_active or _grav_active or _dissolve_active
 
 
 func draw_pieces_to(canvas: CanvasItem) -> void:
@@ -824,6 +867,52 @@ func play_gravity(moves: Array, gravity_flipped: bool) -> void:
 	_grav_active = true
 	queue_redraw()
 	await _grav_done
+
+
+func play_dissolve(entries: Array, gravity_flipped: bool) -> void:
+	if entries.is_empty() or renderer == null or renderer.layout == null:
+		return
+	if reduced_motion:
+		return
+	_finish_dissolve()
+	for entry: Dictionary in entries:
+		var col: int = entry.get("col", -1)
+		var row: int = entry.get("row", -1)
+		if col < 0 or row < 0:
+			continue
+		var occ: CellState.Occupant = entry.get("occupant", CellState.Occupant.EMPTY)
+		var piece_type: CellState.PieceType = entry.get(
+			"piece_type", CellState.PieceType.NORMAL
+		)
+		var board_rect := renderer.cell_rect(col, row, gravity_flipped)
+		var color: Color = renderer.theme.color_player \
+			if occ == CellState.Occupant.PLAYER else renderer.theme.color_ai
+		var pixel_size := PieceShaderTextureCache.layout_pixel_size(
+			int(minf(board_rect.size.x, board_rect.size.y))
+		)
+		var tex := PieceShaderTextureCache.get_texture_sync(color, piece_type, pixel_size)
+		if tex == null:
+			continue
+		var mat := ShaderMaterial.new()
+		mat.shader = _DISSOLVE_SHADER
+		mat.set_shader_parameter("piece_tex", tex)
+		mat.set_shader_parameter("dissolve", 0.0)
+		var cr := ColorRect.new()
+		cr.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		cr.material = mat
+		cr.z_index = 10
+		var vis := _DissolveVisual.new()
+		vis.node = cr
+		vis.board_rect = board_rect
+		add_child(cr)
+		_dissolve_visuals.append(vis)
+	if _dissolve_visuals.is_empty():
+		return
+	_dissolve_active = true
+	for vis: _DissolveVisual in _dissolve_visuals:
+		_tick_dissolve(0.0)
+	queue_redraw()
+	await _dissolve_done
 
 
 func play_clear(cells: Array[Vector2i], gravity_flipped: bool) -> void:

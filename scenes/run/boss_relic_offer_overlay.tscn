@@ -1,0 +1,88 @@
+[gd_scene format=3 uid="uid://cektwkvcfvbi4"]
+
+[ext_resource type="Script" uid="uid://bwekfvqai0wbb" path="res://scripts/visual/boss_relic_offer_overlay.gd" id="1_overlay"]
+[ext_resource type="PackedScene" uid="uid://bi28curqlfdby" path="res://scenes/ui/cozy_stripe_background.tscn" id="2_bg"]
+[ext_resource type="Script" uid="uid://spybluaifgqm" path="res://scripts/ui/stagger_fly_in_container.gd" id="3_flyin"]
+[ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="4_rap"]
+[ext_resource type="AudioStream" uid="uid://de3ybywjupdi3" path="res://assets/sfx/571581__el_boss__playing-card-slide-right.wav" id="5_slide"]
+[ext_resource type="AudioStream" uid="uid://dp6yuji2jvo3n" path="res://assets/sfx/850021__yoshicakes77__tada.wav" id="6_win"]
+
+[node name="BossRelicOfferOverlay" type="Control" unique_id=2104897903]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_overlay")
+
+[node name="Background" parent="." unique_id=1503486994 instance=ExtResource("2_bg")]
+layout_mode = 1
+
+[node name="WinSfx" type="AudioStreamPlayer" parent="." unique_id=1017844877]
+unique_name_in_owner = true
+stream = ExtResource("6_win")
+bus = &"sfx"
+
+[node name="Center" type="CenterContainer" parent="." unique_id=480562924]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="CardPanel" type="PanelContainer" parent="Center" unique_id=479629956]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(500, 300)
+layout_mode = 2
+
+[node name="Margin" type="MarginContainer" parent="Center/CardPanel" unique_id=1974417137]
+layout_mode = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 14
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 14
+
+[node name="FlyInVBox" type="VBoxContainer" parent="Center/CardPanel/Margin" unique_id=299636294]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 14
+script = ExtResource("3_flyin")
+stagger = 0.08
+duration = 0.32
+slide_volume_db = -8.0
+
+[node name="SlideSfx" parent="Center/CardPanel/Margin/FlyInVBox" unique_id=1138805182 instance=ExtResource("4_rap")]
+volume_db = -4.0
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("5_slide")])
+min_pitch = 0.88
+max_pitch = 1.12
+
+[node name="TitleLabel" type="RichTextLabel" parent="Center/CardPanel/Margin/FlyInVBox" unique_id=1707235943]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 2
+theme_override_constants/shadow_offset_y = 4
+theme_override_constants/outline_size = 6
+theme_override_font_sizes/normal_font_size = 28
+bbcode_enabled = true
+text = "[wave][center][font_size=28]BOSS DEFEATED[/font_size][/center][/wave]"
+fit_content = true
+scroll_active = false
+
+[node name="SubtitleLabel" type="Label" parent="Center/CardPanel/Margin/FlyInVBox" unique_id=1598848197]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Choose a relic reward"
+horizontal_alignment = 1
+
+[node name="OffersRow" type="HBoxContainer" parent="Center/CardPanel/Margin/FlyInVBox" unique_id=1444821470]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 0
+theme_override_constants/separation = 12
+alignment = 1

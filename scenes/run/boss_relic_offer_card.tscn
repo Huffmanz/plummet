@@ -1,0 +1,87 @@
+[gd_scene format=3 uid="uid://c4hgr74hv8mho"]
+
+[ext_resource type="Script" uid="uid://c04ms5nshctg" path="res://scripts/visual/boss_relic_offer_card.gd" id="1_card"]
+[ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
+[ext_resource type="AudioStream" uid="uid://cxiguwesqt88c" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_001.ogg" id="3_imp1"]
+[ext_resource type="AudioStream" uid="uid://bvkelokoa3nk6" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_002.ogg" id="4_imp2"]
+[ext_resource type="AudioStream" uid="uid://3r52re0qx5ks" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_003.ogg" id="5_imp3"]
+
+[node name="BossRelicOfferCard" type="PanelContainer" unique_id=865259300]
+custom_minimum_size = Vector2(200, 0)
+script = ExtResource("1_card")
+
+[node name="Margin" type="MarginContainer" parent="." unique_id=1789155343]
+layout_mode = 2
+theme_override_constants/margin_left = 6
+theme_override_constants/margin_top = 6
+theme_override_constants/margin_right = 6
+theme_override_constants/margin_bottom = 6
+
+[node name="VBox" type="VBoxContainer" parent="Margin" unique_id=1181003600]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 6
+
+[node name="Header" type="HBoxContainer" parent="Margin/VBox" unique_id=299433967]
+layout_mode = 2
+theme_override_constants/separation = 7
+
+[node name="IconFrame" type="PanelContainer" parent="Margin/VBox/Header" unique_id=984752385]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(30, 30)
+layout_mode = 2
+
+[node name="IconInner" type="CenterContainer" parent="Margin/VBox/Header/IconFrame" unique_id=846509308]
+layout_mode = 2
+
+[node name="IconTexture" type="TextureRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=239388472]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(18, 18)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+
+[node name="IconGlyph" type="ColorRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=1785624597]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(12, 12)
+layout_mode = 2
+color = Color(0.95, 0.93, 0.9, 1)
+
+[node name="TitleCol" type="VBoxContainer" parent="Margin/VBox/Header" unique_id=40337106]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 1
+
+[node name="NameLabel" type="Label" parent="Margin/VBox/Header/TitleCol" unique_id=1746346238]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 12
+text = "Relic"
+
+[node name="TypeLabel" type="Label" parent="Margin/VBox/Header/TitleCol" unique_id=2058885112]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Relic · rare · boss drop"
+
+[node name="DescLabel" type="Label" parent="Margin/VBox" unique_id=261538027]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 9
+text = "Effect description."
+autowrap_mode = 3
+
+[node name="FooterLabel" type="Label" parent="Margin/VBox" unique_id=1204005955]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Click to choose"
+
+[node name="ChooseSfx" parent="." unique_id=145072878 instance=ExtResource("2_rap")]
+unique_name_in_owner = true
+bus = &"sfx"
+streams = Array[AudioStream]([ExtResource("3_imp1"), ExtResource("4_imp2"), ExtResource("5_imp3")])
+min_pitch = 0.92
+max_pitch = 1.08

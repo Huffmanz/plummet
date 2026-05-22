@@ -1,6 +1,7 @@
 extends Control
 
 const _GAME_BOARD_SCENE := preload("res://scenes/game/game_board.tscn")
+const _BOSS_RELIC_OVERLAY_SCENE := preload("res://scenes/run/boss_relic_offer_overlay.tscn")
 
 # Enemy name/gimmick per [act][match_in_act] (match_in_act 1-4, 4=boss)
 const _ENEMY_SCHEDULE: Array = [
@@ -160,49 +161,20 @@ func _offer_boss_relic() -> void:
 		call_deferred("_start_match")
 		return
 
-	var overlay := _build_relic_offer_overlay(offer_a, offer_b)
-	add_child(overlay)
-
-
-func _build_relic_offer_overlay(offer_a: String, offer_b: String) -> Control:
-	var overlay := Control.new()
-	overlay.set_anchors_preset(Control.PRESET_FULL_RECT)
-	overlay.mouse_filter = Control.MOUSE_FILTER_STOP
+	var offers: Array[String] = [offer_a]
+	if not offer_b.is_empty():
+		offers.append(offer_b)
+	var overlay: BossRelicOfferOverlay = _BOSS_RELIC_OVERLAY_SCENE.instantiate()
 	overlay.z_index = 20
+	overlay.relic_chosen.connect(_on_boss_relic_chosen)
+	overlay.finished.connect(func() -> void: call_deferred("_start_match"), CONNECT_ONE_SHOT)
+	add_child(overlay)
+	overlay.setup_offers(offers)
 
-	var bg := ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = Color(0.05, 0.05, 0.12, 0.88)
-	overlay.add_child(bg)
 
-	var vbox := VBoxContainer.new()
-	vbox.set_anchors_preset(Control.PRESET_CENTER)
-	vbox.add_theme_constant_override("separation", 16)
-	overlay.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "BOSS DEFEATED — CHOOSE A RELIC"
-	title.add_theme_font_size_override("font_size", 20)
-	title.add_theme_color_override("font_color", Color.WHITE)
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-
-	for offer in [offer_a, offer_b]:
-		if offer.is_empty():
-			continue
-		var btn := Button.new()
-		btn.text = offer
-		btn.add_theme_font_size_override("font_size", 16)
-		btn.custom_minimum_size = Vector2(260, 48)
-		btn.pressed.connect(func():
-			if _run_state.relic_manager.can_add_relic():
-				_run_state.relic_manager.add_relic(offer)
-			overlay.queue_free()
-			call_deferred("_start_match")
-		)
-		vbox.add_child(btn)
-
-	return overlay
+func _on_boss_relic_chosen(relic_id: String) -> void:
+	if _run_state.relic_manager.can_add_relic():
+		_run_state.relic_manager.add_relic(relic_id)
 
 
 func _teardown_game_board() -> void:

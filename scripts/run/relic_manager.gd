@@ -104,3 +104,18 @@ func momentum_bonus(win_streak: int) -> int:
 	if not has_relic("Momentum") or win_streak <= 0:
 		return 0
 	return win_streak * 50
+
+
+# Cartographer: bonus points when a placement does not clear.
+func cartographer_placement_bonus() -> int:
+	return 5 if has_relic("Cartographer") else 0
+
+
+# Compass: bonus points when a placement blocks an opponent line.
+func compass_block_bonus() -> int:
+	return 30 if has_relic("Compass") else 0
+
+
+# Lens: chips earned when the opponent blocks your line.
+func lens_blocked_chips() -> int:
+	return 2 if has_relic("Lens") else 0

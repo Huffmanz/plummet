@@ -306,7 +306,9 @@ func _test_relics() -> void:
 	_test_relic_stockpile()
 	_test_relic_echo_chamber()
 	_test_relic_momentum()
-	_test_relic_passive_only()
+	_test_relic_cartographer()
+	_test_relic_compass()
+	_test_relic_lens()
 	_test_relic_capacity()
 
 
@@ -370,15 +372,25 @@ func _test_relic_momentum() -> void:
 	_assert("Momentum: 3 wins = 150 bonus", rm.momentum_bonus(3) == 150)
 
 
-func _test_relic_passive_only() -> void:
-	# Compass, Lens, Cartographer have no dedicated behavior methods.
+func _test_relic_cartographer() -> void:
 	var rm := RelicManager.new()
-	rm.add_relic("Compass")
-	rm.add_relic("Lens")
+	_assert("Cartographer absent: 0 placement bonus", rm.cartographer_placement_bonus() == 0)
 	rm.add_relic("Cartographer")
-	_assert("Compass: tracked correctly", rm.has_relic("Compass"))
-	_assert("Lens: tracked correctly", rm.has_relic("Lens"))
-	_assert("Cartographer: tracked correctly", rm.has_relic("Cartographer"))
+	_assert("Cartographer present: +5 placement bonus", rm.cartographer_placement_bonus() == 5)
+
+
+func _test_relic_compass() -> void:
+	var rm := RelicManager.new()
+	_assert("Compass absent: 0 block bonus", rm.compass_block_bonus() == 0)
+	rm.add_relic("Compass")
+	_assert("Compass present: +30 block bonus", rm.compass_block_bonus() == 30)
+
+
+func _test_relic_lens() -> void:
+	var rm := RelicManager.new()
+	_assert("Lens absent: 0 blocked chips", rm.lens_blocked_chips() == 0)
+	rm.add_relic("Lens")
+	_assert("Lens present: 2 blocked chips", rm.lens_blocked_chips() == 2)
 
 
 func _test_relic_capacity() -> void:

@@ -7,7 +7,7 @@
 script = ExtResource("1_cartographer")
 id = "Cartographer"
 display_name = "Cartographer"
-description = "After each act, choose which enemy you face first in the next act."
+description = "Whenever you place a piece that doesn't clear, earn +5 points."
 rarity = "rare"
 source = "boss_drop"
 icon = ExtResource("1_2d1xr")

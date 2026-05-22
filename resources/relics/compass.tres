@@ -7,5 +7,5 @@
 script = ExtResource("1_compass")
 id = "Compass"
 display_name = "Compass"
-description = "At the start of each match, reveal the enemy's gimmick and their first 3 planned moves."
+description = "Earn +30 points each time you place a piece that blocks an opponent."
 icon = ExtResource("1_1ih66")

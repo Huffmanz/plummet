@@ -7,5 +7,5 @@
 script = ExtResource("1_lens")
 id = "Lens"
 display_name = "Lens"
-description = "Before each match, see the board layout after the first 4 AI drops."
+description = "Each time you are blocked, gain 2 chips."
 icon = ExtResource("1_jk3vc")

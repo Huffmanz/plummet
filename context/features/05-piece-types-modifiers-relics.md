@@ -150,10 +150,10 @@ Relics are found two ways:
 ---
 
 #### Compass
-**Effect:** At the start of each match, reveal the enemy's gimmick and their first 3 planned moves (columns they will play).
+**Effect:** Earn +30 points each time you place a piece that blocks an opponent.
 **Rarity:** Common
 **Source:** Shop
-**Notes:** Removes the information asymmetry of the early turns. Lets the player set up a counter-strategy before the AI has established a pattern.
+**Notes:** Rewards defensive reads — interrupting a would-be four-in-a-row is worth steady points even when you are not clearing yourself.
 
 ---
 
@@ -182,10 +182,10 @@ Relics are found two ways:
 ---
 
 #### Lens
-**Effect:** Before each match, see the board layout after the first 4 AI drops (a preview of their opening).
+**Effect:** Each time you are blocked, gain 2 chips.
 **Rarity:** Common
 **Source:** Shop
-**Notes:** Tactical advantage in the opening turns. Lets you anticipate column threats before they develop.
+**Notes:** Softens defensive AI reads — getting shut down still grows your shop economy.
 
 ---
 
@@ -222,10 +222,10 @@ Relics are found two ways:
 ---
 
 #### Cartographer
-**Effect:** After each act, choose which enemy you face first in the next act (instead of the fixed order).
+**Effect:** Whenever you place a piece that doesn't clear, earn +5 points.
 **Rarity:** Rare
 **Source:** Boss drop
-**Notes:** Run navigation relic. Lets you avoid a bad matchup for your current build, or seek out a favorable one. Does not change which enemies appear — only the order.
+**Notes:** Rewards deliberate placement — building toward a clear rather than forcing one every turn.
 
 ---
 
@@ -266,7 +266,9 @@ Relics are found two ways:
 - Stockpile doubles per-clear chip earnings throughout the run.
 - Echo Chamber correctly causes Echo to drop 2 copies instead of 1.
 - Momentum correctly tracks win streak and applies starting score bonus.
-- Cartographer correctly allows enemy order selection at act transitions.
+- Cartographer awards +5 points when a player placement produces no clears.
+- Compass awards +30 points when a player placement blocks an opponent four-in-a-row threat.
+- Lens awards 2 chips when an AI placement blocks a player four-in-a-row threat.
 
 ---
 

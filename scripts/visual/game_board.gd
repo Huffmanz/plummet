@@ -259,7 +259,8 @@ func _on_column_selected(col: int) -> void:
 		PieceVisualUtil.cell_piece_type(p_piece.type), p_piece.modifier
 	)
 	_check_col_fill_flash(col)
-	if _is_block_move(col, landing_row, Piece.Owner.PLAYER):
+	var blocked_opponent := _is_block_move(col, landing_row, Piece.Owner.PLAYER)
+	if blocked_opponent:
 		_spawn_blocked_popup(col, landing_row, gf)
 	var landing_chips := _modifier_resolver.on_land(_board)
 	if landing_chips > 0:
@@ -280,6 +281,15 @@ func _on_column_selected(col: int) -> void:
 	_award_chips(p_result, Piece.Owner.PLAYER)
 	var bounty_pts := _modifier_resolver.get_accumulated_bonus_points()
 	_score_tracker.add_turn(_score_calc.calculate(p_result, bounty_pts))
+	if _relic_manager != null:
+		if p_result.clears.is_empty():
+			var placement_bonus := _relic_manager.cartographer_placement_bonus()
+			if placement_bonus > 0:
+				_award_relic_points(col, landing_row, gf, placement_bonus, _CARTOGRAPHER_POPUP_COLOR)
+		if blocked_opponent:
+			var block_bonus := _relic_manager.compass_block_bonus()
+			if block_bonus > 0:
+				_award_relic_points(col, landing_row, gf, block_bonus, _COMPASS_POPUP_COLOR)
 	_check_score_milestone()
 	if sandbox_mode:
 		# Replenish player turns so the match never ends
@@ -332,8 +342,14 @@ func _run_ai_turn_animated() -> void:
 		PieceVisualUtil.cell_piece_type(ai_piece.type), ai_piece.modifier
 	)
 	_check_col_fill_flash(ai_col)
-	if _is_block_move(ai_col, ai_landing_row, Piece.Owner.AI):
+	var blocked_player := _is_block_move(ai_col, ai_landing_row, Piece.Owner.AI)
+	if blocked_player:
 		_spawn_blocked_popup(ai_col, ai_landing_row, gf)
+		if _relic_manager != null:
+			var lens_chips := _relic_manager.lens_blocked_chips()
+			if lens_chips > 0:
+				_chip_count += lens_chips
+				_spawn_chip_popups(lens_chips)
 	_state = _build_state()
 	_refresh_all()
 
@@ -582,6 +598,8 @@ func _score_label_pos(owner: Piece.Owner) -> Vector2:
 
 const _BOUNTY_POPUP_COLOR := Color("#52B85A")
 const _IGNITE_POPUP_COLOR := Color("#D93824")
+const _CARTOGRAPHER_POPUP_COLOR := Color("#C9A227")
+const _COMPASS_POPUP_COLOR := Color("#4A9FD4")
 const _MODIFIER_POPUP_STAGGER := 0.045
 
 
@@ -920,6 +938,15 @@ func _is_block_move(col: int, row: int, my_owner: Piece.Owner) -> bool:
 		if count >= 3:
 			return true
 	return false
+
+
+func _award_relic_points(col: int, row: int, gf: bool, points: int, popup_color: Color) -> void:
+	var bonus_turn := TurnScore.new()
+	bonus_turn.player_points = points
+	_score_tracker.add_turn(bonus_turn)
+	if _renderer != null and _renderer.layout != null:
+		var pop_pos := _renderer.cell_rect(col, row, gf).get_center()
+		_anim_layer.spawn_popup(pop_pos, "+%d" % points, popup_color)
 
 
 func _spawn_blocked_popup(col: int, row: int, gf: bool) -> void:

@@ -36,6 +36,28 @@ static func get_texture_sync(base_color: Color, piece_type: CellState.PieceType,
 	return null
 
 
+## Returns a cached disc texture or bakes one. Returns null on web (use vector fallback).
+static func get_or_bake_texture_async(
+		base_color: Color,
+		piece_type: CellState.PieceType,
+		pixel_size: int,
+	) -> Texture2D:
+	var tex := get_texture_sync(base_color, piece_type, pixel_size)
+	if tex != null:
+		return tex
+	if OS.has_feature("web"):
+		return null
+	var size := maxi(8, pixel_size)
+	var style := PieceVisualUtil.shader_style_index(piece_type)
+	var baker := _ensure_baker()
+	if not baker.is_inside_tree():
+		await baker.tree_entered
+	tex = await baker.bake(base_color, style, size)
+	if tex != null:
+		_store_style(base_color, style, size, tex)
+	return tex
+
+
 static func layout_pixel_size(cell_size: float) -> int:
 	return maxi(8, int(cell_size))
 

@@ -95,7 +95,7 @@ custom_minimum_size = Vector2(100, 32)
 layout_mode = 2
 size_flags_horizontal = 8
 size_flags_vertical = 4
-button_text = "Continue →"
+button_text = "Continue"
 
 [node name="Body" type="VBoxContainer" parent="Root" unique_id=1933275907]
 layout_mode = 2

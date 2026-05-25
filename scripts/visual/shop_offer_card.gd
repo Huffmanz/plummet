@@ -38,6 +38,7 @@ var _border_base_color: Color = Color.WHITE
 var _hover_tween: Tween = null
 var _pulse_tween: Tween = null
 var _shimmer_tween: Tween = null
+var _tooltip_body: String = ""
 
 
 func _ready() -> void:
@@ -48,11 +49,15 @@ func _ready() -> void:
 	mouse_exited.connect(_on_mouse_exited)
 
 
+func _exit_tree() -> void:
+	GameTooltip.unbind(self)
+
+
 func _style_labels() -> void:
-	var on_surface := not OS.has_feature("web")
-	UITheme.style_label_primary(_name_lbl, on_surface)
-	UITheme.style_label_muted(_type_lbl, on_surface)
-	UITheme.style_label_primary(_desc_lbl, on_surface)
+	# Offer cards always use the dark surface panel — light text, not canvas-dark text.
+	UITheme.style_label_primary(_name_lbl, true)
+	UITheme.style_label_muted(_type_lbl, true)
+	UITheme.style_label_primary(_desc_lbl, true)
 	_desc_lbl.add_theme_font_size_override("font_size", 9)
 	_footer_lbl.add_theme_color_override("font_color", UITheme.ACCENT_POP)
 	_footer_lbl.add_theme_font_size_override("font_size", 9)
@@ -85,6 +90,9 @@ func setup(
 	_is_relic = is_relic
 	_footer_text = _format_footer(cost, hint)
 	_footer_lbl.text = _footer_text
+	_tooltip_body = _build_tooltip_body(title, type_label, description)
+	_style_labels()
+	_apply_tooltip_binding()
 	call_deferred("_setup_offer_visual", kind, id)
 	_apply_border(is_relic)
 	set_consumed(false)
@@ -117,6 +125,26 @@ func _format_footer(cost: int, hint: String) -> String:
 	if cost == 0:
 		return "Free · %s" % hint
 	return "%d chips · %s" % [cost, hint]
+
+
+func _build_tooltip_body(title: String, type_label: String, description: String) -> String:
+	var lines: PackedStringArray = []
+	if not title.is_empty():
+		lines.append(title)
+	if not type_label.is_empty():
+		lines.append(type_label)
+	if not description.is_empty():
+		lines.append(description)
+	if not _footer_text.is_empty():
+		lines.append(_footer_text)
+	return "\n".join(lines)
+
+
+func _apply_tooltip_binding() -> void:
+	if _consumed or _hidden_for_drag or _tooltip_body.is_empty():
+		GameTooltip.unbind(self)
+	else:
+		GameTooltip.bind(self, _tooltip_body)
 
 
 func restore_visibility_for_deal_in() -> void:
@@ -190,11 +218,13 @@ func _apply_consumed_appearance() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	modulate = Color(1, 1, 1, 0)
+	GameTooltip.unbind(self)
 
 
 func _apply_active_appearance() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_apply_border(_is_relic)
+	_apply_tooltip_binding()
 
 
 func _apply_border(is_relic: bool) -> void:
@@ -241,6 +271,7 @@ func _start_drag() -> void:
 		shop_audio.play_drag_pickup()
 	_stop_hover_immediate()
 	_hidden_for_drag = true
+	GameTooltip.unbind(self)
 	GameCursor.apply_closed()
 	pivot_offset = size * 0.5
 	if _shrink_tween != null and _shrink_tween.is_valid():
@@ -311,6 +342,7 @@ func _notification(what: int) -> void:
 			modulate = Color(1, 1, 1, 0)
 		else:
 			set_affordable(_affordable)
+			_apply_tooltip_binding()
 		drag_ended.emit()
 		call_deferred("_clear_cursor_icon")
 		_pressed = false

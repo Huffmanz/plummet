@@ -127,6 +127,11 @@ func _make_preview_bag() -> PieceBag:
 
 func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = false) -> void:
 	DataRegistry.ensure_loaded()
+	if not OS.has_feature("web"):
+		var disc_px := PieceShaderTextureCache.layout_pixel_size(
+			52.0 * ShopPiecePreview.DISC_FILL_RATIO
+		)
+		await PieceShaderTextureCache.warm_for_layout_async(disc_px, UITheme.PLAYER, UITheme.AI)
 	_enter_anim_done = false
 	if OS.has_feature("web"):
 		reduced_motion = true

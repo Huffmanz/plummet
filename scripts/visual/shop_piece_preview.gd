@@ -1,58 +1,111 @@
 class_name ShopPiecePreview extends Control
+## Bag / offer piece disc — baked shader texture (board pipeline) or vector fallback on web.
 
 const DISC_FILL_RATIO := 0.9
-const _PIECE_SHADER := preload("res://shaders/piece_type.gdshader")
 
-var _shader_style: int = 0
+var _piece_type: CellState.PieceType = CellState.PieceType.NORMAL
+var _disc_texture: Texture2D = null
+var _use_vector_fallback: bool = false
 
 @onready var _piece_rect: ColorRect = %PieceRect
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	resized.connect(_sync_piece_size)
+	if _piece_rect != null:
+		_piece_rect.visible = false
+	resized.connect(_on_resized)
 
 
 func setup(piece: Piece) -> void:
-	_shader_style = PieceVisualUtil.shader_style_index_from_piece(piece.type)
+	_piece_type = PieceVisualUtil.cell_piece_type(piece.type)
 	if not is_node_ready():
 		await ready
-	_apply_material()
-	_sync_piece_size()
-	if _piece_rect != null:
-		_piece_rect.modulate = Color.WHITE
+	await _apply_disc_visual()
 
 
 func flash_type_change() -> void:
-	if _piece_rect == null:
-		return
 	var flash := create_tween()
-	_piece_rect.modulate = Color(1.4, 1.4, 1.4, 1.0)
-	flash.tween_property(_piece_rect, "modulate", Color.WHITE, 0.1) \
+	modulate = Color(1.4, 1.4, 1.4, 1.0)
+	flash.tween_property(self, "modulate", Color.WHITE, 0.1) \
 		.set_ease(Tween.EASE_OUT)
 
 
-func _sync_piece_size() -> void:
-	if _piece_rect == null:
+func _apply_disc_visual() -> void:
+	if _piece_rect != null:
+		_piece_rect.visible = false
+	_disc_texture = null
+	_use_vector_fallback = false
+	var pixel_size := PieceShaderTextureCache.layout_pixel_size(minf(size.x, size.y))
+	_disc_texture = await PieceShaderTextureCache.get_or_bake_texture_async(
+		UITheme.PLAYER,
+		_piece_type,
+		pixel_size
+	)
+	_use_vector_fallback = _disc_texture == null
+	modulate = Color.WHITE
+	queue_redraw()
+
+
+func _on_resized() -> void:
+	queue_redraw()
+
+
+func _draw() -> void:
+	if size.x < 1.0 or size.y < 1.0:
 		return
 	var side := minf(size.x, size.y) * DISC_FILL_RATIO
-	var half := side * 0.5
-	_piece_rect.offset_left = -half
-	_piece_rect.offset_top = -half
-	_piece_rect.offset_right = half
-	_piece_rect.offset_bottom = half
+	var draw_rect := Rect2(size * 0.5 - Vector2(side, side) * 0.5, Vector2(side, side))
+	if _disc_texture != null:
+		draw_texture_rect(_disc_texture, draw_rect, false)
+		return
+	if _use_vector_fallback:
+		_draw_vector_disc(draw_rect)
 
 
-func _apply_material() -> void:
-	if _piece_rect == null:
-		return
-	if OS.has_feature("web"):
-		_piece_rect.material = null
-		_piece_rect.color = UITheme.PLAYER
-		return
-	var mat := ShaderMaterial.new()
-	mat.shader = _PIECE_SHADER
-	mat.set_shader_parameter("base_color", UITheme.PLAYER)
-	mat.set_shader_parameter("style", _shader_style)
-	_piece_rect.material = mat
-	_piece_rect.color = Color.WHITE
+func _draw_vector_disc(rect: Rect2) -> void:
+	var color := UITheme.PLAYER
+	var center := rect.get_center()
+	var radius: float = minf(rect.size.x, rect.size.y) * 0.42
+	var outline := color.darkened(0.32)
+	draw_circle(center, radius, color)
+	draw_arc(center, radius, 0.0, TAU, 32, outline, 2.5)
+
+	match _piece_type:
+		CellState.PieceType.PRISM:
+			var t: float = Time.get_ticks_msec() * 0.001
+			var hue_steps := 6
+			for i in hue_steps:
+				var hue := fmod(float(i) / float(hue_steps) + t * 0.3, 1.0)
+				var arc_color := Color.from_hsv(hue, 0.9, 1.0, 0.7)
+				var start_a := float(i) / float(hue_steps) * TAU
+				var end_a := float(i + 1) / float(hue_steps) * TAU
+				draw_arc(center, radius * 1.06, start_a, end_a, 6, arc_color, 2.5)
+		CellState.PieceType.COIN:
+			var gold := Color(1.0, 0.82, 0.18, 0.85)
+			draw_arc(center, radius * 0.98, 0.0, TAU, 32, gold, 3.0)
+			var inner_r := radius * 0.38
+			draw_line(center + Vector2(0.0, -inner_r), center + Vector2(0.0, inner_r), gold, 2.0)
+			draw_line(center + Vector2(-inner_r, 0.0), center + Vector2(inner_r, 0.0), gold, 2.0)
+		CellState.PieceType.EMBER:
+			var glow := Color(1.0, 0.42, 0.08, 0.9)
+			draw_circle(center, radius * 0.48, glow)
+			for i in 4:
+				var angle: float = i * TAU / 4.0 + TAU / 8.0
+				var dir := Vector2(cos(angle), sin(angle))
+				draw_line(center + dir * (radius * 0.55), center + dir * (radius * 1.02), glow, 2.0)
+		CellState.PieceType.SHARD:
+			var crystal := Color(0.78, 0.92, 1.0, 0.75)
+			var crack_pts: Array[Vector2] = [
+				center + Vector2(-radius * 0.1, radius * 0.05),
+				center + Vector2(radius * 0.35, -radius * 0.25),
+				center + Vector2(-radius * 0.3, -radius * 0.35),
+				center + Vector2(radius * 0.15, radius * 0.38),
+			]
+			for i in crack_pts.size() - 1:
+				draw_line(crack_pts[i], crack_pts[i + 1], crystal, 1.5)
+			draw_line(crack_pts[0], crack_pts[2], crystal, 1.0)
+			var dash_arc: float = TAU / 14.0
+			for i in 7:
+				var start_angle: float = i * TAU / 7.0
+				draw_arc(center, radius * 1.04, start_angle, start_angle + dash_arc, 6, crystal, 1.5)

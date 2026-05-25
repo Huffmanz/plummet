@@ -21,11 +21,11 @@ var _badge_pop_tween: Tween
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	if _preview:
-		_preview.mouse_filter = Control.MOUSE_FILTER_PASS
+		_preview.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _mod_host:
-		_mod_host.mouse_filter = Control.MOUSE_FILTER_PASS
+		_mod_host.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if _drop_ring:
-		_drop_ring.mouse_filter = Control.MOUSE_FILTER_PASS
+		_drop_ring.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_drop_ring.visible = false
 	resized.connect(_on_resized)
 

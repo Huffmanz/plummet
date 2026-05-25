@@ -83,7 +83,7 @@ func _ready() -> void:
 
 	_reset_btn.pressed.connect(_reset)
 
-	_game_board.get_node("MarginContainer/AIPanel").hide()
+	_game_board.get_node("%RightPanel").hide()
 	_game_board.sandbox_placement_handler = _handle_sandbox_click
 	_game_board.setup_match(_player_bag, 0, 0, 1, 1, "Sandbox", "No gimmick", false, _relic_manager)
 	_game_board.match_complete.connect(_on_match_complete)
@@ -184,7 +184,7 @@ func _reset() -> void:
 
 	_game_board.setup_match(_player_bag, 0, 0, 1, 1, "Sandbox", "No gimmick", false, _relic_manager)
 	_game_board.sandbox_placement_handler = _handle_sandbox_click
-	_game_board.get_node("MarginContainer/AIPanel").hide()
+	_game_board.get_node("%RightPanel").hide()
 	_game_board.match_complete.connect(_on_match_complete)
 	_chip_label.text = "Chips: 0"
 	_log("Board reset.")

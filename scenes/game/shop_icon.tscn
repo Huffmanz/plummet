@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://c8k2shopicon7m3"]
+
+[ext_resource type="Script" uid="uid://dj4shopicnscript" path="res://scripts/visual/shop_icon.gd" id="1_icon"]
+
+[node name="ShopIcon" type="PanelContainer"]
+custom_minimum_size = Vector2(26, 26)
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+script = ExtResource("1_icon")
+
+[node name="IconInner" type="CenterContainer" parent="."]
+layout_mode = 2
+
+[node name="IconTexture" type="TextureRect" parent="IconInner"]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(14, 14)
+layout_mode = 2
+expand_mode = 1
+stretch_mode = 5
+mouse_filter = 2
+
+[node name="IconGlyph" type="ColorRect" parent="IconInner"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(10, 10)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.95, 0.93, 0.9, 1)

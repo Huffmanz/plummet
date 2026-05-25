@@ -50,13 +50,19 @@ func play_fly_in() -> void:
 	if reduced_motion:
 		finished.emit()
 		return
+	await prepare_fly_in()
+	await run_fly_in_tween()
+
+
+func prepare_fly_in() -> void:
+	if reduced_motion:
+		return
 	_kill_tween()
 	_unwrap_children()
 	await get_tree().process_frame
 	_wrap_children()
 	var slots := _gather_animatable_slots()
 	if slots.is_empty():
-		finished.emit()
 		return
 	await get_tree().process_frame
 	for slot in slots:
@@ -66,6 +72,16 @@ func play_fly_in() -> void:
 		slot.prepare_fly_in_right(fly_offset)
 		if play_pan_pop:
 			slot.prepare_pan_pop()
+
+
+func run_fly_in_tween() -> void:
+	if reduced_motion:
+		finished.emit()
+		return
+	var slots := _gather_animatable_slots()
+	if slots.is_empty():
+		finished.emit()
+		return
 	_tween = create_tween().set_parallel(true)
 	var count := slots.size()
 	for i in count:

@@ -1,5 +1,6 @@
 class_name ShopPiecePreview extends Control
 
+const DISC_FILL_RATIO := 0.9
 const _PIECE_SHADER := preload("res://shaders/piece_type.gdshader")
 
 var _shader_style: int = 0
@@ -34,7 +35,7 @@ func flash_type_change() -> void:
 func _sync_piece_size() -> void:
 	if _piece_rect == null:
 		return
-	var side := minf(size.x, size.y) * 0.9
+	var side := minf(size.x, size.y) * DISC_FILL_RATIO
 	var half := side * 0.5
 	_piece_rect.offset_left = -half
 	_piece_rect.offset_top = -half

@@ -65,6 +65,20 @@ static func shader_style_index_from_piece(t: Piece.Type) -> int:
 	return shader_style_index_from_registry_id(registry_id_from_piece(t))
 
 
+static func piece_type_from_registry_id(id: String) -> Piece.Type:
+	match id:
+		"PRISM":
+			return Piece.Type.PRISM
+		"COIN":
+			return Piece.Type.COIN
+		"EMBER":
+			return Piece.Type.EMBER
+		"SHARD":
+			return Piece.Type.SHARD
+		_:
+			return Piece.Type.NORMAL
+
+
 static func shader_style_index_from_registry_id(id: String) -> int:
 	var data: PieceTypeData = DataRegistry.get_piece_type(id)
 	if data == null:

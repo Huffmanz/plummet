@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://df18mutl56vpj"]
 
 [ext_resource type="Script" path="res://scripts/visual/shop_piece_info_popup.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://c8k2shopicon7m3" path="res://scenes/game/shop_icon.tscn" id="2_icon"]
 
 [node name="ShopPieceInfoPopup" type="PanelContainer"]
 visible = false
@@ -32,27 +33,9 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="TypeIconFrame" type="PanelContainer" parent="Margin/ScrollRoot/Body/TypeHeader" unique_name_in_owner = true]
+[node name="TypeShopIcon" parent="Margin/ScrollRoot/Body/TypeHeader" instance=ExtResource("2_icon")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-
-[node name="TypeIconInner" type="CenterContainer" parent="Margin/ScrollRoot/Body/TypeHeader/TypeIconFrame"]
-layout_mode = 2
-
-[node name="TypeIconTexture" type="TextureRect" parent="Margin/ScrollRoot/Body/TypeHeader/TypeIconFrame/TypeIconInner" unique_name_in_owner = true]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(14, 14)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="TypeIconGlyph" type="ColorRect" parent="Margin/ScrollRoot/Body/TypeHeader/TypeIconFrame/TypeIconInner" unique_name_in_owner = true]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(10, 10)
-layout_mode = 2
-color = Color(0.95, 0.93, 0.9, 1)
 
 [node name="TypeTitleCol" type="VBoxContainer" parent="Margin/ScrollRoot/Body/TypeHeader"]
 layout_mode = 2
@@ -88,27 +71,9 @@ theme_override_constants/separation = 4
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="ModIconFrame" type="PanelContainer" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader" unique_name_in_owner = true]
+[node name="ModShopIcon" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader" instance=ExtResource("2_icon")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
-
-[node name="ModIconInner" type="CenterContainer" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModIconFrame"]
-layout_mode = 2
-
-[node name="ModIconTexture" type="TextureRect" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModIconFrame/ModIconInner" unique_name_in_owner = true]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(14, 14)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="ModIconGlyph" type="ColorRect" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader/ModIconFrame/ModIconInner" unique_name_in_owner = true]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(10, 10)
-layout_mode = 2
-color = Color(0.95, 0.93, 0.9, 1)
 
 [node name="ModTitleCol" type="VBoxContainer" parent="Margin/ScrollRoot/Body/ModifierBlock/ModHeader"]
 layout_mode = 2

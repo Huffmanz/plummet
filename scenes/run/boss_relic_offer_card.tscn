@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://c4hgr74hv8mho"]
 
 [ext_resource type="Script" uid="uid://c04ms5nshctg" path="res://scripts/visual/boss_relic_offer_card.gd" id="1_card"]
+[ext_resource type="PackedScene" uid="uid://c8k2shopicon7m3" path="res://scenes/game/shop_icon.tscn" id="6_icon"]
 [ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
 [ext_resource type="AudioStream" uid="uid://cxiguwesqt88c" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_001.ogg" id="3_imp1"]
 [ext_resource type="AudioStream" uid="uid://bvkelokoa3nk6" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_002.ogg" id="4_imp2"]
@@ -26,27 +27,12 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="IconFrame" type="PanelContainer" parent="Margin/VBox/Header" unique_id=984752385]
+[node name="ShopIcon" parent="Margin/VBox/Header" instance=ExtResource("6_icon")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
-
-[node name="IconInner" type="CenterContainer" parent="Margin/VBox/Header/IconFrame" unique_id=846509308]
-layout_mode = 2
-
-[node name="IconTexture" type="TextureRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=239388472]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(18, 18)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="IconGlyph" type="ColorRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=1785624597]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(12, 12)
-layout_mode = 2
-color = Color(0.95, 0.93, 0.9, 1)
+texture_min_size = Vector2(18, 18)
+glyph_min_size = Vector2(12, 12)
 
 [node name="TitleCol" type="VBoxContainer" parent="Margin/VBox/Header" unique_id=40337106]
 layout_mode = 2

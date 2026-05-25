@@ -1,6 +1,9 @@
 class_name StaggerFlyInSlot extends Control
 ## Wraps one child so horizontal fly-in can animate without fighting VBox layout.
 
+## Inset so hover scale / border glow are not clipped by the fly-in wrapper.
+const CONTENT_PAD := 4.0
+
 var _content: Control
 var _pan: Control
 var _prepared_fly_offset: float = 0.0
@@ -25,6 +28,7 @@ func wrap(content: Control) -> void:
 func clear_fly_in_prep() -> void:
 	_awaiting_fly_in = false
 	_prepared_fly_offset = 0.0
+	clip_contents = false
 
 
 func get_content() -> Control:
@@ -156,7 +160,12 @@ func _layout_content_in_pan() -> void:
 	var content := get_content()
 	if content == null or _pan == null:
 		return
+	var pad := CONTENT_PAD
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.offset_left = pad
+	content.offset_top = pad
+	content.offset_right = -pad
+	content.offset_bottom = -pad
 
 
 func _layout_pan() -> void:
@@ -182,4 +191,6 @@ func _sync_minimum_size() -> void:
 	var min_h := content.get_combined_minimum_size().y
 	if content is Label and (content as Label).autowrap_mode != TextServer.AUTOWRAP_OFF:
 		min_h = maxf(min_h, content.get_minimum_size().y)
-	custom_minimum_size = Vector2(0.0, min_h)
+	var content_min := content.get_combined_minimum_size()
+	var inset := CONTENT_PAD * 2.0
+	custom_minimum_size = Vector2(content_min.x + inset, min_h + inset)

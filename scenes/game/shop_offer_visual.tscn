@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://bqx7offervisualsc"]
+
+[ext_resource type="Script" uid="uid://d7offervisual01" path="res://scripts/visual/shop_offer_visual.gd" id="1_visual"]
+
+[node name="ShopOfferVisual" type="Control"]
+custom_minimum_size = Vector2(26, 26)
+size_flags_horizontal = 0
+size_flags_vertical = 0
+mouse_filter = 2
+script = ExtResource("1_visual")

@@ -23,7 +23,7 @@ const _ENEMY_GIMMICK: Dictionary = {
 }
 
 var _run_state: RunState
-var _game_board = null
+var _game_board: GameBoard = null
 var _main_menu = null
 var _summary_screen = null
 func _ready() -> void:
@@ -50,10 +50,7 @@ func _get_relic_manager() -> RelicManager:
 
 
 func _start_match() -> void:
-	var had_board := _game_board != null
 	_teardown_game_board()
-	if had_board:
-		await get_tree().process_frame
 
 	var enemy_name := _get_enemy_name(_run_state.act, _run_state.match_in_act)
 	var gimmick := _ENEMY_GIMMICK.get(enemy_name, "No gimmick") as String
@@ -191,12 +188,14 @@ func _on_boss_relic_chosen(relic_id: String) -> void:
 func _teardown_game_board() -> void:
 	if _game_board == null:
 		return
-	if _game_board.match_complete.is_connected(_on_match_complete):
-		_game_board.match_complete.disconnect(_on_match_complete)
-	if _game_board.run_shop_finished.is_connected(_on_run_shop_finished):
-		_game_board.run_shop_finished.disconnect(_on_run_shop_finished)
-	_game_board.queue_free()
+	var board := _game_board
 	_game_board = null
+	if board.match_complete.is_connected(_on_match_complete):
+		board.match_complete.disconnect(_on_match_complete)
+	if board.run_shop_finished.is_connected(_on_run_shop_finished):
+		board.run_shop_finished.disconnect(_on_run_shop_finished)
+	if is_instance_valid(board):
+		board.free()
 
 
 func _award_act_fragments() -> void:

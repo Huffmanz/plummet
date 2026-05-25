@@ -7,16 +7,12 @@ const ANCHOR_GAP := 8.0
 
 @onready var _scroll: ScrollContainer = %ScrollRoot
 @onready var _body: VBoxContainer = %Body
-@onready var _type_icon_frame: PanelContainer = %TypeIconFrame
-@onready var _type_icon_texture: TextureRect = %TypeIconTexture
-@onready var _type_icon_glyph: ColorRect = %TypeIconGlyph
+@onready var _type_icon: ShopIcon = %TypeShopIcon
 @onready var _type_name_lbl: Label = %TypeNameLabel
 @onready var _type_kind_lbl: Label = %TypeKindLabel
 @onready var _type_desc_lbl: Label = %TypeDescLabel
 @onready var _modifier_block: VBoxContainer = %ModifierBlock
-@onready var _mod_icon_frame: PanelContainer = %ModIconFrame
-@onready var _mod_icon_texture: TextureRect = %ModIconTexture
-@onready var _mod_icon_glyph: ColorRect = %ModIconGlyph
+@onready var _mod_icon: ShopIcon = %ModShopIcon
 @onready var _mod_name_lbl: Label = %ModNameLabel
 @onready var _mod_kind_lbl: Label = %ModKindLabel
 @onready var _mod_desc_lbl: Label = %ModDescLabel
@@ -66,10 +62,7 @@ func _apply_piece(piece: Piece) -> void:
 		_type_name_lbl.text = type_data.display_name
 		_type_kind_lbl.text = ShopOfferCard.format_piece_type()
 		_type_desc_lbl.text = type_data.description
-		_apply_icon(
-			_type_icon_frame,
-			_type_icon_texture,
-			_type_icon_glyph,
+		_type_icon.setup(
 			type_data.icon,
 			UITheme.PLAYER if piece.type == Piece.Type.NORMAL else UITheme.PLAYER
 		)
@@ -88,44 +81,11 @@ func _apply_piece(piece: Piece) -> void:
 		_mod_name_lbl.text = mod_data.display_name
 		_mod_kind_lbl.text = ShopOfferCard.format_modifier_type(mod_data.trigger)
 		_mod_desc_lbl.text = mod_data.description
-		_apply_icon(
-			_mod_icon_frame,
-			_mod_icon_texture,
-			_mod_icon_glyph,
-			mod_data.icon,
-			mod_data.badge_color
-		)
+		_mod_icon.setup(mod_data.icon, mod_data.badge_color)
 	else:
 		_mod_name_lbl.text = piece.modifier
 		_mod_kind_lbl.text = "Modifier"
 		_mod_desc_lbl.text = ""
-
-
-func _apply_icon(
-	frame: PanelContainer,
-	texture_rect: TextureRect,
-	glyph: ColorRect,
-	texture: Texture2D,
-	border_color: Color
-) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UITheme.SURFACE
-	sb.border_color = border_color
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(4)
-	frame.add_theme_stylebox_override("panel", sb)
-
-	if texture != null:
-		texture_rect.texture = texture
-		texture_rect.visible = true
-		glyph.visible = false
-	else:
-		texture_rect.visible = false
-		glyph.visible = true
-		if border_color == UITheme.PLAYER:
-			glyph.color = border_color.lightened(0.22)
-		else:
-			glyph.color = Color(0.95, 0.93, 0.9, 1)
 
 
 func _reposition() -> void:

@@ -3,12 +3,10 @@ class_name ShopOfferCard extends PanelContainer
 signal drag_started(offer_index: int)
 signal drag_ended
 
-const RELIC_BORDER := Color("#4DA8B0")
+const RELIC_BORDER := ShopIcon.RELIC_BORDER
 const _DragIconScript := preload("res://scripts/visual/shop_offer_drag_icon.gd")
 
-@onready var _icon_frame: PanelContainer = %IconFrame
-@onready var _icon_texture: TextureRect = %IconTexture
-@onready var _icon_glyph: ColorRect = %IconGlyph
+@onready var _offer_visual: ShopOfferVisual = %OfferVisual
 @onready var _name_lbl: Label = %NameLabel
 @onready var _type_lbl: Label = %TypeLabel
 @onready var _desc_lbl: Label = %DescLabel
@@ -31,7 +29,7 @@ var _pressed: bool = false
 var _hidden_for_drag: bool = false
 var _drop_accepted: bool = false
 var _affordable: bool = true
-var _cursor_icon: PanelContainer = null
+var _cursor_icon: ShopOfferDragIcon = null
 var _shrink_tween: Tween = null
 
 @export var reduced_motion: bool = false
@@ -86,12 +84,17 @@ func setup(
 	_is_relic = is_relic
 	_footer_text = _format_footer(cost, hint)
 	_footer_lbl.text = _footer_text
-	_apply_icon(icon_texture, icon_color)
+	call_deferred("_setup_offer_visual", kind, id)
 	_apply_border(is_relic)
 	set_consumed(false)
 	set_affordable(true)
 	if is_relic and not reduced_motion:
 		_start_relic_shimmer()
+
+
+func _setup_offer_visual(kind: String, id: String) -> void:
+	if _offer_visual != null:
+		_offer_visual.setup(kind, id)
 
 
 static func format_modifier_type(trigger: String) -> String:
@@ -189,27 +192,6 @@ func _apply_active_appearance() -> void:
 	_apply_border(_is_relic)
 
 
-func _apply_icon(texture: Texture2D, border_color: Color) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UITheme.SURFACE
-	sb.border_color = border_color
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(4)
-	_icon_frame.add_theme_stylebox_override("panel", sb)
-
-	if texture != null:
-		_icon_texture.texture = texture
-		_icon_texture.visible = true
-		_icon_glyph.visible = false
-	else:
-		_icon_texture.visible = false
-		_icon_glyph.visible = true
-		if border_color == UITheme.PLAYER:
-			_icon_glyph.color = border_color.lightened(0.22)
-		else:
-			_icon_glyph.color = Color(0.95, 0.93, 0.9, 1)
-
-
 func _apply_border(is_relic: bool) -> void:
 	var sb := UITheme.make_surface_style(10, UITheme.SURFACE_LIGHT)
 	if is_relic:
@@ -269,10 +251,10 @@ func _start_drag() -> void:
 
 func _spawn_cursor_icon() -> void:
 	_clear_cursor_icon()
-	_cursor_icon = _DragIconScript.create_for_offer(offer_kind, offer_id)
 	var vp := get_viewport()
 	if vp == null:
 		return
+	_cursor_icon = _DragIconScript.create_for_offer(offer_kind, offer_id)
 	vp.add_child(_cursor_icon)
 	_cursor_icon.follow_cursor(vp)
 
@@ -319,13 +301,13 @@ func _notification(what: int) -> void:
 		_shrink_tween = null
 		scale = Vector2.ONE
 		pivot_offset = Vector2.ZERO
-		_clear_cursor_icon()
 		_hidden_for_drag = false
 		if _drop_accepted or _consumed:
 			modulate = Color(1, 1, 1, 0)
 		else:
 			set_affordable(_affordable)
 		drag_ended.emit()
+		call_deferred("_clear_cursor_icon")
 		_pressed = false
 		_refresh_shop_cursor()
 
@@ -362,7 +344,7 @@ func _refresh_shop_cursor() -> void:
 func _ignore_mouse_on_children(node: Node) -> void:
 	for child in node.get_children():
 		if child is Control:
-			(child as Control).mouse_filter = Control.MOUSE_FILTER_PASS
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_ignore_mouse_on_children(child)
 
 

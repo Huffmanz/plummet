@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b3b7fs32ol1wu"]
 
 [ext_resource type="Script" uid="uid://yynh5ig2la7x" path="res://scripts/visual/shop_offer_card.gd" id="1_card"]
+[ext_resource type="PackedScene" uid="uid://bqx7offervisualsc" path="res://scenes/game/shop_offer_visual.tscn" id="2_visual"]
 
 [node name="ShopOfferCard" type="PanelContainer" unique_id=1819470358]
 size_flags_horizontal = 3
@@ -23,28 +24,10 @@ theme_override_constants/separation = 5
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="IconFrame" type="PanelContainer" parent="Margin/VBox/Header" unique_id=1571100786]
+[node name="OfferVisual" parent="Margin/VBox/Header" instance=ExtResource("2_visual")]
 unique_name_in_owner = true
-custom_minimum_size = Vector2(26, 26)
 layout_mode = 2
 size_flags_vertical = 0
-
-[node name="IconInner" type="CenterContainer" parent="Margin/VBox/Header/IconFrame" unique_id=1281158492]
-layout_mode = 2
-
-[node name="IconTexture" type="TextureRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=523125621]
-unique_name_in_owner = true
-visible = false
-custom_minimum_size = Vector2(14, 14)
-layout_mode = 2
-expand_mode = 1
-stretch_mode = 5
-
-[node name="IconGlyph" type="ColorRect" parent="Margin/VBox/Header/IconFrame/IconInner" unique_id=56315964]
-unique_name_in_owner = true
-custom_minimum_size = Vector2(10, 10)
-layout_mode = 2
-color = Color(0.95, 0.93, 0.9, 1)
 
 [node name="TitleCol" type="VBoxContainer" parent="Margin/VBox/Header" unique_id=1288511719]
 layout_mode = 2

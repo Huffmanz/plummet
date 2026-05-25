@@ -8,7 +8,7 @@ extends Node
 
 const MAX_WIDTH := 176.0
 const SHOW_DELAY := 0.35
-const CURSOR_OFFSET := Vector2(14.0, 18.0)
+const ANCHOR_GAP := 8.0
 const VIEWPORT_MARGIN := 8.0
 const FONT_SIZE := 10
 
@@ -36,7 +36,9 @@ func bind(control: Control, text: String) -> void:
 	control.tooltip_text = ""
 	if _shown_target == control and _panel != null and _panel.visible:
 		_label.text = text
+		_label.reset_size()
 		_panel.reset_size()
+		call_deferred("_refresh_position")
 	if not control.tree_exited.is_connected(_on_bound_tree_exited):
 		control.tree_exited.connect(_on_bound_tree_exited.bind(control), CONNECT_ONE_SHOT)
 
@@ -117,7 +119,16 @@ func _show(target: Control) -> void:
 	_shown_target = target
 	_label.text = _bindings[target]
 	_panel.visible = true
+	_label.reset_size()
 	_panel.reset_size()
+	call_deferred("_refresh_position")
+
+
+func _refresh_position() -> void:
+	var vp := get_viewport()
+	if vp == null or not _panel.visible:
+		return
+	_position_panel(vp)
 
 
 func _hide() -> void:
@@ -126,15 +137,31 @@ func _hide() -> void:
 
 
 func _position_panel(vp: Viewport) -> void:
-	var mouse := vp.get_mouse_position()
-	var panel_size := _panel.size
-	var pos := mouse + CURSOR_OFFSET
+	if _shown_target == null or not is_instance_valid(_shown_target):
+		return
 
-	if pos.x + panel_size.x > vp.size.x - VIEWPORT_MARGIN:
-		pos.x = mouse.x - panel_size.x - 8.0
-	if pos.y + panel_size.y > vp.size.y - VIEWPORT_MARGIN:
-		pos.y = mouse.y - panel_size.y - 8.0
+	_label.reset_size()
+	_panel.reset_size()
 
-	pos.x = clampf(pos.x, VIEWPORT_MARGIN, vp.size.x - panel_size.x - VIEWPORT_MARGIN)
-	pos.y = clampf(pos.y, VIEWPORT_MARGIN, vp.size.y - panel_size.y - VIEWPORT_MARGIN)
+	var vp_rect := vp.get_visible_rect()
+	var anchor_rect := _shown_target.get_global_rect()
+	var panel_size := _panel.get_minimum_size()
+	if panel_size.y <= 0.0:
+		panel_size = _label.get_minimum_size() + Vector2(20.0, 16.0)
+	panel_size.x = maxf(panel_size.x, 1.0)
+	panel_size.y = maxf(panel_size.y, 1.0)
+
+	var space_above := anchor_rect.position.y - vp_rect.position.y - VIEWPORT_MARGIN
+	var space_below := vp_rect.end.y - anchor_rect.end.y - VIEWPORT_MARGIN
+	var prefer_above := space_below < panel_size.y + ANCHOR_GAP or space_above >= space_below
+
+	var pos := Vector2.ZERO
+	if prefer_above:
+		pos.y = anchor_rect.position.y - panel_size.y - ANCHOR_GAP
+	else:
+		pos.y = anchor_rect.end.y + ANCHOR_GAP
+	pos.x = anchor_rect.position.x + anchor_rect.size.x * 0.5 - panel_size.x * 0.5
+
+	pos.x = clampf(pos.x, vp_rect.position.x + VIEWPORT_MARGIN, vp_rect.end.x - panel_size.x - VIEWPORT_MARGIN)
+	pos.y = clampf(pos.y, vp_rect.position.y + VIEWPORT_MARGIN, vp_rect.end.y - panel_size.y - VIEWPORT_MARGIN)
 	_panel.position = pos

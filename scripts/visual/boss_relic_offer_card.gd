@@ -2,11 +2,9 @@ class_name BossRelicOfferCard extends PanelContainer
 
 signal chosen(relic_id: String)
 
-const RELIC_BORDER := Color("#4DA8B0")
+const RELIC_BORDER := ShopIcon.RELIC_BORDER
 
-@onready var _icon_frame: PanelContainer = %IconFrame
-@onready var _icon_texture: TextureRect = %IconTexture
-@onready var _icon_glyph: ColorRect = %IconGlyph
+@onready var _icon: ShopIcon = %ShopIcon
 @onready var _name_lbl: Label = %NameLabel
 @onready var _type_lbl: Label = %TypeLabel
 @onready var _desc_lbl: Label = %DescLabel
@@ -55,12 +53,12 @@ func _apply_setup(id: String) -> void:
 		_name_lbl.text = id
 		_type_lbl.text = ShopOfferCard.format_relic_type()
 		_desc_lbl.text = ""
-		_apply_icon(null, RELIC_BORDER)
+		_icon.setup_relic(null)
 	else:
 		_name_lbl.text = rd.display_name
 		_type_lbl.text = _format_relic_type(rd)
 		_desc_lbl.text = rd.description
-		_apply_icon(rd.icon, RELIC_BORDER)
+		_icon.setup_relic(rd.icon)
 	_apply_border()
 	_footer_lbl.text = "Click to choose"
 
@@ -76,23 +74,6 @@ func _style_labels() -> void:
 	_desc_lbl.add_theme_font_size_override("font_size", 9)
 	_footer_lbl.add_theme_color_override("font_color", UITheme.ACCENT_POP)
 	_footer_lbl.add_theme_font_size_override("font_size", 9)
-
-
-func _apply_icon(texture: Texture2D, border_color: Color) -> void:
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = UITheme.SURFACE
-	sb.border_color = border_color
-	sb.set_border_width_all(2)
-	sb.set_corner_radius_all(4)
-	_icon_frame.add_theme_stylebox_override("panel", sb)
-	if texture != null:
-		_icon_texture.texture = texture
-		_icon_texture.visible = true
-		_icon_glyph.visible = false
-	else:
-		_icon_texture.visible = false
-		_icon_glyph.visible = true
-		_icon_glyph.color = Color(0.95, 0.93, 0.9, 1)
 
 
 func _apply_border() -> void:

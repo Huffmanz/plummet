@@ -59,7 +59,7 @@ func _seed_combo_board() -> void:
 
 func _update_labels() -> void:
 	super._update_labels()
-	_enemy_name_label.text = "JUICE TEST"
+	_enemy_header.text = "[wave]JUICE TEST[/wave]"
 	_enemy_gimmick_label.text = "Drop col 3 (middle gap) — 4-level cascade + chain"
 
 

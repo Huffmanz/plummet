@@ -12,12 +12,14 @@ signal run_shop_finished(chips_remaining: int)
 @onready var _score_delta_label: Label = %ScoreDelta
 @onready var _player_turns_label: Label = %PlayerTurns
 @onready var _sidebar_vbox: VBoxContainer = $LeftPanel/SidebarVBox
+@onready var _ai_sidebar_vbox: VBoxContainer = $RightPanel/AISidebarVBox
 @onready var _turn_pill: PanelContainer = $LeftPanel/SidebarVBox/ScorePanel/Margin/VBox/TurnPill
 @onready var _ai_score_label: Label = %AIScore
 @onready var _ai_turns_label: Label = %AITurns
 @onready var _chip_label: Label = %ChipCount
 @onready var _relic_display: MatchRelicDisplay = %RelicDisplay
-@onready var _enemy_name_label: Label = %EnemyName
+@onready var _enemy_header: RichTextLabel = %EnemyHeader
+@onready var _boss_tag: Label = %BossTag
 @onready var _enemy_gimmick_label: Label = %EnemyGimmick
 @onready var _turn_indicator_label: Label = %TurnIndicator
 @onready var _match_info_label: Label = %MatchInfo
@@ -95,7 +97,7 @@ func _ready() -> void:
 	_shop_screen.shop_closed.connect(_on_shop_closed)
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
-	_apply_left_sidebar_theme()
+	_apply_hud_sidebar_theme()
 	call_deferred("_on_viewport_resized")
 
 	if standalone:
@@ -135,12 +137,18 @@ func _process(delta: float) -> void:
 
 	# Turn counter urgency — pulse red in last 10 turns
 	if _state != null and _match_active:
+		var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.009)
+		var urgent := Color(1.0, pulse * 0.4 + 0.6, pulse * 0.4 + 0.6)
 		var p_turns := _state.player_turns_remaining
 		if p_turns <= 10 and p_turns > 0:
-			var pulse := 0.5 + 0.5 * sin(Time.get_ticks_msec() * 0.009)
-			_player_turns_label.modulate = Color(1.0, pulse * 0.4 + 0.6, pulse * 0.4 + 0.6)
+			_player_turns_label.modulate = urgent
 		else:
 			_player_turns_label.modulate = Color.WHITE
+		var ai_turns := _state.ai_turns_remaining
+		if ai_turns <= 10 and ai_turns > 0:
+			_ai_turns_label.modulate = urgent
+		else:
+			_ai_turns_label.modulate = Color.WHITE
 
 	# Keep score labels updating during tween
 	if _state != null and (_disp_player_score != float(_state.player_score) or _disp_ai_score != float(_state.ai_score)):
@@ -651,6 +659,7 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 	await get_tree().create_timer(0.6).timeout
 	await _match_end_overlay.show_result(_score_tracker.player_score, _score_tracker.ai_score)
 	_match_end_overlay.hide()
+	_clear_match_visuals()
 
 	var player_won: bool = _score_tracker.player_score > _score_tracker.ai_score
 	if player_won:
@@ -680,9 +689,35 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 func _on_shop_closed(chips_remaining: int) -> void:
 	_chip_count = chips_remaining
 	if standalone:
-		_init_game()
+		call_deferred("_init_game")
 	else:
-		run_shop_finished.emit(_chip_count)
+		call_deferred("_notify_run_shop_finished")
+
+
+func _notify_run_shop_finished() -> void:
+	if not is_inside_tree():
+		return
+	run_shop_finished.emit(_chip_count)
+
+
+func _clear_match_visuals() -> void:
+	var cleared := RenderState.make_empty()
+	cleared.act = _match_act
+	cleared.match_number = _match_num
+	cleared.enemy_name = _match_enemy_name
+	cleared.enemy_gimmick = _match_enemy_gimmick
+	cleared.chip_count = _chip_count
+	cleared.player_score = int(_disp_player_score)
+	cleared.ai_score = int(_disp_ai_score)
+	cleared.player_turns_remaining = _turn_manager.player_turns_remaining if _turn_manager != null else 0
+	cleared.ai_turns_remaining = _turn_manager.ai_turns_remaining if _turn_manager != null else 0
+	_state = cleared
+	_board_canvas.refresh(_state)
+	_ghost_canvas.refresh(_state)
+	_pieces_panel.refresh(_state)
+	_renderer.hovered_col = -1
+	_board_canvas.queue_redraw()
+	_ghost_canvas.queue_redraw()
 
 
 func _emit_match_complete(player_won: bool) -> void:
@@ -712,13 +747,14 @@ func _update_labels() -> void:
 		_score_delta_label.visible = true
 	else:
 		_score_delta_label.visible = false
-	_player_turns_label.text =  str(_state.player_turns_remaining)
-	_ai_score_label.text = "Score: %d" % int(_disp_ai_score)
-	_ai_turns_label.text = "Turns: %d" % _state.ai_turns_remaining
+	_player_turns_label.text = str(_state.player_turns_remaining)
+	_ai_score_label.text = str(int(_disp_ai_score))
+	_ai_turns_label.text = str(_state.ai_turns_remaining)
 	_chip_label.text = str(_state.chip_count)
 	if _relic_display != null:
 		_relic_display.refresh(_relic_manager)
-	_enemy_name_label.text = _state.enemy_name
+	_enemy_header.text = "[wave]%s[/wave]" % _state.enemy_name
+	_boss_tag.visible = _match_is_boss
 	_enemy_gimmick_label.text = _state.enemy_gimmick
 	_match_info_label.text = "Act %d · Match %d" % [_state.act, _state.match_number]
 	if _state.active_player == CellState.Occupant.PLAYER and not _animating:
@@ -729,31 +765,42 @@ func _update_labels() -> void:
 		_style_turn_pill(false)
 
 
-func _apply_left_sidebar_theme() -> void:
+func _apply_hud_sidebar_theme() -> void:
+	var panel_style := _make_hud_panel_style()
+	_apply_panel_style(_sidebar_vbox, ["ScorePanel", "ChipsPanel", "PiecesPanelWrap", "RelicsPanel"], panel_style)
+	_apply_panel_style(_ai_sidebar_vbox, ["EnemyPanel", "ScorePanel"], panel_style)
+	if _match_progress_panel != null:
+		_match_progress_panel.add_theme_stylebox_override("panel", panel_style)
+	_style_player_sidebar_labels()
+	_style_ai_sidebar_labels()
+	_style_turn_pill(_state != null and _state.active_player == CellState.Occupant.PLAYER)
+
+
+func _make_hud_panel_style() -> StyleBoxFlat:
 	var panel_style := UITheme.make_surface_style(10, UITheme.SURFACE)
 	panel_style.content_margin_left = 0.0
 	panel_style.content_margin_right = 0.0
 	panel_style.content_margin_top = 0.0
 	panel_style.content_margin_bottom = 0.0
 	panel_style.shadow_size = 2
-	for panel_name in ["ScorePanel", "ChipsPanel", "PiecesPanelWrap", "RelicsPanel"]:
-		var panel := _sidebar_vbox.get_node_or_null(panel_name) as PanelContainer
+	return panel_style
+
+
+func _apply_panel_style(vbox: VBoxContainer, panel_names: Array[String], panel_style: StyleBoxFlat) -> void:
+	for panel_name in panel_names:
+		var panel := vbox.get_node_or_null(panel_name) as PanelContainer
 		if panel != null:
 			panel.add_theme_stylebox_override("panel", panel_style)
-	if _match_progress_panel != null:
-		_match_progress_panel.add_theme_stylebox_override("panel", panel_style)
-	_style_sidebar_labels()
-	_style_turn_pill(_state != null and _state.active_player == CellState.Occupant.PLAYER)
 
 
-func _style_sidebar_labels() -> void:
-	var headers: Array[Label] = [
-		_sidebar_vbox.get_node_or_null("ScorePanel/Margin/VBox/Header") as Label,
-		_sidebar_vbox.get_node_or_null("ChipsPanel/Margin/VBox/Header") as Label,
-	]
-	for lbl in headers:
+func _style_player_sidebar_labels() -> void:
+	for header_path in [
+		"ChipsPanel/Margin/VBox/HBoxContainer/Header",
+		"ChipsPanel/Margin/VBox/HBoxContainer/TurnHeader",
+	]:
+		var lbl := _sidebar_vbox.get_node_or_null(header_path) as Label
 		if lbl != null:
-			UITheme.style_label_muted(lbl, true)
+			lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	_player_score_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	_score_delta_label.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	_player_turns_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
@@ -761,6 +808,23 @@ func _style_sidebar_labels() -> void:
 	_chip_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	_match_info_label.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
 	_match_info_label.add_theme_font_size_override("font_size", 8)
+
+
+func _style_ai_sidebar_labels() -> void:
+	_enemy_header.add_theme_color_override("default_color", UITheme.AI)
+	_enemy_gimmick_label.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
+	_boss_tag.add_theme_color_override("font_color", UITheme.ACCENT_POP)
+	_boss_tag.add_theme_font_size_override("font_size", 7)
+	for header_path in [
+		"ScorePanel/Margin/VBox/HeaderRow/ScoreHeader",
+		"ScorePanel/Margin/VBox/HeaderRow/TurnHeader",
+	]:
+		var lbl := _ai_sidebar_vbox.get_node_or_null(header_path) as Label
+		if lbl != null:
+			lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
+	_ai_score_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
+	_ai_turns_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
+	_ai_turns_label.add_theme_font_size_override("font_size", 18)
 
 
 func _style_turn_pill(player_turn: bool) -> void:
@@ -973,9 +1037,6 @@ func _on_viewport_resized() -> void:
 
 	var vp := _layout.viewport_size
 	var pw: float = _layout.panel_width
-	var bh: float = _layout.bottom_height
-	var board_area_h: float = vp.y - bh
-
 	const hud_margin := 5.0
 	const match_progress_h := 26.0
 	_left_panel.visible = true
@@ -983,10 +1044,10 @@ func _on_viewport_resized() -> void:
 	_match_progress_panel.visible = true
 	_left_panel.position = Vector2(hud_margin, hud_margin)
 	_left_panel.size = Vector2(pw, vp.y - hud_margin * 2.0 - match_progress_h)
-	_match_progress_panel.position = Vector2(hud_margin, vp.y - hud_margin - match_progress_h)
+	#_match_progress_panel.position = Vector2(hud_margin, vp.y - hud_margin - match_progress_h)
 	_match_progress_panel.size = Vector2(pw, match_progress_h)
-	_right_panel.position = Vector2(vp.x - pw, 0.0)
-	_right_panel.size = Vector2(pw, board_area_h)
+	_right_panel.position = Vector2(vp.x - pw - hud_margin, hud_margin)
+	_right_panel.size = Vector2(pw, vp.y - hud_margin * 2.0 - match_progress_h)
 
 	if _state != null:
 		_refresh_all()

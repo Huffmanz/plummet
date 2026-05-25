@@ -2,9 +2,8 @@ class_name ShopRelicSlot extends PanelContainer
 
 signal relic_dropped(slot_index: int, data: Dictionary)
 
-@onready var _icon: ColorRect = %Icon
+@onready var _icon: ShopIcon = %ShopIcon
 @onready var _name_lbl: Label = %NameLabel
-@onready var _summary_lbl: Label = %SummaryLabel
 @onready var _empty_lbl: Label = %EmptyLabel
 
 var slot_index: int = 0
@@ -15,7 +14,12 @@ var _pulse_tween: Tween = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
+	UITheme.style_label_primary(_name_lbl, true)
 	_ignore_mouse_on_children(self)
+
+
+func _exit_tree() -> void:
+	GameTooltip.unbind(self)
 
 
 func is_occupied() -> bool:
@@ -29,23 +33,28 @@ func can_accept_relic_drop() -> bool:
 func setup(index: int, relic_id: String) -> void:
 	slot_index = index
 	_occupied = not relic_id.is_empty()
+	GameTooltip.unbind(self)
 	if _occupied:
 		var rd: RelicData = DataRegistry.get_relic(relic_id)
 		_name_lbl.text = rd.display_name if rd else relic_id
-		_summary_lbl.text = rd.description if rd else ""
-		_icon.color = ShopOfferCard.RELIC_BORDER
+		_icon.setup_relic(rd.icon if rd != null else null)
 		_icon.visible = true
 		_name_lbl.visible = true
-		_summary_lbl.visible = true
 		_empty_lbl.visible = false
 		add_theme_stylebox_override("panel", UITheme.make_surface_style(8, UITheme.SURFACE_LIGHT))
+		GameTooltip.bind(self, _tooltip_text(rd, relic_id))
 	else:
 		_icon.visible = false
 		_name_lbl.visible = false
-		_summary_lbl.visible = false
 		_empty_lbl.visible = true
 		_apply_empty_style()
 	_update_highlight()
+
+
+func _tooltip_text(rd: RelicData, id: String) -> String:
+	if rd == null:
+		return id
+	return "%s\n%s" % [rd.display_name, rd.description]
 
 
 func set_drop_highlight(on: bool) -> void:
@@ -110,8 +119,8 @@ func _update_pulse(on: bool) -> void:
 
 
 func _ignore_mouse_on_children(node: Node) -> void:
-	# PASS so drags hit this slot; IGNORE would pass through to controls behind.
+	# IGNORE excludes children from hit-testing so this slot receives drops.
 	for child in node.get_children():
 		if child is Control:
-			(child as Control).mouse_filter = Control.MOUSE_FILTER_PASS
+			(child as Control).mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_ignore_mouse_on_children(child)

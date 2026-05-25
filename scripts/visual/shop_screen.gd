@@ -148,17 +148,42 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = fals
 	for card in _offer_cards:
 		card.shop_audio = _audio
 		card.reduced_motion = reduced_motion
-	show()
-	_set_input_enabled(true)
 	for slot in _piece_slots:
 		slot.reduced_motion = reduced_motion
-	_refresh()
-	_set_bag_row_visible_for_fly_in(false)
+	_prepare_shop_content_hidden()
+	show()
+	modulate = Color(1.0, 1.0, 1.0, 0.0)
+	_set_input_enabled(false)
 	_update_shop_cursor()
 	if TransitionManager.is_transitioning():
-		TransitionManager.transition_finished.connect(_play_shop_intro_animations, CONNECT_ONE_SHOT)
+		TransitionManager.transition_finished.connect(_finish_shop_enter, CONNECT_ONE_SHOT)
 	else:
-		_play_shop_intro_animations.call_deferred()
+		_finish_shop_enter.call_deferred()
+
+
+func _prepare_shop_content_hidden() -> void:
+	_set_chip_display(_displayed_chips)
+	_reroll_btn.disabled = _rerolled or _chips < COST_REROLL
+	_reroll_btn.button_text = "Rerolled" if _rerolled else "Reroll (%d)" % COST_REROLL
+	_refresh_offers(true)
+	_refresh_bag()
+	_refresh_relics()
+	_set_bag_row_visible_for_fly_in(false)
+	for card in _offer_cards:
+		if card.visible:
+			card.scale = Vector2.ONE
+			card.pivot_offset = Vector2.ZERO
+
+
+func _finish_shop_enter() -> void:
+	if not is_inside_tree():
+		return
+	modulate = Color.WHITE
+	await _play_shop_intro_animations()
+	if not is_inside_tree():
+		return
+	_set_input_enabled(true)
+	_update_shop_cursor()
 
 
 func _roll_offers() -> Array[Dictionary]:
@@ -316,7 +341,7 @@ func _refresh_offers(hide_until_deal_in: bool = false) -> void:
 					title = rd.display_name
 					type_lbl = ShopOfferCard.format_relic_type()
 					desc = rd.description
-					icon_color = ShopOfferCard.RELIC_BORDER
+					icon_color = ShopIcon.RELIC_BORDER
 					icon_texture = rd.icon
 				hint = "drag to relic row"
 				cost = _relic_purchase_cost()
@@ -325,8 +350,9 @@ func _refresh_offers(hide_until_deal_in: bool = false) -> void:
 		var can_use := not used and _chips >= cost
 		if not used and kind == "modifier" and _count_empty_mod_slots() == 0:
 			can_use = false
-		if not used and kind == "relic" and not _relic_manager.can_add_relic():
-			can_use = false
+		if not used and kind == "relic":
+			if _count_empty_relic_slots() == 0 or not _relic_manager.can_add_relic():
+				can_use = false
 		card.set_affordable(can_use)
 		if hide_until_deal_in and not used:
 			var hidden := card.modulate
@@ -353,14 +379,26 @@ func _play_shop_intro_animations() -> void:
 	await _play_offer_deal_in()
 	if not is_inside_tree():
 		return
-	_set_bag_row_visible_for_fly_in(true)
-	await _bag_fly_in.play_fly_in()
+	await _play_bag_deal_in()
 
 
 func _play_offer_deal_in() -> void:
 	_offer_fly_in.reduced_motion = reduced_motion
 	_reset_offer_cards_for_deal_in()
 	await _offer_fly_in.play_fly_in()
+
+
+func _play_bag_deal_in() -> void:
+	_bag_fly_in.reduced_motion = reduced_motion
+	if reduced_motion:
+		_set_bag_row_visible_for_fly_in(true)
+		return
+	# Row stays transparent until slots are wrapped and hidden behind pan alpha 0.
+	await _bag_fly_in.prepare_fly_in()
+	if not is_inside_tree():
+		return
+	_bag_fly_in.modulate = Color.WHITE
+	await _bag_fly_in.run_fly_in_tween()
 
 
 func _reset_offer_cards_for_deal_in() -> void:
@@ -443,6 +481,36 @@ func _count_empty_mod_slots() -> int:
 	return n
 
 
+func _count_empty_relic_slots() -> int:
+	var n := 0
+	for slot in _relic_slots:
+		if slot.can_accept_relic_drop():
+			n += 1
+	return n
+
+
+func _offer_drag_payload(offer_idx: int) -> Dictionary:
+	if offer_idx < 0 or offer_idx >= _offers.size():
+		return {}
+	var offer := _offers[offer_idx]
+	var kind: String = offer.get("kind", "")
+	return {
+		"type": "shop_offer",
+		"index": offer_idx,
+		"kind": kind,
+		"id": offer.get("id", ""),
+		"cost": _offer_cost(kind),
+	}
+
+
+func _find_highlighted_relic_slot() -> int:
+	for i in _relic_slots.size():
+		var slot := _relic_slots[i]
+		if slot.is_drop_highlight_active() and slot.can_accept_relic_drop():
+			return i
+	return -1
+
+
 func _process(_delta: float) -> void:
 	if visible:
 		_update_shop_cursor()
@@ -505,13 +573,24 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 	elif kind == "piece_type":
 		for slot in _piece_slots:
 			slot.set_drop_highlight(true)
-	elif kind == "relic" and _relic_manager.can_add_relic():
+	elif kind == "relic":
 		for slot in _relic_slots:
-			slot.set_drop_highlight(not slot.is_occupied())
+			slot.set_drop_highlight(slot.can_accept_relic_drop())
 
 
 func _on_offer_drag_ended() -> void:
 	var ended_idx := _drag_offer_idx
+	if (
+		not _drag_drop_accepted
+		and ended_idx >= 0
+		and ended_idx < _offers.size()
+		and not _offer_used[ended_idx]
+	):
+		var kind: String = _offers[ended_idx].get("kind", "")
+		if kind == "relic":
+			var slot_idx := _find_highlighted_relic_slot()
+			if slot_idx >= 0:
+				_on_relic_dropped(slot_idx, _offer_drag_payload(ended_idx))
 	_offer_dragging = false
 	_drag_offer_idx = -1
 	if (
@@ -654,12 +733,13 @@ func _on_relic_dropped(slot_idx: int, data: Dictionary) -> void:
 	if offer_idx < _offer_cards.size():
 		icon = _offer_cards[offer_idx].take_cursor_icon()
 	var apply := func() -> void:
-		if cost == 0:
-			if not _relic_manager.try_patron():
-				return
-		else:
+		if cost > 0:
 			_chips -= cost
+		elif not _relic_manager.try_patron():
+			return
 		if not _relic_manager.add_relic(offer.get("id", ""), slot_idx):
+			if cost > 0:
+				_chips += cost
 			return
 		_offer_used[offer_idx] = true
 		if _audio != null:
@@ -729,6 +809,14 @@ func _on_continue() -> void:
 	await TransitionManager.transition_screen(func():
 		hide()
 	)
+	if not is_inside_tree():
+		return
+	call_deferred("_emit_shop_closed")
+
+
+func _emit_shop_closed() -> void:
+	if not is_inside_tree():
+		return
 	shop_closed.emit(_chips)
 
 
@@ -764,12 +852,7 @@ func _update_piece_info_popup(delta: float) -> void:
 
 
 func _piece_type_from_id(id: String) -> Piece.Type:
-	match id:
-		"PRISM": return Piece.Type.PRISM
-		"COIN": return Piece.Type.COIN
-		"EMBER": return Piece.Type.EMBER
-		"SHARD": return Piece.Type.SHARD
-		_: return Piece.Type.NORMAL
+	return PieceVisualUtil.piece_type_from_registry_id(id)
 
 
 func _piece_type_data(t: Piece.Type) -> PieceTypeData:

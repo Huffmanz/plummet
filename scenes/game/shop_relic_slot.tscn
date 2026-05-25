@@ -1,6 +1,7 @@
 [gd_scene format=3 uid="uid://b3e6lwoj0jiwu"]
 
 [ext_resource type="Script" uid="uid://daq3o7kje7jh1" path="res://scripts/visual/shop_relic_slot.gd" id="1_slot"]
+[ext_resource type="PackedScene" uid="uid://c8k2shopicon7m3" path="res://scenes/game/shop_icon.tscn" id="2_icon"]
 
 [node name="ShopRelicSlot" type="PanelContainer" unique_id=1983432133]
 size_flags_horizontal = 3
@@ -18,36 +19,24 @@ theme_override_constants/margin_bottom = 4
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="Icon" type="ColorRect" parent="Margin/HBox" unique_id=24644485]
+[node name="ShopIcon" parent="Margin/HBox" instance=ExtResource("2_icon")]
 unique_name_in_owner = true
 visible = false
-custom_minimum_size = Vector2(20, 20)
+custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 size_flags_vertical = 4
-color = Color(0.302, 0.659, 0.69, 1)
+texture_min_size = Vector2(12, 12)
+glyph_min_size = Vector2(8, 8)
 
-[node name="TextCol" type="VBoxContainer" parent="Margin/HBox" unique_id=726204732]
+[node name="NameLabel" type="Label" parent="Margin/HBox" unique_id=1672977521]
+unique_name_in_owner = true
+visible = false
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 4
-theme_override_constants/separation = 1
-
-[node name="NameLabel" type="Label" parent="Margin/HBox/TextCol" unique_id=1672977521]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
 theme_override_font_sizes/font_size = 10
 text = "Relic"
 clip_text = true
-
-[node name="SummaryLabel" type="Label" parent="Margin/HBox/TextCol" unique_id=12652214]
-unique_name_in_owner = true
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 8
-text = "Summary"
-clip_text = true
-max_lines_visible = 2
 
 [node name="EmptyLabel" type="Label" parent="Margin/HBox" unique_id=705903961]
 unique_name_in_owner = true

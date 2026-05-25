@@ -22,7 +22,13 @@ func _process(_delta: float) -> void:
 		queue_redraw()
 		return
 	for c in RenderState.COLS:
-		if c < state.landing_rows.size() and state.landing_rows[c] >= RenderState.ROWS - 2 and state.landing_rows[c] >= 0:
+		if c >= state.landing_rows.size():
+			continue
+		var lr := state.landing_rows[c]
+		if lr < 0:
+			continue
+		var near_full := lr <= 1 if state.gravity_flipped else lr >= RenderState.ROWS - 2
+		if near_full:
 			queue_redraw()
 			return
 

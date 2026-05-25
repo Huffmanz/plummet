@@ -7,7 +7,7 @@ const _BOSS_RELIC_OVERLAY_SCENE := preload("res://scenes/run/boss_relic_offer_ov
 const _ENEMY_SCHEDULE: Array = [
 	[],  # unused index 0
 	["The Stoic", "The Blocker", "", "The Mirror"],          # act 1
-	["The Gravedigger", "The Architect", "", "The Inverter"], # act 2
+	["The Gravedigger", "The Architect", "", "The Taxman"], # act 2
 	["The Painter", "The Shifter", "", "The Hoarder"],        # act 3
 ]
 const _ENEMY_GIMMICK: Dictionary = {
@@ -18,7 +18,7 @@ const _ENEMY_GIMMICK: Dictionary = {
 	"The Mirror":     "Copies your modifier onto their piece",
 	"The Painter":    "Recolors a 2×2 area every 6 turns",
 	"The Shifter":    "Slides board contents every 8 drops",
-	"The Inverter":   "Flips the board once per match",
+	"The Taxman":     "Each piece you place costs 1 chip",
 	"The Hoarder":    "Scores double, but only pure-color clears",
 }
 

@@ -9,7 +9,7 @@ const _ENEMY_GIMMICK: Dictionary = {
 	"The Mirror": "Copies your modifier onto their piece",
 	"The Painter": "Recolors a 2×2 area every 6 turns",
 	"The Shifter": "Slides board contents every 8 drops",
-	"The Inverter": "Flips the board once per match",
+	"The Taxman": "Each piece you place costs 1 chip",
 	"The Hoarder": "Scores double, but only pure-color clears",
 }
 
@@ -28,8 +28,8 @@ const _ENEMIES: Array[Dictionary] = [
 		"tip": "Every 6 AI turns, steals a 2×2 patch (PAINT popup)."},
 	{"id": "The Shifter", "boss": false, "act": 3,
 		"tip": "Every 8 drops, the whole board slides left or right."},
-	{"id": "The Inverter", "boss": true, "act": 2,
-		"tip": "Boss — once per match when AI trails by 200+, gravity flips for 3 AI turns. Use +500 AI to trigger."},
+	{"id": "The Taxman", "boss": true, "act": 2,
+		"tip": "Boss — every piece you drop costs 1 chip. Clears can still earn chips; placements add up fast."},
 	{"id": "The Hoarder", "boss": true, "act": 3,
 		"tip": "Boss — AI only scores pure-color lines (pollute with your pieces)."},
 ]
@@ -94,7 +94,7 @@ func _restart_match() -> void:
 	var gimmick: String = _ENEMY_GIMMICK.get(_selected_id, "No gimmick") as String
 	_game_board.setup_match(
 		_player_bag,
-		0,
+		20,
 		0,
 		entry.act,
 		1,
@@ -131,4 +131,4 @@ func _cheat_player_score() -> void:
 
 func _cheat_ai_score() -> void:
 	_game_board.gimmick_test_add_score(Piece.Owner.AI, 500)
-	_status_label.text = "+500 AI (helps trigger Inverter)"
+	_status_label.text = "+500 AI"

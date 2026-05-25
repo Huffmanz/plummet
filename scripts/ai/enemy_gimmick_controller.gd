@@ -4,8 +4,11 @@ const BLOCKER_FREEZE_INTERVAL := 5
 const BLOCKER_FREEZE_PLAYER_TURNS := 2
 const PAINTER_INTERVAL := 6
 const SHIFTER_INTERVAL := 8
-const INVERTER_TRAIL_THRESHOLD := 200
+const INVERTER_FLIP_INTERVAL := 10
 const INVERTER_FLIP_TURNS := 3
+const INVERTER_ANIM_NONE := 0
+const INVERTER_ANIM_FLIP_ON := 1
+const INVERTER_ANIM_FLIP_OFF := -1
 
 var enemy_name: String = "The Stoic"
 
@@ -17,6 +20,7 @@ var _score_tracker: ScoreTracker
 var _total_drops: int = 0
 var _drops_since_blocker_freeze: int = 0
 var _drops_since_shifter: int = 0
+var _drops_since_inverter_flip: int = 0
 var _ai_turns_since_paint: int = 0
 
 # Blocker
@@ -26,8 +30,8 @@ var _player_last_col: int = -1
 var _copied_modifier: String = ""
 
 # Inverter
-var _inverter_used: bool = false
 var _inverted_turns_left: int = 0
+var pending_inverter_anim: int = INVERTER_ANIM_NONE
 
 # Paint flash cells (visual feedback)
 var _paint_flash_cells: Array[Vector2i] = []
@@ -45,7 +49,7 @@ func get_noise() -> float:
 			return 0.12
 		"The Blocker", "The Gravedigger", "The Architect":
 			return 0.08
-		"The Mirror", "The Inverter", "The Hoarder":
+		"The Mirror", "The Inverter", "The Hoarder", "The Taxman":
 			return 0.03
 		"The Painter", "The Shifter":
 			return 0.05
@@ -73,6 +77,8 @@ func setup(ai: AIOpponent, board: BoardEngine, score_tracker: ScoreTracker) -> v
 			_setup_inverter()
 		"The Hoarder":
 			_setup_hoarder()
+		"The Taxman":
+			pass  # placement chip tax handled in game_board
 
 
 func is_gravity_flipped() -> bool:
@@ -110,6 +116,8 @@ func on_drop() -> void:
 	_total_drops += 1
 	_drops_since_blocker_freeze += 1
 	_drops_since_shifter += 1
+	if enemy_name == "The Inverter":
+		_drops_since_inverter_flip += 1
 
 
 func filter_clears(runs: Array[MatchedRun]) -> Array[MatchedRun]:
@@ -124,10 +132,13 @@ func filter_clears(runs: Array[MatchedRun]) -> Array[MatchedRun]:
 
 
 func on_turn_advanced() -> void:
-	if enemy_name == "The Inverter" and _inverted_turns_left > 0:
-		_inverted_turns_left -= 1
-		if _inverted_turns_left <= 0:
-			_restore_gravity()
+	pass
+
+
+func consume_pending_inverter_anim() -> int:
+	var pending := pending_inverter_anim
+	pending_inverter_anim = INVERTER_ANIM_NONE
+	return pending
 
 
 func adjust_ai_turn_score(turn: TurnScore, result: CascadeResult) -> TurnScore:
@@ -353,27 +364,46 @@ func _would_break_player_line(from_c: int, from_r: int, to_c: int, to_r: int) ->
 
 func _setup_inverter() -> void:
 	_ai.register_on_turn_start(_on_inverter_turn_start)
+	_ai.register_on_player_turn_start(_on_inverter_player_turn_start)
 
 
 func _on_inverter_turn_start(_board_ref: BoardEngine) -> void:
-	if _inverter_used or _inverted_turns_left > 0:
+	_inverter_on_turn_start()
+
+
+func _on_inverter_player_turn_start(_board_ref: BoardEngine) -> void:
+	_inverter_on_turn_start()
+
+
+func _inverter_on_turn_start() -> void:
+	if _inverted_turns_left > 0:
+		_tick_inverter_turn()
 		return
-	if _score_tracker.player_score <= _score_tracker.ai_score + INVERTER_TRAIL_THRESHOLD:
+	_try_inverter_flip()
+
+
+func _try_inverter_flip() -> void:
+	if _drops_since_inverter_flip < INVERTER_FLIP_INTERVAL:
 		return
-	_inverter_used = true
+	_drops_since_inverter_flip = 0
 	_inverted_turns_left = INVERTER_FLIP_TURNS
-	_board.gravity_up = true
+	pending_inverter_anim = INVERTER_ANIM_FLIP_ON
 
 
-func _restore_gravity() -> void:
-	_board.gravity_up = false
-	_board.apply_gravity()
-	while true:
-		var runs: Array[MatchedRun] = _board.detect_clears()
-		if runs.is_empty():
-			break
-		_board.remove_clears(runs)
-		_board.apply_gravity()
+func _tick_inverter_turn() -> void:
+	_inverted_turns_left -= 1
+	if _inverted_turns_left <= 0:
+		pending_inverter_anim = INVERTER_ANIM_FLIP_OFF
+
+
+# --- Taxman ---
+
+func is_taxman() -> bool:
+	return enemy_name == "The Taxman"
+
+
+func chip_tax_per_placement() -> int:
+	return 1 if is_taxman() else 0
 
 
 # --- Hoarder ---

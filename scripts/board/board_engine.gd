@@ -57,6 +57,18 @@ func apply_gravity() -> void:
 	gravity_applied.emit()
 
 
+# Swap rows top↔bottom (Inverter board flip). Self-inverse — call again to undo.
+func mirror_vertical() -> void:
+	var rows: int = _grid[0].size()
+	for c in _grid.size():
+		for r in range(rows / 2):
+			var mirror_r: int = rows - 1 - r
+			var a: Piece = _grid[c][r]
+			var b: Piece = _grid[c][mirror_r]
+			_grid[c][r] = b
+			_grid[c][mirror_r] = a
+
+
 func freeze_column(col: int, turns: int) -> void:
 	frozen_columns[col] = turns
 
@@ -131,6 +143,15 @@ func get_landing_row(col: int) -> int:
 	return _lowest_empty_row(col)
 
 
+func is_column_near_full(col: int) -> bool:
+	var landing := get_landing_row(col)
+	if landing < 0:
+		return true
+	if gravity_up:
+		return landing <= 1
+	return landing >= ROWS - 2
+
+
 # Returns the row a Ghost piece would land on: passes through the topmost occupied
 # cell, then settles at the first available slot below it.
 # Returns -1 if no valid landing exists (packed stack or top piece at floor).
@@ -178,15 +199,11 @@ func is_board_full() -> bool:
 func _lowest_empty_row(col: int) -> int:
 	var rows: int = _grid[col].size()
 	if gravity_up:
-		var lowest_occupied := rows
+		# Stack hangs from the ceiling (row ROWS-1). Land in the topmost open cell.
 		for r in range(rows - 1, -1, -1):
-			if _grid[col][r] != null:
-				lowest_occupied = r
-				break
-		if lowest_occupied == rows:
-			return rows - 1
-		var landing := lowest_occupied - 1
-		return -1 if landing < 0 else landing
+			if _grid[col][r] == null:
+				return r
+		return -1
 	var highest_occupied := -1
 	for r in rows:
 		if _grid[col][r] != null:

@@ -63,9 +63,16 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 	var t_ms := Time.get_ticks_msec() * 0.006
 	for c in RenderState.COLS:
 		var lr := state.landing_rows[c] if c < state.landing_rows.size() else -1
-		if lr >= RenderState.ROWS - 2 and lr >= 0:
+		var near_full := false
+		if lr >= 0:
+			if state.gravity_flipped:
+				near_full = lr <= 1
+			else:
+				near_full = lr >= RenderState.ROWS - 2
+		if near_full:
 			var pulse := 0.5 + 0.5 * sin(t_ms)
-			var base_alpha := 0.35 if lr == RenderState.ROWS - 1 else 0.18
+			var at_limit := lr <= 0 if state.gravity_flipped else lr >= RenderState.ROWS - 1
+			var base_alpha := 0.35 if at_limit else 0.18
 			canvas.draw_rect(_column_rect(c), Color(UITheme.DANGER.r, UITheme.DANGER.g, UITheme.DANGER.b, base_alpha * pulse))
 
 

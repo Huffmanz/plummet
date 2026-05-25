@@ -9,7 +9,10 @@ func _ready() -> void:
 	test_architect_filters_four_clear()
 	test_gravedigger_places_locked()
 	test_architect_ignores_four_clear_scoring()
-	test_inverter_triggers_when_trailing()
+	test_inverter_triggers_on_drop_interval()
+	test_inverter_landing_row_at_ceiling()
+	test_taxman_chip_tax_per_placement()
+	test_taxman_no_placement_tax_other_enemies()
 	print("-----------------------------")
 	print("Gimmick results: %d passed, %d failed" % [_passed, _failed])
 
@@ -78,13 +81,33 @@ func test_architect_ignores_four_clear_scoring() -> void:
 	_assert("Architect scores 0 for 4-clear", turn.ai_points == 0)
 
 
-func test_inverter_triggers_when_trailing() -> void:
+func test_inverter_triggers_on_drop_interval() -> void:
 	var board := BoardEngine.new()
 	var ai := AIOpponent.new(0.0)
 	var st := ScoreTracker.new()
-	st.player_score = 500
-	st.ai_score = 100
 	var gimmick := EnemyGimmickController.for_enemy("The Inverter")
 	gimmick.setup(ai, board, st)
-	gimmick._on_inverter_turn_start(board)
-	_assert("Inverter flips gravity when trailing", board.gravity_up)
+	for i in EnemyGimmickController.INVERTER_FLIP_INTERVAL:
+		gimmick.on_drop()
+	gimmick._inverter_on_turn_start()
+	_assert("Inverter schedules flip after drop interval",
+		gimmick.pending_inverter_anim == EnemyGimmickController.INVERTER_ANIM_FLIP_ON)
+	_assert("Drop counter resets on flip", gimmick._drops_since_inverter_flip == 0)
+
+
+func test_inverter_landing_row_at_ceiling() -> void:
+	var board := BoardEngine.new()
+	board.gravity_up = true
+	_assert("Empty inverted column lands at ceiling", board.get_landing_row(3) == BoardEngine.ROWS - 1)
+	board.drop_piece(3, Piece.new(Piece.Owner.AI))
+	_assert("Next inverted landing below stack", board.get_landing_row(3) == BoardEngine.ROWS - 2)
+
+
+func test_taxman_chip_tax_per_placement() -> void:
+	var gimmick := EnemyGimmickController.for_enemy("The Taxman")
+	_assert("Taxman charges 1 chip per placement", gimmick.chip_tax_per_placement() == 1)
+
+
+func test_taxman_no_placement_tax_other_enemies() -> void:
+	var gimmick := EnemyGimmickController.for_enemy("The Stoic")
+	_assert("Stoic charges 0 per placement", gimmick.chip_tax_per_placement() == 0)

@@ -85,6 +85,7 @@ var _match_enemy_gimmick: String = "No gimmick"
 var _match_is_boss: bool = false
 var _match_max_cascade: int = 0
 var _match_cross_color_count: int = 0
+var _was_gravity_flipped: bool = false
 
 
 func _ready() -> void:
@@ -174,6 +175,7 @@ func setup_match(
 ) -> void:
 	_player_bag = bag
 	_chip_count = chips
+	_sync_chip_display()
 	_win_streak = win_streak
 	_match_act = act
 	_match_num = match_num
@@ -206,6 +208,7 @@ func _init_game() -> void:
 	_score_milestone = 0
 	_match_max_cascade = 0
 	_match_cross_color_count = 0
+	_was_gravity_flipped = false
 	if _renderer != null:
 		_renderer.cascade_heat = 0.0
 
@@ -227,8 +230,7 @@ func update_state(rs: RenderState) -> void:
 func get_cell_at_local_pos(local_pos: Vector2) -> Vector2i:
 	if _renderer == null or _renderer.layout == null:
 		return Vector2i(-1, -1)
-	var gf := _state.gravity_flipped if _state != null else false
-	return _renderer.cell_from_position(local_pos, gf)
+	return _renderer.cell_from_position(local_pos, _gravity_flipped())
 
 
 func sandbox_place_cell(col: int, row: int, owner: Piece.Owner, piece_type: Piece.Type, modifier: String = "") -> void:
@@ -263,21 +265,42 @@ func sandbox_clear_cell(col: int, row: int) -> void:
 	_refresh_all()
 
 
-func _build_state() -> RenderState:
+func _gravity_flipped() -> bool:
+	return _board != null and _board.gravity_up
+
+
+func _is_taxman_match() -> bool:
+	return _match_enemy_name == "The Taxman"
+
+
+func _make_render_state(gravity_flipped_display: bool) -> RenderState:
 	var frozen: Array = _gimmick.get_frozen_columns() if _gimmick != null else []
 	var locked: Array[Vector2i] = _gimmick.get_locked_cells() if _gimmick != null else []
-	var gf: bool = _gimmick.is_gravity_flipped() if _gimmick != null else false
 	return _builder.build(
 		_board, _score_tracker, _turn_manager,
-		_player_bag.current(), _player_bag.get_queue_pieces(2), frozen, locked, gf,
+		_player_bag.current(), _player_bag.get_queue_pieces(2), frozen, locked, gravity_flipped_display,
 		_match_act, _match_num, _match_enemy_name, _match_enemy_gimmick,
 		_chip_count, _animating
 	)
 
 
+func _build_state() -> RenderState:
+	var gf: bool = _gravity_flipped()
+	if gf != _was_gravity_flipped and _match_active and _anim_layer != null:
+		_was_gravity_flipped = gf
+		if not _anim_layer.reduced_motion:
+			_anim_layer.play_shake(8.0 if gf else 4.0, 12 if gf else 6)
+	else:
+		_was_gravity_flipped = gf
+	return _make_render_state(gf)
+
+
 func _on_player_turn_started(_remaining: int) -> void:
 	if _ai != null and _board != null:
 		_ai.fire_on_player_turn_start(_board)
+	await _run_pending_inverter_animation()
+	_state = _build_state()
+	_refresh_all()
 
 
 func _on_column_selected(col: int) -> void:
@@ -288,10 +311,13 @@ func _on_column_selected(col: int) -> void:
 	_renderer.hovered_col = -1
 	_ghost_canvas.queue_redraw()
 
+	await _run_pending_inverter_animation()
+
 	# Player turn — drop and animate
 	var p_piece: Piece = _player_bag.current()
 	_player_bag.advance()
-	var gf := _state.gravity_flipped if _state != null else false
+	_state = _build_state()
+	var gf := _gravity_flipped()
 	var landing_row: int = _board.drop_piece(col, p_piece)
 	if landing_row < 0:
 		_animating = false
@@ -299,6 +325,7 @@ func _on_column_selected(col: int) -> void:
 		_refresh_all()
 		return
 	_modifier_resolver.set_landed(col, landing_row, p_piece)
+	_apply_placement_chip_tax()
 	if _gimmick != null:
 		_gimmick.on_drop()
 	_ai.fire_on_player_piece_landed(_board, col, landing_row)
@@ -313,6 +340,7 @@ func _on_column_selected(col: int) -> void:
 	var landing_chips := _modifier_resolver.on_land(_board)
 	if landing_chips > 0:
 		_chip_count += landing_chips
+		_sync_chip_display()
 		_spawn_chip_popups(landing_chips)
 	if p_piece.has_modifier():
 		var _md := DataRegistry.get_modifier(p_piece.modifier)
@@ -371,8 +399,11 @@ func _on_column_selected(col: int) -> void:
 
 func _run_ai_turn_animated() -> void:
 	await _run_ai_thinking_dots()
+	await _run_pending_inverter_animation()
 
 	var ai_col := _ai.choose_column(_board)
+	_state = _build_state()
+	_refresh_all()
 	if ai_col < 0:
 		_turn_manager.on_ai_skipped()
 		_state = _build_state()
@@ -384,7 +415,7 @@ func _run_ai_turn_animated() -> void:
 	await get_tree().create_timer(0.3).timeout
 	_anim_layer.stop_ai_preview()
 
-	var gf := _state.gravity_flipped if _state != null else false
+	var gf := _gravity_flipped()
 	var ai_landing_row := _board.get_landing_row(ai_col)
 	_board.drop_piece(ai_col, _ai.current_piece)
 	var ai_piece := _ai.current_piece
@@ -821,7 +852,7 @@ func _update_labels() -> void:
 	_player_turns_label.text = str(_state.player_turns_remaining)
 	_ai_score_label.text = str(int(_disp_ai_score))
 	_ai_turns_label.text = str(_state.ai_turns_remaining)
-	_chip_label.text = str(_state.chip_count)
+	_chip_label.text = str(_chip_count)
 	if _relic_display != null:
 		_relic_display.refresh(_relic_manager)
 	_enemy_header.text = "[wave]%s[/wave]" % _state.enemy_name
@@ -927,6 +958,73 @@ func _style_turn_pill(player_turn: bool) -> void:
 	_turn_pill.add_theme_stylebox_override("panel", sb)
 
 
+func _run_pending_inverter_animation() -> void:
+	if _gimmick == null or _board == null:
+		return
+	var pending: int = _gimmick.consume_pending_inverter_anim()
+	match pending:
+		EnemyGimmickController.INVERTER_ANIM_FLIP_ON:
+			await _play_inverter_flip_on()
+		EnemyGimmickController.INVERTER_ANIM_FLIP_OFF:
+			await _play_inverter_flip_off()
+
+
+func _play_inverter_flip_on() -> void:
+	if _anim_layer != null and not _anim_layer.reduced_motion:
+		_anim_layer.play_shake(8.0, 12)
+	# Mirror first so the floor stack maps to ceiling rows; then one settle in flipped coords.
+	_board.mirror_vertical()
+	_board.gravity_up = true
+	_was_gravity_flipped = true
+	await _animate_board_apply_gravity(true)
+	_state = _make_render_state(true)
+	_refresh_all()
+
+
+func _play_inverter_flip_off() -> void:
+	if _anim_layer != null and not _anim_layer.reduced_motion:
+		_anim_layer.play_shake(4.0, 6)
+	_board.mirror_vertical()
+	_board.gravity_up = false
+	_was_gravity_flipped = false
+	await _animate_board_apply_gravity(false)
+	while true:
+		var runs: Array[MatchedRun] = _board.detect_clears()
+		if _gimmick != null:
+			runs = _gimmick.filter_clears(runs)
+		if runs.is_empty():
+			break
+		_board.remove_clears(runs)
+		await _animate_board_apply_gravity(false)
+	_state = _build_state()
+	_refresh_all()
+
+
+func _animate_board_apply_gravity(display_flipped: bool) -> void:
+	if _board == null:
+		return
+	if _anim_layer == null or _anim_layer.reduced_motion:
+		_board.apply_gravity()
+		_state = _make_render_state(display_flipped)
+		_refresh_all()
+		return
+	var pre := _make_render_state(display_flipped)
+	_board.apply_gravity()
+	var post := _make_render_state(display_flipped)
+	var moves: Array = _compute_gravity_moves(pre, post)
+	if moves.is_empty():
+		_state = post
+		_refresh_all()
+		return
+	_set_gravity_hidden(moves)
+	_board_canvas.refresh(pre)
+	_ghost_canvas.refresh(pre)
+	await _anim_layer.play_gravity(moves, display_flipped)
+	_renderer.gravity_hidden_cells.clear()
+	_state = post
+	_refresh_all()
+
+
 func _compute_gravity_moves(pre: RenderState, post: RenderState) -> Array:
 	var moves := []
 	for col in RenderState.COLS:
@@ -1026,6 +1124,32 @@ func _check_col_fill_flash(col: int) -> void:
 		_anim_layer.play_col_flash(col)
 
 
+func _sync_chip_display() -> void:
+	if _state != null:
+		_state.chip_count = _chip_count
+	if _chip_label != null:
+		_chip_label.text = str(_chip_count)
+
+
+func _apply_placement_chip_tax() -> void:
+	var tax := _gimmick.chip_tax_per_placement() if _gimmick != null else 0
+	_apply_chip_tax_amount(tax)
+
+
+func _apply_chip_tax_amount(amount: int) -> void:
+	if amount <= 0 or not _is_taxman_match():
+		return
+	_chip_count = maxi(0, _chip_count - amount)
+	_sync_chip_display()
+	if _anim_layer == null:
+		return
+	var chip_pos := Vector2(30.0, 10.0)
+	if _chip_label != null:
+		chip_pos = _chip_label.global_position - global_position + Vector2(30.0, 10.0)
+	var label := "-%d chip" % amount if amount == 1 else "-%d chips" % amount
+	_anim_layer.spawn_popup(chip_pos, label, Color(1.0, 0.3, 0.3))
+
+
 func _award_chips(result: CascadeResult, owner: Piece.Owner) -> void:
 	if owner != Piece.Owner.PLAYER:
 		return
@@ -1034,6 +1158,7 @@ func _award_chips(result: CascadeResult, owner: Piece.Owner) -> void:
 		if tc.run.owner == Piece.Owner.PLAYER:
 			_chip_count += chips_per_clear
 			_chip_count += tc.coin_chips
+	_sync_chip_display()
 
 
 # Removes the two pieces above each Shard piece that cleared (before Detonate row wipe).

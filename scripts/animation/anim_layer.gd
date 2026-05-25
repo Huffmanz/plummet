@@ -52,6 +52,7 @@ var _drop_owner: CellState.Occupant = CellState.Occupant.PLAYER
 var _drop_piece_type: CellState.PieceType = CellState.PieceType.NORMAL
 var _drop_modifier: String = ""
 var _drop_phase: int = 0  # 0=fall 1=squash 2=bounce_up 3=bounce_down 4=settle
+var _drop_falls_down: bool = true
 var _drop_phase_t: float = 0.0
 var _drop_scale_y: float = 1.0
 var _drop_burst_rect: Rect2 = Rect2()
@@ -309,13 +310,15 @@ func _play_run_clear_sfx() -> void:
 
 func _tick_drop(delta: float) -> void:
 	match _drop_phase:
-		0:  # accelerating fall
-			_drop_vel += _DROP_ACCEL * delta
+		0:  # accelerating fall (down or up when gravity flipped)
+			var accel := _DROP_ACCEL if _drop_falls_down else -_DROP_ACCEL
+			_drop_vel += accel * delta
 			_drop_y += _drop_vel * delta
 			_drop_trail.append(Vector2(_drop_x + _drop_cs * 0.5, _drop_y + _drop_cs * 0.5))
 			if _drop_trail.size() > _TRAIL_LEN:
 				_drop_trail.pop_front()
-			if _drop_y >= _drop_target_y:
+			var landed := _drop_y >= _drop_target_y if _drop_falls_down else _drop_y <= _drop_target_y
+			if landed:
 				_drop_y = _drop_target_y
 				_drop_trail.clear()
 				_drop_phase = 1
@@ -582,7 +585,7 @@ func _draw_drop_anim() -> void:
 
 	if _drop_phase == 0 and not reduced_motion:
 		# Drop shadow — ellipse at landing cell that shrinks as piece approaches
-		var cur_dist := maxf(0.0, _drop_target_y - _drop_y)
+		var cur_dist := absf(_drop_target_y - _drop_y)
 		var dist_frac := clampf(cur_dist / (_drop_cs * 6.0), 0.0, 1.0)
 		var shadow_rx := _drop_cs * 0.38 * lerpf(0.9, 0.25, dist_frac)
 		var shadow_alpha := lerpf(0.45, 0.08, dist_frac)
@@ -636,7 +639,7 @@ func _draw_drop_to(canvas: CanvasItem) -> void:
 	var radius := _drop_cs * 0.42
 
 	if _drop_phase == 0 and not reduced_motion:
-		var cur_dist := maxf(0.0, _drop_target_y - _drop_y)
+		var cur_dist := absf(_drop_target_y - _drop_y)
 		var dist_frac := clampf(cur_dist / (_drop_cs * 6.0), 0.0, 1.0)
 		var shadow_rx := _drop_cs * 0.38 * lerpf(0.9, 0.25, dist_frac)
 		var shadow_alpha := lerpf(0.45, 0.08, dist_frac)
@@ -824,11 +827,17 @@ func play_drop(
 	var target_rect := renderer.cell_rect(col, landing_row, gravity_flipped)
 	var cs := renderer.layout.cell_size
 	var step := cs + LayoutManager.CELL_GAP
+	var board_h := RenderState.ROWS * cs + (RenderState.ROWS - 1) * LayoutManager.CELL_GAP
 	_drop_x = renderer.layout.board_origin.x + col * step
-	_drop_y = renderer.layout.board_origin.y - step
+	_drop_falls_down = not gravity_flipped
+	if _drop_falls_down:
+		_drop_y = renderer.layout.board_origin.y - step
+		_drop_vel = _DROP_START_VEL
+	else:
+		_drop_y = renderer.layout.board_origin.y + board_h + step
+		_drop_vel = -_DROP_START_VEL
 	_drop_target_y = target_rect.position.y
 	_drop_landing_y = target_rect.position.y
-	_drop_vel = _DROP_START_VEL
 	_drop_burst_rect = target_rect
 	_drop_burst_owner = owner
 	_drop_cs = cs

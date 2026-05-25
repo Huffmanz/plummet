@@ -120,6 +120,10 @@ func _format_footer(cost: int, hint: String) -> String:
 
 
 func restore_visibility_for_deal_in() -> void:
+	if _consumed:
+		return
+	modulate = Color.WHITE
+	scale = Vector2.ONE
 	set_affordable(_affordable)
 
 

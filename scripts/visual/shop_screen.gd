@@ -81,6 +81,12 @@ func _collect_nodes() -> void:
 		%Relic0 as ShopRelicSlot, %Relic1 as ShopRelicSlot,
 		%Relic2 as ShopRelicSlot, %Relic3 as ShopRelicSlot,
 	]
+	for i in _offer_cards.size():
+		if _offer_cards[i] == null:
+			push_error("ShopScreen: Offer%d missing ShopOfferCard script" % i)
+	for i in _piece_slots.size():
+		if _piece_slots[i] == null:
+			push_error("ShopScreen: Piece%d missing ShopPieceSlot script" % i)
 
 
 func _style_ui() -> void:
@@ -120,6 +126,7 @@ func _make_preview_bag() -> PieceBag:
 
 
 func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = false) -> void:
+	DataRegistry.ensure_loaded()
 	_enter_anim_done = false
 	if OS.has_feature("web"):
 		reduced_motion = true
@@ -214,6 +221,7 @@ func _run_shop_enter() -> void:
 	await _play_shop_intro_animations()
 	if not is_inside_tree():
 		return
+	_ensure_shop_content_visible()
 	_set_input_enabled(true)
 	_update_shop_cursor()
 
@@ -425,6 +433,15 @@ func _play_offer_deal_in() -> void:
 	_offer_fly_in.reduced_motion = reduced_motion
 	_reset_offer_cards_for_deal_in()
 	await _offer_fly_in.play_fly_in()
+	_refresh_offers(false)
+
+
+func _ensure_shop_content_visible() -> void:
+	_offer_fly_in.skip_animation_show_all()
+	_bag_fly_in.skip_animation_show_all()
+	_set_bag_row_visible_for_fly_in(true)
+	_refresh_offers(false)
+	_refresh_bag()
 
 
 func _show_shop_content_immediately() -> void:
@@ -447,6 +464,12 @@ func _play_bag_deal_in() -> void:
 		return
 	_bag_fly_in.modulate = Color.WHITE
 	await _bag_fly_in.run_fly_in_tween()
+	_ensure_bag_row_visible()
+
+
+func _ensure_bag_row_visible() -> void:
+	_set_bag_row_visible_for_fly_in(true)
+	_refresh_bag()
 
 
 func _reset_offer_cards_for_deal_in() -> void:

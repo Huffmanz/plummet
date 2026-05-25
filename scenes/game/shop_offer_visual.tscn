@@ -1,4 +1,4 @@
-[gd_scene format=3 uid="uid://bqx7offervisualsc"]
+[gd_scene format=3]
 
 [ext_resource type="Script" uid="uid://d7offervisual01" path="res://scripts/visual/shop_offer_visual.gd" id="1_visual"]
 

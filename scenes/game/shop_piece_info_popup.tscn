@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://df18mutl56vpj"]
 
-[ext_resource type="Script" path="res://scripts/visual/shop_piece_info_popup.gd" id="1_script"]
+[ext_resource type="Script" uid="uid://xn6fpsn23er3" path="res://scripts/visual/shop_piece_info_popup.gd" id="1_script"]
 [ext_resource type="PackedScene" uid="uid://c8k2shopicon7m3" path="res://scenes/game/shop_icon.tscn" id="2_icon"]
 
 [node name="ShopPieceInfoPopup" type="PanelContainer"]

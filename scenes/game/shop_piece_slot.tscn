@@ -1,8 +1,8 @@
 [gd_scene load_steps=4 format=3 uid="uid://b3dbeqqj0jiwu"]
 
-[ext_resource type="Script" path="res://scripts/visual/shop_piece_slot.gd" id="1_slot"]
-[ext_resource type="PackedScene" path="res://scenes/game/shop_piece_preview.tscn" id="2_preview"]
-[ext_resource type="Script" path="res://scripts/visual/shop_drop_ring_overlay.gd" id="3_ring"]
+[ext_resource type="Script" uid="uid://csoqnqwrld1b7" path="res://scripts/visual/shop_piece_slot.gd" id="1_slot"]
+[ext_resource type="PackedScene" uid="uid://covd723x4oypi" path="res://scenes/game/shop_piece_preview.tscn" id="2_preview"]
+[ext_resource type="Script" uid="uid://djpajy04gjjo8" path="res://scripts/visual/shop_drop_ring_overlay.gd" id="3_ring"]
 
 [node name="ShopPieceSlot" type="Control"]
 custom_minimum_size = Vector2(52, 52)

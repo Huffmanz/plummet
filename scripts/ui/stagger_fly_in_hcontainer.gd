@@ -78,6 +78,7 @@ func prepare_fly_in() -> void:
 	_wrap_children()
 	var slots := _gather_animatable_slots()
 	if slots.is_empty():
+		skip_animation_show_all()
 		return
 	await get_tree().process_frame
 	for slot in slots:
@@ -96,6 +97,7 @@ func run_fly_in_tween() -> void:
 		return
 	var slots := _gather_animatable_slots()
 	if slots.is_empty():
+		skip_animation_show_all()
 		finished.emit()
 		return
 	_tween = create_tween().set_parallel(true)

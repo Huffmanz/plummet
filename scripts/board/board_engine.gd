@@ -10,6 +10,12 @@ const ROWS: int = 12
 # grid[col][row] = Piece or null
 var _grid: Array = []
 
+# Frozen columns cannot receive drops (enemy gimmick).
+var frozen_columns: Dictionary = {}  # col -> turns_remaining
+
+# When true, pieces fall toward row ROWS-1 (ceiling) instead of row 0.
+var gravity_up: bool = false
+
 # Direction vectors for clear detection: right, up, diagonal-up-right, diagonal-up-left
 const _DIRECTIONS: Array[Vector2i] = [
 	Vector2i(1, 0),
@@ -34,6 +40,8 @@ func _init_grid(cols: int, rows: int) -> void:
 
 # Returns the row the piece landed on, or -1 if the column is full.
 func drop_piece(col: int, piece: Piece) -> int:
+	if is_column_frozen(col):
+		return -1
 	var landing_row: int = _lowest_empty_row(col)
 	if landing_row < 0:
 		return -1
@@ -49,6 +57,24 @@ func apply_gravity() -> void:
 	gravity_applied.emit()
 
 
+func freeze_column(col: int, turns: int) -> void:
+	frozen_columns[col] = turns
+
+
+func is_column_frozen(col: int) -> bool:
+	return frozen_columns.has(col)
+
+
+func tick_frozen_columns() -> void:
+	var expired: Array[int] = []
+	for col: int in frozen_columns:
+		frozen_columns[col] -= 1
+		if frozen_columns[col] <= 0:
+			expired.append(col)
+	for col in expired:
+		frozen_columns.erase(col)
+
+
 func detect_clears() -> Array[MatchedRun]:
 	var runs: Array[MatchedRun] = []
 	var cols: int = _grid.size()
@@ -58,20 +84,22 @@ func detect_clears() -> Array[MatchedRun]:
 		for c in cols:
 			for r in rows:
 				var cell: Piece = _grid[c][r]
-				if cell == null:
+				if not _is_matchable(cell):
 					continue
 				# Only process cells that are the start of a run in this direction.
 				var prev_c: int = c - dir.x
 				var prev_r: int = r - dir.y
-				if _in_bounds(prev_c, prev_r) and _grid[prev_c][prev_r] != null \
-						and _grid[prev_c][prev_r].owner == cell.owner:
+				var prev: Piece = _grid[prev_c][prev_r] if _in_bounds(prev_c, prev_r) else null
+				if _is_matchable(prev) and prev.owner == cell.owner:
 					continue
 				# Count run length.
 				var run_cells: Array[Vector2i] = []
 				var nc: int = c
 				var nr: int = r
-				while _in_bounds(nc, nr) and _grid[nc][nr] != null \
-						and _grid[nc][nr].owner == cell.owner:
+				while _in_bounds(nc, nr):
+					var run_cell: Piece = _grid[nc][nr]
+					if not _is_matchable(run_cell) or run_cell.owner != cell.owner:
+						break
 					run_cells.append(Vector2i(nc, nr))
 					nc += dir.x
 					nr += dir.y
@@ -136,7 +164,7 @@ func drop_ghost_piece(col: int, piece: Piece) -> int:
 
 
 func is_column_full(col: int) -> bool:
-	return _lowest_empty_row(col) < 0
+	return is_column_frozen(col) or _lowest_empty_row(col) < 0
 
 
 func is_board_full() -> bool:
@@ -146,27 +174,89 @@ func is_board_full() -> bool:
 	return true
 
 
-# Next open slot above the stack top (row 0 = floor). Ignores internal gaps from Anchor etc.
+# Next open slot in the current gravity direction.
 func _lowest_empty_row(col: int) -> int:
 	var rows: int = _grid[col].size()
+	if gravity_up:
+		var lowest_occupied := rows
+		for r in range(rows - 1, -1, -1):
+			if _grid[col][r] != null:
+				lowest_occupied = r
+				break
+		if lowest_occupied == rows:
+			return rows - 1
+		var landing := lowest_occupied - 1
+		return -1 if landing < 0 else landing
 	var highest_occupied := -1
 	for r in rows:
 		if _grid[col][r] != null:
 			highest_occupied = r
-	var landing := highest_occupied + 1
-	if landing >= rows:
+	var landing_down := highest_occupied + 1
+	if landing_down >= rows:
 		return -1
-	return landing
+	return landing_down
 
 
 func _settle_column(col: int) -> void:
 	var rows: int = _grid[col].size()
+	var locked: Dictionary = {}
 	var pieces: Array = []
 	for r in rows:
-		if _grid[col][r] != null:
-			pieces.append(_grid[col][r])
+		var cell: Piece = _grid[col][r]
+		if cell != null and cell.type == Piece.Type.LOCKED:
+			locked[r] = cell
+		elif cell != null:
+			pieces.append(cell)
+	var slots: Array[int] = []
+	if gravity_up:
+		for r in range(rows - 1, -1, -1):
+			if not locked.has(r):
+				slots.append(r)
+	else:
+		for r in rows:
+			if not locked.has(r):
+				slots.append(r)
 	for r in rows:
-		_grid[col][r] = pieces[r] if r < pieces.size() else null
+		_grid[col][r] = null
+	for r in locked:
+		_grid[col][r] = locked[r]
+	for i in mini(pieces.size(), slots.size()):
+		_grid[col][slots[i]] = pieces[i]
+
+
+# Place a locked obstacle at the column floor (row 0), pushing pieces upward.
+func place_locked_at_bottom(col: int) -> bool:
+	var rows: int = _grid[col].size()
+	if _grid[col][rows - 1] != null:
+		return false
+	for r in range(rows - 1, 0, -1):
+		_grid[col][r] = _grid[col][r - 1]
+	var locked := Piece.new(Piece.Owner.AI, Piece.Type.LOCKED)
+	_grid[col][0] = locked
+	return true
+
+
+# Slide all columns one step; pieces off the edge are discarded.
+func slide_contents(direction: int) -> void:
+	var cols: int = _grid.size()
+	var rows: int = _grid[0].size()
+	var new_grid: Array = []
+	for _c in cols:
+		var col: Array = []
+		col.resize(rows)
+		col.fill(null)
+		new_grid.append(col)
+	for c in cols:
+		var dest_c: int = c + direction
+		if dest_c < 0 or dest_c >= cols:
+			continue
+		for r in rows:
+			new_grid[dest_c][r] = _grid[c][r]
+	_grid = new_grid
+
+
+func _is_matchable(cell: Piece) -> bool:
+	return cell != null and cell.type != Piece.Type.LOCKED
 
 
 func _in_bounds(col: int, row: int) -> bool:

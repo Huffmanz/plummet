@@ -53,6 +53,10 @@ func draw_frozen_overlay(_canvas: CanvasItem, _rect: Rect2, _turns_remaining: in
 	pass
 
 
+func draw_frozen_cell(_canvas: CanvasItem, _rect: Rect2) -> void:
+	pass
+
+
 func draw_modifier_badge(_canvas: CanvasItem, _rect: Rect2, _modifier_name: String) -> void:
 	pass
 

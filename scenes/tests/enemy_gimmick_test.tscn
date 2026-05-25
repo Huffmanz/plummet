@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://cdomt1y1pys2t"]
+
+[ext_resource type="Script" uid="uid://es3l73h6ly56" path="res://scripts/ai/enemy_gimmick_test.gd" id="1_l6hl6"]
+
+[node name="EnemyGimmickTest" type="Node" unique_id=1034195058]
+script = ExtResource("1_l6hl6")

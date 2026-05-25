@@ -1,0 +1,109 @@
+[gd_scene format=3 uid="uid://df3u34bk63dhv"]
+
+[ext_resource type="Script" path="res://scripts/tests/boss_gimmick_test.gd" id="1_script"]
+[ext_resource type="PackedScene" uid="uid://bnxkfv3qm0t4p" path="res://scenes/game/game_board.tscn" id="2_board"]
+
+[node name="BossGimmickTest" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_script")
+
+[node name="HBox" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 0
+
+[node name="GameBoard" parent="HBox" instance=ExtResource("2_board")]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+standalone = false
+sandbox_mode = false
+gimmick_test_mode = true
+
+[node name="SidePanel" type="PanelContainer" parent="HBox"]
+custom_minimum_size = Vector2(152, 0)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="Scroll" type="ScrollContainer" parent="HBox/SidePanel"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="Margin" type="MarginContainer" parent="HBox/SidePanel/Scroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 8
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 8
+theme_override_constants/margin_bottom = 8
+
+[node name="VBox" type="VBoxContainer" parent="HBox/SidePanel/Scroll/Margin"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Title" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 11
+text = "ENEMY GIMMICK TEST"
+
+[node name="StatusLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+text = "Pick an enemy"
+autowrap_mode = 3
+
+[node name="EnemyList" type="VBoxContainer" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="TipLabel" type="RichTextLabel" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_font_sizes/normal_font_size = 9
+bbcode_enabled = true
+fit_content = true
+scroll_active = false
+
+[node name="CheatsLabel" type="Label" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 9
+modulate = Color(0.65, 0.65, 0.65, 1)
+text = "SCORE CHEATS"
+
+[node name="CheatRow" type="HBoxContainer" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="PlayerPlusBtn" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/CheatRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+500 You"
+
+[node name="AIPlusBtn" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox/CheatRow"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "+500 AI"
+
+[node name="ResetBtn" type="Button" parent="HBox/SidePanel/Scroll/Margin/VBox"]
+unique_name_in_owner = true
+layout_mode = 2
+text = "Reset match"

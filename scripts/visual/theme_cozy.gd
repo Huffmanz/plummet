@@ -22,7 +22,7 @@ func _init() -> void:
 	color_empty = UITheme.CELL_EMPTY
 	color_bg = UITheme.BOARD_WELL
 	color_locked = UITheme.LOCKED
-	color_frozen_overlay = Color(0.55, 0.82, 0.92, 0.22)
+	color_frozen_overlay = Color(0.55, 0.82, 0.98, 0.42)
 	color_ui_bg = UITheme.CANVAS
 	color_text_primary = UITheme.TEXT_ON_CANVAS
 	color_text_secondary = UITheme.TEXT_MUTED
@@ -77,8 +77,24 @@ func draw_locked_cell(canvas: CanvasItem, rect: Rect2) -> void:
 	canvas.draw_string(_font, pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, UITheme.TEXT_MUTED_ON_SURFACE)
 
 
-func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int) -> void:
+func draw_frozen_cell(canvas: CanvasItem, rect: Rect2) -> void:
+	var frost := Color(0.70, 0.88, 1.0, 0.35)
+	canvas.draw_rect(rect, frost)
+	canvas.draw_rect(rect, Color(0.45, 0.72, 0.95, 0.85), false, 2.0)
+
+
+func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, turns_remaining: int) -> void:
 	canvas.draw_rect(rect, color_frozen_overlay)
+	canvas.draw_rect(rect.grow(-2.0), Color(0.35, 0.65, 0.92, 0.55), false, 3.0)
+	if turns_remaining > 0:
+		var label := str(turns_remaining)
+		var font_size: int = clampi(int(rect.size.x * 0.22), 10, 16)
+		var text_w: float = _font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		var pos := rect.position + Vector2((rect.size.x - text_w) * 0.5, rect.size.y * 0.08)
+		canvas.draw_string(
+			_font, pos, label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size,
+			Color(0.15, 0.35, 0.55, 0.9)
+		)
 	var hatch_color := Color(0.75, 0.90, 0.98, 0.30)
 	var spacing := 10.0
 	var rx := rect.position.x

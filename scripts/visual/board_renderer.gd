@@ -16,6 +16,7 @@ func _init(p_theme: ThemeBase) -> void:
 func render_board(state: RenderState, canvas: CanvasItem) -> void:
 	render_board_under(state, canvas)
 	render_board_tiles(state, canvas)
+	_render_frozen_columns(state, canvas)
 
 
 func render_board_under(state: RenderState, canvas: CanvasItem) -> void:
@@ -29,8 +30,6 @@ func render_board_under(state: RenderState, canvas: CanvasItem) -> void:
 	var tray := board_rect.grow(4.0)
 	canvas.draw_rect(tray, heat_bg)
 	canvas.draw_rect(tray, UITheme.SURFACE_BORDER_MUTED, false, 3.0)
-	for fc in state.frozen_columns:
-		theme.draw_frozen_overlay(canvas, _column_rect(fc.col), fc.turns_remaining)
 	for c in RenderState.COLS:
 		for r in RenderState.ROWS:
 			var cs: CellState = state.get_cell(c, r)
@@ -57,6 +56,8 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 				continue
 			if cs.occupant == CellState.Occupant.EMPTY:
 				theme.draw_empty_cell(canvas, rect)
+			if cs.frozen:
+				theme.draw_frozen_cell(canvas, rect)
 			if not cs.modifier.is_empty():
 				theme.draw_modifier_badge(canvas, rect, cs.modifier)
 	var t_ms := Time.get_ticks_msec() * 0.006
@@ -66,6 +67,13 @@ func render_board_tiles(state: RenderState, canvas: CanvasItem) -> void:
 			var pulse := 0.5 + 0.5 * sin(t_ms)
 			var base_alpha := 0.35 if lr == RenderState.ROWS - 1 else 0.18
 			canvas.draw_rect(_column_rect(c), Color(UITheme.DANGER.r, UITheme.DANGER.g, UITheme.DANGER.b, base_alpha * pulse))
+
+
+func _render_frozen_columns(state: RenderState, canvas: CanvasItem) -> void:
+	if state == null or layout == null or theme == null:
+		return
+	for fc in state.frozen_columns:
+		theme.draw_frozen_overlay(canvas, _column_rect(fc.col), fc.turns_remaining)
 
 
 func render_ghost(state: RenderState, canvas: CanvasItem) -> void:

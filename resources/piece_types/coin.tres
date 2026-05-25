@@ -8,6 +8,6 @@ script = ExtResource("1_coin")
 id = "COIN"
 display_name = "Coin"
 initial = "C"
-description = "When part of a clear, earn +3 chips. Multiple Coins in one clear each trigger independently."
+description = "When part of a clear, earn +3 chips (stacks)."
 shader_style = "gold"
 icon = ExtResource("1_pvll5")

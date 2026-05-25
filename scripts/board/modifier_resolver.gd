@@ -242,7 +242,9 @@ func _cell_in_bounds(col: int, row: int) -> bool:
 # Removes all pieces in the specified row.
 func _apply_detonate(board: BoardEngine, row: int) -> void:
 	for c in BoardEngine.COLS:
-		board.set_cell(c, row, null)
+		var p: Piece = board.get_cell(c, row)
+		if p != null and p.type != Piece.Type.LOCKED:
+			board.set_cell(c, row, null)
 
 
 # Counts opponent pieces in the given row for Bounty scoring.

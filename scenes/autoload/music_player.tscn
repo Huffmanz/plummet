@@ -1,0 +1,11 @@
+[gd_scene format=3 uid="uid://v82n6derufdj"]
+
+[ext_resource type="Script" uid="uid://bjgwok4pg6ta5" path="res://scripts/autoload/music_player.gd" id="1_script"]
+[ext_resource type="AudioStream" uid="uid://b8h1tuv6e7rli" path="res://assets/sfx/Daytime2Loop.wav" id="2_xlf3v"]
+
+[node name="MusicPlayer" type="Node" unique_id=447790250]
+script = ExtResource("1_script")
+
+[node name="Player" type="AudioStreamPlayer" parent="." unique_id=63093149]
+stream = ExtResource("2_xlf3v")
+bus = &"music"

@@ -72,6 +72,11 @@ func draw_locked_cell(canvas: CanvasItem, rect: Rect2) -> void:
 		Color(0.75, 0.75, 0.75))
 
 
+func draw_frozen_cell(canvas: CanvasItem, rect: Rect2) -> void:
+	canvas.draw_rect(rect, Color(0.522, 0.875, 0.922, 0.35))
+	canvas.draw_rect(rect, Color(0.35, 0.65, 0.92, 0.7), false, 2.0)
+
+
 func draw_frozen_overlay(canvas: CanvasItem, rect: Rect2, _turns_remaining: int) -> void:
 	canvas.draw_rect(rect, color_frozen_overlay)
 	var hatch_color := Color(0.65, 0.88, 1.0, 0.28)

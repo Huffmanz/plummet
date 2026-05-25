@@ -8,6 +8,6 @@ script = ExtResource("1_ember")
 id = "EMBER"
 display_name = "Ember"
 initial = "E"
-description = "When part of a clear, add +1 to cascade depth for subsequent clears. Multiple Embers stack."
+description = "When part of a clear, add +1 to cascade depth for subsequent clears (stacks)."
 shader_style = "ember"
 icon = ExtResource("1_mmyvl")

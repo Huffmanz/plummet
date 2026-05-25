@@ -4,6 +4,7 @@ extends Control
 signal column_selected(col: int)
 signal match_complete(player_won: bool, player_score: int, ai_score: int, chips: int, win_streak: int, max_cascade: int, cross_color_count: int)
 signal run_shop_finished(chips_remaining: int)
+signal gimmick_test_match_finished(player_won: bool)
 
 @onready var _board_canvas: BoardCanvas = $BoardCanvas
 @onready var _ghost_canvas: GhostCanvas = $GhostCanvas
@@ -45,6 +46,7 @@ var _score_tracker: ScoreTracker
 var _turn_manager: TurnManager
 var _cascade_loop: CascadeLoop
 var _ai: AIOpponent
+var _gimmick: EnemyGimmickController
 var _builder: RenderStateBuilder
 var _player_bag: PieceBag
 var _modifier_resolver: ModifierResolver
@@ -71,6 +73,8 @@ const _SCORE_DELTA_RESERVE_TEXT := "+999 last turn"
 # Match metadata (injected by RunController in run mode)
 @export var standalone: bool = true
 @export var sandbox_mode: bool = false
+## When true, match end restarts in place (no shop / run signals). Used by boss gimmick test scene.
+@export var gimmick_test_mode: bool = false
 ## When set, sandbox clicks call this first. Args: local_pos (Vector2), button (int).
 ## Return true to consume the click (skip normal drop).
 var sandbox_placement_handler: Callable
@@ -186,7 +190,9 @@ func _init_game() -> void:
 	_score_tracker = ScoreTracker.new()
 	_turn_manager = TurnManager.new()
 	_cascade_loop = CascadeLoop.new()
-	_ai = AIOpponent.new(0.1)
+	_gimmick = EnemyGimmickController.for_enemy(_match_enemy_name)
+	_ai = AIOpponent.new(_gimmick.get_noise())
+	_gimmick.setup(_ai, _board, _score_tracker)
 	_builder = RenderStateBuilder.new()
 	if _player_bag == null:
 		_player_bag = PieceBag.new(Piece.Owner.PLAYER)
@@ -204,6 +210,8 @@ func _init_game() -> void:
 		_renderer.cascade_heat = 0.0
 
 	_turn_manager.match_ended.connect(_on_match_ended)
+	if not _turn_manager.player_turn_started.is_connected(_on_player_turn_started):
+		_turn_manager.player_turn_started.connect(_on_player_turn_started)
 	_turn_manager.start()
 
 	_state = _build_state()
@@ -234,6 +242,19 @@ func sandbox_place_cell(col: int, row: int, owner: Piece.Owner, piece_type: Piec
 	_refresh_all()
 
 
+func gimmick_test_add_score(owner: Piece.Owner, points: int) -> void:
+	if _score_tracker == null:
+		return
+	var bonus := TurnScore.new()
+	if owner == Piece.Owner.PLAYER:
+		bonus.player_points = points
+	else:
+		bonus.ai_points = points
+	_score_tracker.add_turn(bonus)
+	_state = _build_state()
+	_refresh_all()
+
+
 func sandbox_clear_cell(col: int, row: int) -> void:
 	if _board == null:
 		return
@@ -243,12 +264,20 @@ func sandbox_clear_cell(col: int, row: int) -> void:
 
 
 func _build_state() -> RenderState:
+	var frozen: Array = _gimmick.get_frozen_columns() if _gimmick != null else []
+	var locked: Array[Vector2i] = _gimmick.get_locked_cells() if _gimmick != null else []
+	var gf: bool = _gimmick.is_gravity_flipped() if _gimmick != null else false
 	return _builder.build(
 		_board, _score_tracker, _turn_manager,
-		_player_bag.current(), _player_bag.get_queue_pieces(2), [], [], false,
+		_player_bag.current(), _player_bag.get_queue_pieces(2), frozen, locked, gf,
 		_match_act, _match_num, _match_enemy_name, _match_enemy_gimmick,
 		_chip_count, _animating
 	)
+
+
+func _on_player_turn_started(_remaining: int) -> void:
+	if _ai != null and _board != null:
+		_ai.fire_on_player_turn_start(_board)
 
 
 func _on_column_selected(col: int) -> void:
@@ -270,6 +299,9 @@ func _on_column_selected(col: int) -> void:
 		_refresh_all()
 		return
 	_modifier_resolver.set_landed(col, landing_row, p_piece)
+	if _gimmick != null:
+		_gimmick.on_drop()
+	_ai.fire_on_player_piece_landed(_board, col, landing_row)
 	await _anim_layer.play_drop(
 		col, landing_row, CellState.Occupant.PLAYER, gf,
 		PieceVisualUtil.cell_piece_type(p_piece.type), p_piece.modifier
@@ -290,6 +322,7 @@ func _on_column_selected(col: int) -> void:
 	_refresh_all()
 
 	var p_result := await _run_cascade_animated(_board, Piece.Owner.PLAYER)
+	_ai.fire_on_cascade_complete(_board, p_result)
 	_match_max_cascade = maxi(_match_max_cascade, p_result.max_depth)
 	if p_result.cross_color:
 		_match_cross_color_count += 1
@@ -311,6 +344,8 @@ func _on_column_selected(col: int) -> void:
 		# Replenish player turns so the match never ends
 		_turn_manager.player_turns_remaining = TurnManager.TURNS_PER_PLAYER
 	_turn_manager.advance(_board)
+	if _gimmick != null:
+		_gimmick.on_turn_advanced()
 	if _chip_count > chips_before:
 		_spawn_chip_popups(_chip_count - chips_before)
 
@@ -353,6 +388,9 @@ func _run_ai_turn_animated() -> void:
 	var ai_landing_row := _board.get_landing_row(ai_col)
 	_board.drop_piece(ai_col, _ai.current_piece)
 	var ai_piece := _ai.current_piece
+	if _gimmick != null:
+		_gimmick.on_drop()
+	_ai.fire_on_piece_landed(_board, ai_col, ai_landing_row)
 	await _anim_layer.play_drop(
 		ai_col, ai_landing_row, CellState.Occupant.AI, gf,
 		PieceVisualUtil.cell_piece_type(ai_piece.type), ai_piece.modifier
@@ -370,13 +408,32 @@ func _run_ai_turn_animated() -> void:
 	_refresh_all()
 
 	var ai_result := await _run_cascade_animated(_board, Piece.Owner.AI)
+	_ai.fire_on_cascade_complete(_board, ai_result)
 	_match_max_cascade = maxi(_match_max_cascade, ai_result.max_depth)
-	_score_tracker.add_turn(_score_calc.calculate(ai_result, 0))
+	var ai_turn := _score_calc.calculate(ai_result, 0)
+	if _gimmick != null:
+		ai_turn = _gimmick.adjust_ai_turn_score(ai_turn, ai_result)
+	_score_tracker.add_turn(ai_turn)
+	_spawn_paint_flash_if_needed()
 	_ai.advance_queue()
 	_turn_manager.advance(_board)
+	if _gimmick != null:
+		_gimmick.on_turn_advanced()
 
 	_state = _build_state()
 	_refresh_all()
+
+
+func _spawn_paint_flash_if_needed() -> void:
+	if _gimmick == null or _renderer == null or _renderer.layout == null:
+		return
+	var cells := _gimmick.take_paint_flash_cells()
+	if cells.is_empty():
+		return
+	var gf := _state.gravity_flipped if _state != null else false
+	for cell: Vector2i in cells:
+		var pos := _renderer.cell_rect(cell.x, cell.y, gf).get_center()
+		_anim_layer.spawn_popup(pos, "PAINT", Color(0.6, 0.3, 0.9))
 
 
 func _run_ai_thinking_dots() -> void:
@@ -397,6 +454,8 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 
 	while true:
 		var runs: Array[MatchedRun] = board.detect_clears()
+		if _gimmick != null:
+			runs = _gimmick.filter_clears(runs)
 		if runs.is_empty():
 			break
 
@@ -418,6 +477,12 @@ func _run_cascade_animated(board: BoardEngine, attribution: Piece.Owner) -> Casc
 			var cascade_depth := _cascade_depth_for_run(board, run, owner_depth)
 			var tc := TaggedClear.new(run, cascade_depth)
 			tc.ember_bonus = ember_bonus + _count_ember_in_run(board, run)
+			if run.owner == Piece.Owner.AI:
+				for cell_pos: Vector2i in run.cells:
+					var check_piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
+					if check_piece != null and check_piece.owner == Piece.Owner.PLAYER:
+						tc.ai_pure = false
+						break
 			for cell_pos: Vector2i in run.cells:
 				var piece: Piece = board.get_cell(cell_pos.x, cell_pos.y)
 				if piece == null:
@@ -664,6 +729,10 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 	_clear_match_visuals()
 
 	var player_won: bool = _score_tracker.player_score > _score_tracker.ai_score
+	if gimmick_test_mode:
+		gimmick_test_match_finished.emit(player_won)
+		call_deferred("_init_game")
+		return
 	if player_won:
 		_win_streak += 1
 		_chip_count += 15
@@ -1072,7 +1141,7 @@ func _is_block_move(col: int, row: int, my_owner: Piece.Owner) -> bool:
 		var r: int = row + axis.y
 		while c >= 0 and c < BoardEngine.COLS and r >= 0 and r < BoardEngine.ROWS:
 			var cell := _board.get_cell(c, r)
-			if cell != null and cell.owner == opponent:
+			if cell != null and cell.type != Piece.Type.LOCKED and cell.owner == opponent:
 				count += 1
 				c += axis.x
 				r += axis.y
@@ -1082,7 +1151,7 @@ func _is_block_move(col: int, row: int, my_owner: Piece.Owner) -> bool:
 		r = row - axis.y
 		while c >= 0 and c < BoardEngine.COLS and r >= 0 and r < BoardEngine.ROWS:
 			var cell := _board.get_cell(c, r)
-			if cell != null and cell.owner == opponent:
+			if cell != null and cell.type != Piece.Type.LOCKED and cell.owner == opponent:
 				count += 1
 				c -= axis.x
 				r -= axis.y
@@ -1120,6 +1189,7 @@ func _input(event: InputEvent) -> void:
 			_anim_layer.shake_enabled = not _anim_layer.reduced_motion
 		elif key.pressed and key.keycode == KEY_M:
 			_anim_layer.muted = not _anim_layer.muted
+			MusicPlayer.set_muted(_anim_layer.muted)
 
 	if _state == null or _state.input_locked or _animating:
 		return

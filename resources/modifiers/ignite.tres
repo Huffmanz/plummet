@@ -10,5 +10,5 @@ display_name = "Ignite"
 initial = "I"
 badge_color = Color(0.85, 0.22, 0.15, 1)
 trigger = "clear"
-description = "On clear, each piece beyond 4 in the line scores +100 bonus."
+description = "On clear, each piece beyond 4 scores +100 bonus."
 icon = ExtResource("1_qhnli")

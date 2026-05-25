@@ -9,5 +9,5 @@ id = "Deposit"
 display_name = "Deposit"
 initial = "D"
 badge_color = Color(0.85, 0.72, 0.15, 1)
-description = "On landing, earn +5 chips immediately regardless of whether this piece clears."
+description = "On landing, earn +5 chips immediately."
 icon = ExtResource("1_sitbs")

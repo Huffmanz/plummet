@@ -27,10 +27,13 @@ func build(
 			cs.col = c
 			cs.row = r
 			if piece != null:
-				cs.occupant = CellState.Occupant.PLAYER if piece.owner == Piece.Owner.PLAYER \
-					else CellState.Occupant.AI
-				cs.piece_type = _map_piece_type(piece.type)
-				cs.modifier = piece.modifier
+				if piece.type == Piece.Type.LOCKED:
+					cs.locked = true
+				else:
+					cs.occupant = CellState.Occupant.PLAYER if piece.owner == Piece.Owner.PLAYER \
+						else CellState.Occupant.AI
+					cs.piece_type = _map_piece_type(piece.type)
+					cs.modifier = piece.modifier
 			rs.cells[c * RenderState.ROWS + r] = cs
 
 	for locked_cell in locked_cells:

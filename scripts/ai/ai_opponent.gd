@@ -11,6 +11,9 @@ const _ADJACENT_DIRS: Array[Vector2i] = [
 # Probability [0.0, 1.0] of replacing the top-scored column with a random valid column.
 var noise: float = 0.0
 
+# Optional override for column heuristic scoring (Architect gimmick).
+var custom_score_column: Callable = Callable()
+
 # AI piece queue — current and next piece, hidden from the player.
 var current_piece: Piece
 var next_piece: Piece
@@ -119,6 +122,8 @@ func _pick_best_column(board: BoardEngine, valid_cols: Array[int]) -> int:
 
 # One-ply heuristic: simulate drop and score the resulting board state.
 func _score_column(board: BoardEngine, col: int) -> float:
+	if custom_score_column.is_valid():
+		return custom_score_column.call(board, col)
 	var landing_row: int = board.get_landing_row(col)
 	if landing_row == -1:
 		return -INF
@@ -182,7 +187,7 @@ func _count_adjacent_owner(board: BoardEngine, col: int, row: int, owner: Piece.
 		if nc < 0 or nc >= BoardEngine.COLS or nr < 0 or nr >= BoardEngine.ROWS:
 			continue
 		var cell: Piece = board.get_cell(nc, nr)
-		if cell != null and cell.owner == owner:
+		if cell != null and cell.type != Piece.Type.LOCKED and cell.owner == owner:
 			count += 1
 	return count
 

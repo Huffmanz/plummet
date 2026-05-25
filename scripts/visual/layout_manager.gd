@@ -7,6 +7,8 @@ const CELL_GAP: float = 3.0
 const PANEL_WIDTH: float = 160.0
 const BOTTOM_STRIP_HEIGHT: float = 8.0
 const BOARD_FRAME_OUTSET: float = 8.0
+## Minimum board width at MIN_CELL_SIZE — used to shrink side panels on narrow viewports (web).
+const MIN_BOARD_WIDTH: float = RenderState.COLS * MIN_CELL_SIZE + (RenderState.COLS - 1) * CELL_GAP
 ## Nudge board position after layout. Negative Y moves the board up.
 const BOARD_OFFSET := Vector2(0.0, 0.0)
 
@@ -25,11 +27,17 @@ class LayoutResult extends RefCounted:
 func compute(viewport_size: Vector2) -> LayoutResult:
 	var result := LayoutResult.new()
 	result.viewport_size = viewport_size
-	result.panel_width = PANEL_WIDTH
 	result.bottom_height = BOTTOM_STRIP_HEIGHT
 
 	var frame_pad: float = BOARD_FRAME_OUTSET * 2.0
-	var available_w: float = viewport_size.x - PANEL_WIDTH * 2.0 - frame_pad
+	# Shrink or drop side panels so the board stays in the center gap (itch/web adaptive resize).
+	var max_panel_w: float = maxf(
+		0.0,
+		(viewport_size.x - MIN_BOARD_WIDTH - frame_pad) / 2.0
+	)
+	result.panel_width = minf(PANEL_WIDTH, max_panel_w)
+
+	var available_w: float = viewport_size.x - result.panel_width * 2.0 - frame_pad
 	var available_h: float = viewport_size.y - BOTTOM_STRIP_HEIGHT - frame_pad
 
 	var cols: int = RenderState.COLS
@@ -49,7 +57,7 @@ func compute(viewport_size: Vector2) -> LayoutResult:
 	var board_h: float = rows * result.cell_size + (rows - 1) * CELL_GAP
 
 	result.board_origin = Vector2(
-		PANEL_WIDTH + BOARD_FRAME_OUTSET + (available_w - board_w) / 2.0,
+		result.panel_width + BOARD_FRAME_OUTSET + (available_w - board_w) / 2.0,
 		BOARD_FRAME_OUTSET + (available_h - board_h) / 2.0
 	)
 	result.board_origin += BOARD_OFFSET

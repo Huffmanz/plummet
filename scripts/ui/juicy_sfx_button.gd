@@ -97,6 +97,24 @@ func _apply_normal_bg_color() -> void:
 		_panel_style.bg_color = normal_bg_color
 
 
+## Re-apply panel/label visuals after layout (WebGL can skip child Panel draws until refreshed).
+func refresh_web_visuals() -> void:
+	if not is_node_ready():
+		return
+	_cache_rest_state()
+	modulate = Color.WHITE
+	if _visual != null:
+		_visual.visible = true
+		_visual.modulate = Color.WHITE
+	if _panel != null:
+		_panel.visible = true
+		_panel.modulate = Color.WHITE
+	if _label != null:
+		_label.visible = true
+		_label.modulate = Color.WHITE
+		_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
+
+
 func _cache_rest_state() -> void:
 	var panel_style := _panel.get_theme_stylebox("panel")
 	if panel_style is StyleBoxFlat:

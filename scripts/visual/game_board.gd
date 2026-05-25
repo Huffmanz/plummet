@@ -105,7 +105,8 @@ func _ready() -> void:
 
 	get_viewport().size_changed.connect(_on_viewport_resized)
 	_apply_hud_sidebar_theme()
-	call_deferred("_on_viewport_resized")
+	_apply_viewport_layout_sync()
+	call_deferred("_rewarm_piece_textures")
 
 	if standalone:
 		_init_game()
@@ -187,6 +188,7 @@ func setup_match(
 
 
 func _init_game() -> void:
+	_set_match_play_ui_hidden(false)
 	_board = BoardEngine.new()
 	_score_calc = ScoreCalculator.new()
 	_score_tracker = ScoreTracker.new()
@@ -219,6 +221,8 @@ func _init_game() -> void:
 
 	_state = _build_state()
 	_refresh_all()
+	if _layout != null:
+		_apply_viewport_layout_sync()
 
 
 # Called externally to hot-swap game state (e.g. from a parent game controller).
@@ -242,6 +246,26 @@ func sandbox_place_cell(col: int, row: int, owner: Piece.Owner, piece_type: Piec
 	_board.set_cell(col, row, piece)
 	_state = _build_state()
 	_refresh_all()
+
+
+## Secret test cheat: Ctrl+Shift+W — +100 chips, winning score, 0 turns left, normal match end.
+func _secret_autowin() -> void:
+	if not _match_active or _animating:
+		return
+	if _shop_screen != null and _shop_screen.visible:
+		return
+	if _turn_manager == null or _score_tracker == null:
+		return
+	_chip_count += 100
+	_sync_chip_display()
+	var need := _score_tracker.ai_score + 1 - _score_tracker.player_score
+	if need > 0:
+		gimmick_test_add_score(Piece.Owner.PLAYER, need)
+	_turn_manager.player_turns_remaining = 0
+	_turn_manager.ai_turns_remaining = 0
+	_state = _build_state()
+	_refresh_all()
+	_turn_manager.force_end()
 
 
 func gimmick_test_add_score(owner: Piece.Owner, points: int) -> void:
@@ -757,7 +781,6 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 	await get_tree().create_timer(0.6).timeout
 	await _match_end_overlay.show_result(_score_tracker.player_score, _score_tracker.ai_score)
 	_match_end_overlay.hide()
-	_clear_match_visuals()
 
 	var player_won: bool = _score_tracker.player_score > _score_tracker.ai_score
 	if gimmick_test_mode:
@@ -769,27 +792,51 @@ func _on_match_ended(_reason: TurnManager.MatchEndReason) -> void:
 		_chip_count += 15
 		if _win_streak >= 2:
 			_chip_count += (_win_streak - 1) * 5
-		if not _match_is_boss and not standalone:
-			_emit_match_complete(true)
-			await TransitionManager.transition_screen(func():
-				_shop_screen.open(_player_bag, _chip_count, _relic_manager, _anim_layer.muted)
-			)
-		elif standalone:
-			await TransitionManager.transition_screen(func():
-				_shop_screen.open(_player_bag, _chip_count, _relic_manager, _anim_layer.muted)
-			)
+		var opens_shop := not _match_is_boss
+		if opens_shop:
+			if not standalone:
+				_emit_match_complete(true)
+			await _open_shop_after_win()
+			if standalone:
+				pass  # shop close restarts via _on_shop_closed
 		else:
+			_clear_match_visuals()
 			_emit_match_complete(true)
 	else:
 		_win_streak = 0
+		_clear_match_visuals()
 		if standalone:
 			_init_game()
 		else:
 			_emit_match_complete(false)
 
 
+func _open_shop_after_win() -> void:
+	_shop_screen.reduced_motion = _anim_layer.reduced_motion or OS.has_feature("web")
+	_set_match_play_ui_hidden(true)
+	_shop_screen.open(_player_bag, _chip_count, _relic_manager, _anim_layer.muted)
+
+
+func _set_match_play_ui_hidden(hidden: bool) -> void:
+	_board_canvas.visible = not hidden
+	_ghost_canvas.visible = not hidden
+	_anim_layer.visible = not hidden
+	if hidden:
+		_left_panel.visible = false
+		_right_panel.visible = false
+		_match_progress_panel.visible = false
+		_match_end_overlay.hide()
+	elif _layout != null:
+		_apply_viewport_layout_sync()
+	else:
+		_left_panel.visible = true
+		_right_panel.visible = true
+		_match_progress_panel.visible = true
+
+
 func _on_shop_closed(chips_remaining: int) -> void:
 	_chip_count = chips_remaining
+	_set_match_play_ui_hidden(false)
 	if standalone:
 		call_deferred("_init_game")
 	else:
@@ -1234,25 +1281,38 @@ func _rewarm_piece_shader_cache() -> void:
 
 
 func _on_viewport_resized() -> void:
+	_apply_viewport_layout_sync()
+	_rewarm_piece_textures()
+
+
+func _apply_viewport_layout_sync() -> void:
+	if not is_inside_tree():
+		return
 	_layout = _layout_mgr.compute(get_viewport().get_visible_rect().size)
 	_renderer.layout = _layout
-	await _rewarm_piece_shader_cache()
 	_rotate_prompt.visible = _layout.mode == LayoutManager.LayoutMode.TOO_SMALL
 
 	var vp := _layout.viewport_size
 	var pw: float = _layout.panel_width
 	const hud_margin := 5.0
 	const match_progress_h := 26.0
-	_left_panel.visible = true
-	_right_panel.visible = true
-	_match_progress_panel.visible = true
-	_left_panel.position = Vector2(hud_margin, hud_margin)
-	_left_panel.size = Vector2(pw, vp.y - hud_margin * 2.0 - match_progress_h)
-	#_match_progress_panel.position = Vector2(hud_margin, vp.y - hud_margin - match_progress_h)
-	_match_progress_panel.size = Vector2(pw, match_progress_h)
-	_right_panel.position = Vector2(vp.x - pw - hud_margin, hud_margin)
-	_right_panel.size = Vector2(pw, vp.y - hud_margin * 2.0 - match_progress_h)
+	var show_side_panels := pw > 0.0
+	_left_panel.visible = show_side_panels
+	_right_panel.visible = show_side_panels
+	_match_progress_panel.visible = show_side_panels
+	if show_side_panels:
+		_left_panel.position = Vector2(hud_margin, hud_margin)
+		_left_panel.size = Vector2(pw, vp.y - hud_margin * 2.0 - match_progress_h)
+		_match_progress_panel.size = Vector2(pw, match_progress_h)
+		_right_panel.position = Vector2(vp.x - pw - hud_margin, hud_margin)
+		_right_panel.size = Vector2(pw, vp.y - hud_margin * 2.0 - match_progress_h)
 
+	if _state != null:
+		_refresh_all()
+
+
+func _rewarm_piece_textures() -> void:
+	await _rewarm_piece_shader_cache()
 	if _state != null:
 		_refresh_all()
 
@@ -1306,9 +1366,12 @@ func _spawn_blocked_popup(col: int, row: int, gf: bool) -> void:
 
 
 func _input(event: InputEvent) -> void:
-	# Accessibility toggles work at any time
 	if event is InputEventKey:
 		var key := event as InputEventKey
+		if key.pressed and key.ctrl_pressed and key.shift_pressed and key.keycode == KEY_W:
+			_secret_autowin()
+			return
+		# Accessibility toggles work at any time
 		if key.pressed and key.keycode == KEY_R:
 			_anim_layer.reduced_motion = not _anim_layer.reduced_motion
 			_anim_layer.shake_enabled = not _anim_layer.reduced_motion

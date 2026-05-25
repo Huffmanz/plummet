@@ -49,9 +49,10 @@ func _ready() -> void:
 
 
 func _style_labels() -> void:
-	UITheme.style_label_primary(_name_lbl, true)
-	UITheme.style_label_muted(_type_lbl, true)
-	UITheme.style_label_primary(_desc_lbl, true)
+	var on_surface := not OS.has_feature("web")
+	UITheme.style_label_primary(_name_lbl, on_surface)
+	UITheme.style_label_muted(_type_lbl, on_surface)
+	UITheme.style_label_primary(_desc_lbl, on_surface)
 	_desc_lbl.add_theme_font_size_override("font_size", 9)
 	_footer_lbl.add_theme_color_override("font_color", UITheme.ACCENT_POP)
 	_footer_lbl.add_theme_font_size_override("font_size", 9)

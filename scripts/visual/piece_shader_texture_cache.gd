@@ -15,6 +15,10 @@ static func warm_for_layout_async(pixel_size: int, player_color: Color, ai_color
 	var size := maxi(8, pixel_size)
 	if size == _warmed_pixel_size and not _textures.is_empty():
 		return
+	# SubViewport readback is unreliable on WebGL; ThemeCozy falls back to vector drawing.
+	if OS.has_feature("web"):
+		_warmed_pixel_size = size
+		return
 
 	_textures.clear()
 	var baker := _ensure_baker()

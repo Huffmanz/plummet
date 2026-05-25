@@ -50,11 +50,13 @@ var _hover_sfx_ms: int = 0
 var _drag_drop_accepted: bool = false
 var _piece_hover_slot: ShopPieceSlot = null
 var _piece_hover_time: float = 0.0
+var _enter_anim_done: bool = false
 
 
 func _ready() -> void:
 	add_to_group("shop_cursor_owner")
-	z_index = 10
+	z_index = 50
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_collect_nodes()
 	_style_ui()
 	_wire_signals()
@@ -88,8 +90,7 @@ func _style_ui() -> void:
 		$Root/Body/BagSection/BagVBox/BagTitle,
 		$Root/Body/RelicsSection/RelicsVBox/RelicsTitle,
 	]:
-		#UITheme.style_label_muted(section_title as Label)
-		pass
+		UITheme.style_label_primary(section_title as Label, false)
 	_continue_btn.normal_bg_color = UITheme.ACCENT
 	_continue_btn.hover_bg_color = UITheme.ACCENT_HOVER
 	var offers_hint: Label = $Root/Body/OffersSection/OffersVBox/OffersHint
@@ -128,7 +129,15 @@ func _make_preview_bag() -> PieceBag:
 
 
 func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = false) -> void:
+	_enter_anim_done = false
+	var web := _is_web_runtime()
+	if web:
+		reduced_motion = true
+	top_level = false
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	move_to_front()
+	z_index = 100 if web else 50
+	mouse_filter = Control.MOUSE_FILTER_STOP
 	_bag = bag
 	_chips = chips
 	_displayed_chips = chips
@@ -150,15 +159,45 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = fals
 		card.reduced_motion = reduced_motion
 	for slot in _piece_slots:
 		slot.reduced_motion = reduced_motion
-	_prepare_shop_content_hidden()
+	if web:
+		_prepare_shop_content_for_web()
+	else:
+		_prepare_shop_content_hidden()
 	show()
-	modulate = Color(1.0, 1.0, 1.0, 0.0)
+	modulate = Color.WHITE
+	if web:
+		_show_shop_content_immediately()
+		_apply_web_shop_theme()
+		_set_input_enabled(true)
+		_update_shop_cursor()
+		_enter_anim_done = true
+		_refresh_web_shop_after_layout.call_deferred()
+		return
+	_force_canvas_visible(self)
 	_set_input_enabled(false)
 	_update_shop_cursor()
-	if TransitionManager.is_transitioning():
-		TransitionManager.transition_finished.connect(_finish_shop_enter, CONNECT_ONE_SHOT)
-	else:
-		_finish_shop_enter.call_deferred()
+	_run_shop_enter.call_deferred()
+
+
+func _is_web_runtime() -> bool:
+	return OS.has_feature("web")
+
+
+func _finish_shop_close() -> void:
+	top_level = false
+	hide()
+
+
+func _force_canvas_visible(node: Node) -> void:
+	if node is CanvasItem:
+		var ci := node as CanvasItem
+		ci.visible = true
+		ci.modulate = Color.WHITE
+	if node is Control:
+		var ctrl := node as Control
+		ctrl.self_modulate = Color.WHITE
+	for child in node.get_children():
+		_force_canvas_visible(child)
 
 
 func _prepare_shop_content_hidden() -> void:
@@ -175,10 +214,103 @@ func _prepare_shop_content_hidden() -> void:
 			card.pivot_offset = Vector2.ZERO
 
 
-func _finish_shop_enter() -> void:
-	if not is_inside_tree():
+func _prepare_shop_content_for_web() -> void:
+	_set_chip_display(_displayed_chips)
+	_reroll_btn.disabled = _rerolled or _chips < COST_REROLL
+	_reroll_btn.button_text = "Rerolled" if _rerolled else "Reroll (%d)" % COST_REROLL
+	_offer_fly_in.skip_animation_show_all()
+	_bag_fly_in.skip_animation_show_all()
+	var bg := get_node_or_null("Background") as ColorRect
+	if bg != null:
+		bg.hide()
+	_ensure_web_backdrop()
+	_refresh_offers(false)
+	_refresh_bag()
+	_refresh_relics()
+	_set_bag_row_visible_for_fly_in(true)
+
+
+func _refresh_web_shop_after_layout() -> void:
+	if not _is_web_runtime() or not visible:
 		return
+	_apply_web_shop_theme()
+
+
+func _apply_web_shop_theme() -> void:
+	var bg := get_node_or_null("Background") as CanvasItem
+	if bg != null:
+		bg.hide()
+	_ensure_web_backdrop()
+	var root := get_node_or_null("Root") as Control
+	if root != null:
+		root.visible = true
+		root.modulate = Color.WHITE
+		root.self_modulate = Color.WHITE
+		root.z_index = 2
+		_apply_web_theme_to_tree(root)
+	_chip_label.uppercase = false
+	_chip_label.add_theme_color_override("font_color", UITheme.TEXT_ON_CANVAS)
+	var title_rtl := $Root/Topbar/TopRow/TitleLabel as RichTextLabel
+	if title_rtl != null:
+		title_rtl.add_theme_color_override("default_color", UITheme.TEXT_ON_CANVAS)
+		title_rtl.visible = true
+		title_rtl.modulate = Color.WHITE
+	for btn in [_continue_btn, _reroll_btn]:
+		if btn != null:
+			btn.refresh_web_visuals()
+	for card in _offer_cards:
+		if card == null or not card.visible:
+			continue
+		card.modulate = Color.WHITE
+		card.visible = true
+
+
+func _apply_web_theme_to_tree(node: Node) -> void:
+	if node is ShopOfferCard or node is JuicySfxButton:
+		return
+	if node is Label:
+		var lbl := node as Label
+		lbl.uppercase = false
+		UITheme.style_label_primary(lbl, false)
+		lbl.add_theme_constant_override("outline_size", 0)
+	elif node is RichTextLabel:
+		var rtl := node as RichTextLabel
+		rtl.add_theme_color_override("default_color", UITheme.TEXT_ON_CANVAS)
+		rtl.visible = true
+	if node is CanvasItem and not (node is Window):
+		var ci := node as CanvasItem
+		ci.visible = true
+		ci.modulate = Color.WHITE
+	if node is Control:
+		(node as Control).self_modulate = Color.WHITE
+	for child in node.get_children():
+		_apply_web_theme_to_tree(child)
+
+
+func _ensure_web_backdrop() -> void:
+	var backdrop := get_node_or_null("WebBackdrop") as ColorRect
+	if backdrop == null:
+		backdrop = ColorRect.new()
+		backdrop.name = "WebBackdrop"
+		backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
+		add_child(backdrop)
+		move_child(backdrop, 0)
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.color = UITheme.CANVAS
+	backdrop.material = null
+	backdrop.show()
+
+
+func _run_shop_enter() -> void:
+	if not is_inside_tree() or _enter_anim_done:
+		return
+	_enter_anim_done = true
 	modulate = Color.WHITE
+	if reduced_motion:
+		_show_shop_content_immediately()
+		_set_input_enabled(true)
+		_update_shop_cursor()
+		return
 	await _play_shop_intro_animations()
 	if not is_inside_tree():
 		return
@@ -358,6 +490,9 @@ func _refresh_offers(hide_until_deal_in: bool = false) -> void:
 			var hidden := card.modulate
 			hidden.a = 0.0
 			card.modulate = hidden
+		else:
+			card.modulate = Color.WHITE
+			card.scale = Vector2.ONE
 
 
 func _refresh_bag() -> void:
@@ -388,10 +523,19 @@ func _play_offer_deal_in() -> void:
 	await _offer_fly_in.play_fly_in()
 
 
+func _show_shop_content_immediately() -> void:
+	_offer_fly_in.reduced_motion = true
+	_bag_fly_in.reduced_motion = true
+	_offer_fly_in.skip_animation_show_all()
+	_bag_fly_in.skip_animation_show_all()
+	_set_bag_row_visible_for_fly_in(true)
+	_refresh_offers(false)
+
+
 func _play_bag_deal_in() -> void:
 	_bag_fly_in.reduced_motion = reduced_motion
 	if reduced_motion:
-		_set_bag_row_visible_for_fly_in(true)
+		_show_shop_content_immediately()
 		return
 	# Row stays transparent until slots are wrapped and hidden behind pan alpha 0.
 	await _bag_fly_in.prepare_fly_in()
@@ -801,13 +945,17 @@ func _on_continue() -> void:
 	if _audio != null:
 		_audio.play_close()
 	if get_parent() == get_tree().root:
-		hide()
+		_finish_shop_close()
 		shop_closed.emit(_chips)
+		return
+	if _is_web_runtime():
+		_finish_shop_close()
+		call_deferred("_emit_shop_closed")
 		return
 	if TransitionManager.is_transitioning():
 		await TransitionManager.transition_finished
 	await TransitionManager.transition_screen(func():
-		hide()
+		_finish_shop_close()
 	)
 	if not is_inside_tree():
 		return

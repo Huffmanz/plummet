@@ -44,8 +44,15 @@ func _sync_piece_size() -> void:
 
 
 func _apply_material() -> void:
+	if _piece_rect == null:
+		return
+	if OS.has_feature("web"):
+		_piece_rect.material = null
+		_piece_rect.color = UITheme.PLAYER
+		return
 	var mat := ShaderMaterial.new()
 	mat.shader = _PIECE_SHADER
 	mat.set_shader_parameter("base_color", UITheme.PLAYER)
 	mat.set_shader_parameter("style", _shader_style)
 	_piece_rect.material = mat
+	_piece_rect.color = Color.WHITE

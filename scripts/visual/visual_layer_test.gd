@@ -25,6 +25,7 @@ func _ready() -> void:
 	test_board_renderer_is_col_valid_full_column()
 	test_layout_manager_desktop_mode()
 	test_layout_manager_too_small()
+	test_layout_manager_narrow_viewport_fits_board()
 	test_layout_manager_cell_size_clamped()
 	test_cell_state_defaults_empty()
 	test_queue_entry_defaults_normal()
@@ -179,6 +180,16 @@ func test_layout_manager_too_small() -> void:
 	var lm := LayoutManager.new()
 	var result := lm.compute(Vector2(200.0, 180.0))
 	_assert("200×180 → TOO_SMALL mode", result.mode == LayoutManager.LayoutMode.TOO_SMALL)
+
+
+func test_layout_manager_narrow_viewport_fits_board() -> void:
+	var lm := LayoutManager.new()
+	var result := lm.compute(Vector2(400.0, 360.0))
+	var board_w: float = RenderState.COLS * result.cell_size + (RenderState.COLS - 1) * LayoutManager.CELL_GAP
+	var board_right: float = result.board_origin.x + board_w
+	_assert("400px wide shrinks panels below full width", result.panel_width < LayoutManager.PANEL_WIDTH)
+	_assert("Board starts after left panel", result.board_origin.x >= result.panel_width)
+	_assert("Board ends before right panel", board_right <= result.viewport_size.x - result.panel_width)
 
 
 func test_layout_manager_cell_size_clamped() -> void:

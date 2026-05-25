@@ -24,6 +24,10 @@ var _running: bool = false
 var _winner_shown: bool = false
 var _winner_tween: Tween
 var _next_tween: Tween
+var _auto_continue_timer: SceneTreeTimer
+
+const _AUTO_CONTINUE_DELAY := 3.0
+const _SFX_WAIT_MAX := 1.5
 
 
 func _ready() -> void:
@@ -89,6 +93,10 @@ func _prepare_winner_label(player_score: int, ai_score: int) -> void:
 func _handle_outcome_reveal() -> void:
 	_stop_count_up_sfx()
 	_reveal_winner_label()
+	if OS.has_feature("web"):
+		if _running:
+			_show_next_button()
+		return
 	if _player_target > _ai_target:
 		_play_win_sfx()
 		await _wait_for_sfx(_win_sfx)
@@ -104,7 +112,7 @@ func _wait_for_sfx(player: AudioStreamPlayer) -> void:
 		return
 	if not player.playing:
 		return
-	await player.finished
+	await get_tree().create_timer(_SFX_WAIT_MAX).timeout
 
 
 func _reveal_winner_label() -> void:
@@ -135,6 +143,25 @@ func _show_next_button() -> void:
 	_next_tween.tween_property(_next_btn, "modulate:a", 1.0, _NEXT_FADE_DUR) \
 		.set_trans(Tween.TRANS_QUAD) \
 		.set_ease(Tween.EASE_OUT)
+	_schedule_auto_continue()
+
+
+func _schedule_auto_continue() -> void:
+	_cancel_auto_continue()
+	if not _running:
+		return
+	_auto_continue_timer = get_tree().create_timer(_AUTO_CONTINUE_DELAY)
+	_auto_continue_timer.timeout.connect(_on_auto_continue, CONNECT_ONE_SHOT)
+
+
+func _cancel_auto_continue() -> void:
+	_auto_continue_timer = null
+
+
+func _on_auto_continue() -> void:
+	if not _running:
+		return
+	finished.emit()
 
 
 func _kill_next_tween() -> void:
@@ -146,6 +173,7 @@ func _kill_next_tween() -> void:
 func _on_next_pressed() -> void:
 	if not _running:
 		return
+	_cancel_auto_continue()
 	_running = false
 	finished.emit()
 
@@ -179,6 +207,7 @@ func _stop_count_up_sfx() -> void:
 
 
 func show_result(player_score: int, ai_score: int) -> void:
+	_cancel_auto_continue()
 	_stop_count_up_sfx()
 	if _confetti != null:
 		_confetti.stop()

@@ -23,6 +23,7 @@ enum Style { FADE, DIAGONAL_WIPE }
 
 var _wipe_material: ShaderMaterial
 var _busy: bool = false
+var _watchdog_timer: SceneTreeTimer
 
 
 func _ready() -> void:
@@ -56,29 +57,25 @@ func transition_to_packed(
 	if scene == null:
 		push_error("TransitionManager: null PackedScene")
 		return
-	if _busy:
-		push_warning("TransitionManager: transition already in progress")
-		return
+	await _await_idle()
 
 	var transition_duration := default_duration if duration < 0.0 else duration
-	_busy = true
-	transition_started.emit()
+	var resolved_style := _resolve_style(style)
+	_begin_transition(transition_duration)
 
 	if transition_duration <= 0.0:
 		get_tree().change_scene_to_packed(scene)
-		_busy = false
-		transition_finished.emit()
+		_end_transition()
 		return
 
 	await _run_midpoint_transition(
 		func() -> void: get_tree().change_scene_to_packed(scene),
 		transition_duration,
 		fade_color,
-		style
+		resolved_style
 	)
 
-	_busy = false
-	transition_finished.emit()
+	_end_transition()
 
 
 ## Cover screen, run `action` while hidden, then reveal. Does not change scenes.
@@ -88,27 +85,23 @@ func transition_screen(
 	fade_color: Color = default_fade_color,
 	style: Style = default_style
 ) -> void:
-	if _busy:
-		push_warning("TransitionManager: transition already in progress")
-		return
 	if not action.is_valid():
 		push_error("TransitionManager: invalid screen action")
 		return
+	await _await_idle()
 
 	var transition_duration := default_duration if duration < 0.0 else duration
-	_busy = true
-	transition_started.emit()
+	var resolved_style := _resolve_style(style)
+	_begin_transition(transition_duration)
 
 	if transition_duration <= 0.0:
 		action.call()
-		_busy = false
-		transition_finished.emit()
+		_end_transition()
 		return
 
-	await _run_midpoint_transition(action, transition_duration, fade_color, style)
+	await _run_midpoint_transition(action, transition_duration, fade_color, resolved_style)
 
-	_busy = false
-	transition_finished.emit()
+	_end_transition()
 
 
 func reload_current(
@@ -126,6 +119,47 @@ func reload_current(
 		push_error("TransitionManager: current scene has no file path")
 		return
 	await transition_to(path, duration, fade_color, style)
+
+
+func _await_idle() -> void:
+	while _busy:
+		await transition_finished
+
+
+func _resolve_style(style: Style) -> Style:
+	# Diagonal wipe shader tweens can stall on WebGL, leaving the overlay opaque.
+	if OS.has_feature("web") and style == Style.DIAGONAL_WIPE:
+		return Style.FADE
+	return style
+
+
+func _begin_transition(duration: float) -> void:
+	_cancel_watchdog()
+	_busy = true
+	transition_started.emit()
+	var watchdog_delay := maxf(duration, default_duration) + 1.5
+	_watchdog_timer = get_tree().create_timer(watchdog_delay)
+	_watchdog_timer.timeout.connect(_on_transition_watchdog, CONNECT_ONE_SHOT)
+
+
+func _end_transition() -> void:
+	if not _busy:
+		return
+	_cancel_watchdog()
+	_reset_overlay()
+	_busy = false
+	transition_finished.emit()
+
+
+func _cancel_watchdog() -> void:
+	_watchdog_timer = null
+
+
+func _on_transition_watchdog() -> void:
+	if not _busy:
+		return
+	push_warning("TransitionManager: watchdog forced transition end (web/tween stall)")
+	_end_transition()
 
 
 func _run_midpoint_transition(

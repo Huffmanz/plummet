@@ -57,3 +57,11 @@ func on_ai_skipped() -> void:
 		return
 	_active = false
 	match_ended.emit(MatchEndReason.BOARD_FULL)
+
+
+## Debug: end the match immediately (e.g. secret autowin cheat).
+func force_end(reason: MatchEndReason = MatchEndReason.TURNS_EXHAUSTED) -> void:
+	if not _active:
+		return
+	_active = false
+	match_ended.emit(reason)

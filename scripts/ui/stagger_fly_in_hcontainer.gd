@@ -48,10 +48,25 @@ func _ready() -> void:
 
 func play_fly_in() -> void:
 	if reduced_motion:
+		skip_animation_show_all()
 		finished.emit()
 		return
 	await prepare_fly_in()
 	await run_fly_in_tween()
+
+
+## Unwrap fly-in slots and force full opacity (web / reduced motion).
+func skip_animation_show_all() -> void:
+	_kill_tween()
+	for child in get_children().duplicate():
+		if child is StaggerFlyInSlot:
+			(child as StaggerFlyInSlot).reveal_immediately()
+	_unwrap_children()
+	for child in get_children():
+		if child is Control:
+			var ctrl := child as Control
+			ctrl.modulate = Color.WHITE
+			ctrl.scale = Vector2.ONE
 
 
 func prepare_fly_in() -> void:
@@ -76,6 +91,7 @@ func prepare_fly_in() -> void:
 
 func run_fly_in_tween() -> void:
 	if reduced_motion:
+		skip_animation_show_all()
 		finished.emit()
 		return
 	var slots := _gather_animatable_slots()

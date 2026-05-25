@@ -31,6 +31,13 @@ func clear_fly_in_prep() -> void:
 	clip_contents = false
 
 
+func reveal_immediately() -> void:
+	if _pan != null:
+		_pan.position = Vector2.ZERO
+		_pan.modulate = Color.WHITE
+	clip_contents = false
+
+
 func get_content() -> Control:
 	if _content == null and _pan != null and _pan.get_child_count() > 0:
 		_content = _pan.get_child(0) as Control

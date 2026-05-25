@@ -14,7 +14,7 @@ var _pulse_tween: Tween = null
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	UITheme.style_label_primary(_name_lbl, true)
+	UITheme.style_label_primary(_name_lbl, not OS.has_feature("web"))
 	_ignore_mouse_on_children(self)
 
 

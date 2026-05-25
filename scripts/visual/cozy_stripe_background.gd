@@ -25,6 +25,10 @@ func _ready() -> void:
 
 
 func _apply_shader() -> void:
+	if OS.has_feature("web"):
+		material = null
+		color = color_one
+		return
 	var mat := ShaderMaterial.new()
 	mat.shader = _SHADER
 	mat.set_shader_parameter("color_one", color_one)

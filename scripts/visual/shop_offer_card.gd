@@ -3,7 +3,7 @@ class_name ShopOfferCard extends PanelContainer
 signal drag_started(offer_index: int)
 signal drag_ended
 
-const RELIC_BORDER := ShopIcon.RELIC_BORDER
+const RELIC_BORDER := Color("#4DA8B0")
 const _DragIconScript := preload("res://scripts/visual/shop_offer_drag_icon.gd")
 
 @onready var _offer_visual: ShopOfferVisual = %OfferVisual

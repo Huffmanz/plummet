@@ -54,7 +54,7 @@ theme_override_constants/separation = 8
 [node name="TitleCol" type="VBoxContainer" parent="Root/Topbar/TopRow" unique_id=2069464131]
 visible = false
 layout_mode = 2
-size_flags_horizontal = 3
+size_flags_horizontal = 0
 theme_override_constants/separation = 0
 
 [node name="TitleLabel" type="RichTextLabel" parent="Root/Topbar/TopRow" unique_id=146164699]
@@ -149,12 +149,6 @@ layout_mode = 2
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
-
-[node name="OffersHint" type="Label" parent="Root/Body/OffersSection/OffersVBox" unique_id=190384448]
-visible = false
-layout_mode = 2
-theme_override_font_sizes/font_size = 8
-text = "Modifiers and piece types drag onto any piece below. Relics drag to your relic row."
 
 [node name="MarginContainer" type="MarginContainer" parent="Root/Body/OffersSection/OffersVBox" unique_id=810755831]
 visible = false

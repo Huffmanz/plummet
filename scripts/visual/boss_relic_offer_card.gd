@@ -2,7 +2,7 @@ class_name BossRelicOfferCard extends PanelContainer
 
 signal chosen(relic_id: String)
 
-const RELIC_BORDER := ShopIcon.RELIC_BORDER
+const RELIC_BORDER := Color("#4DA8B0")
 
 @onready var _icon: ShopIcon = %ShopIcon
 @onready var _name_lbl: Label = %NameLabel

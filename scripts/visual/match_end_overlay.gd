@@ -93,16 +93,14 @@ func _prepare_winner_label(player_score: int, ai_score: int) -> void:
 func _handle_outcome_reveal() -> void:
 	_stop_count_up_sfx()
 	_reveal_winner_label()
-	if OS.has_feature("web"):
-		if _running:
-			_show_next_button()
-		return
 	if _player_target > _ai_target:
 		_play_win_sfx()
-		await _wait_for_sfx(_win_sfx)
+		if not OS.has_feature("web"):
+			await _wait_for_sfx(_win_sfx)
 	else:
 		_play_lose_sfx()
-		await _wait_for_sfx(_lose_sfx)
+		if not OS.has_feature("web"):
+			await _wait_for_sfx(_lose_sfx)
 	if _running:
 		_show_next_button()
 

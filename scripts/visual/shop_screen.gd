@@ -85,17 +85,8 @@ func _collect_nodes() -> void:
 
 func _style_ui() -> void:
 	_chip_label.add_theme_color_override("font_color", UITheme.ACCENT)
-	for section_title in [
-		$Root/Body/OffersSection/OffersVBox/OffersHeader/OffersTitle,
-		$Root/Body/BagSection/BagVBox/BagTitle,
-		$Root/Body/RelicsSection/RelicsVBox/RelicsTitle,
-	]:
-		UITheme.style_label_primary(section_title as Label, false)
 	_continue_btn.normal_bg_color = UITheme.ACCENT
 	_continue_btn.hover_bg_color = UITheme.ACCENT_HOVER
-	var offers_hint: Label = $Root/Body/OffersSection/OffersVBox/OffersHint
-	if offers_hint:
-		UITheme.style_label_muted(offers_hint)
 
 
 func _set_input_enabled(enabled: bool) -> void:
@@ -130,13 +121,12 @@ func _make_preview_bag() -> PieceBag:
 
 func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = false) -> void:
 	_enter_anim_done = false
-	var web := _is_web_runtime()
-	if web:
+	if OS.has_feature("web"):
 		reduced_motion = true
 	top_level = false
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	move_to_front()
-	z_index = 100 if web else 50
+	z_index = 50
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	_bag = bag
 	_chips = chips
@@ -159,24 +149,20 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = fals
 		card.reduced_motion = reduced_motion
 	for slot in _piece_slots:
 		slot.reduced_motion = reduced_motion
-	if web:
-		_prepare_shop_content_for_web()
-	else:
-		_prepare_shop_content_hidden()
+	_prepare_shop_content_hidden()
 	show()
 	modulate = Color.WHITE
-	if web:
+	if reduced_motion:
+		_enter_anim_done = true
 		_show_shop_content_immediately()
-		_apply_web_shop_theme()
 		_set_input_enabled(true)
 		_update_shop_cursor()
-		_enter_anim_done = true
-		_refresh_web_shop_after_layout.call_deferred()
-		return
-	_force_canvas_visible(self)
-	_set_input_enabled(false)
-	_update_shop_cursor()
-	_run_shop_enter.call_deferred()
+	else:
+		_force_canvas_visible(self)
+		_sync_offer_card_visibility()
+		_set_input_enabled(false)
+		_update_shop_cursor()
+		_run_shop_enter.call_deferred()
 
 
 func _is_web_runtime() -> bool:
@@ -213,92 +199,6 @@ func _prepare_shop_content_hidden() -> void:
 			card.scale = Vector2.ONE
 			card.pivot_offset = Vector2.ZERO
 
-
-func _prepare_shop_content_for_web() -> void:
-	_set_chip_display(_displayed_chips)
-	_reroll_btn.disabled = _rerolled or _chips < COST_REROLL
-	_reroll_btn.button_text = "Rerolled" if _rerolled else "Reroll (%d)" % COST_REROLL
-	_offer_fly_in.skip_animation_show_all()
-	_bag_fly_in.skip_animation_show_all()
-	var bg := get_node_or_null("Background") as ColorRect
-	if bg != null:
-		bg.hide()
-	_ensure_web_backdrop()
-	_refresh_offers(false)
-	_refresh_bag()
-	_refresh_relics()
-	_set_bag_row_visible_for_fly_in(true)
-
-
-func _refresh_web_shop_after_layout() -> void:
-	if not _is_web_runtime() or not visible:
-		return
-	_apply_web_shop_theme()
-
-
-func _apply_web_shop_theme() -> void:
-	var bg := get_node_or_null("Background") as CanvasItem
-	if bg != null:
-		bg.hide()
-	_ensure_web_backdrop()
-	var root := get_node_or_null("Root") as Control
-	if root != null:
-		root.visible = true
-		root.modulate = Color.WHITE
-		root.self_modulate = Color.WHITE
-		root.z_index = 2
-		_apply_web_theme_to_tree(root)
-	_chip_label.uppercase = false
-	_chip_label.add_theme_color_override("font_color", UITheme.TEXT_ON_CANVAS)
-	var title_rtl := $Root/Topbar/TopRow/TitleLabel as RichTextLabel
-	if title_rtl != null:
-		title_rtl.add_theme_color_override("default_color", UITheme.TEXT_ON_CANVAS)
-		title_rtl.visible = true
-		title_rtl.modulate = Color.WHITE
-	for btn in [_continue_btn, _reroll_btn]:
-		if btn != null:
-			btn.refresh_web_visuals()
-	for card in _offer_cards:
-		if card == null or not card.visible:
-			continue
-		card.modulate = Color.WHITE
-		card.visible = true
-
-
-func _apply_web_theme_to_tree(node: Node) -> void:
-	if node is ShopOfferCard or node is JuicySfxButton:
-		return
-	if node is Label:
-		var lbl := node as Label
-		lbl.uppercase = false
-		UITheme.style_label_primary(lbl, false)
-		lbl.add_theme_constant_override("outline_size", 0)
-	elif node is RichTextLabel:
-		var rtl := node as RichTextLabel
-		rtl.add_theme_color_override("default_color", UITheme.TEXT_ON_CANVAS)
-		rtl.visible = true
-	if node is CanvasItem and not (node is Window):
-		var ci := node as CanvasItem
-		ci.visible = true
-		ci.modulate = Color.WHITE
-	if node is Control:
-		(node as Control).self_modulate = Color.WHITE
-	for child in node.get_children():
-		_apply_web_theme_to_tree(child)
-
-
-func _ensure_web_backdrop() -> void:
-	var backdrop := get_node_or_null("WebBackdrop") as ColorRect
-	if backdrop == null:
-		backdrop = ColorRect.new()
-		backdrop.name = "WebBackdrop"
-		backdrop.mouse_filter = Control.MOUSE_FILTER_STOP
-		add_child(backdrop)
-		move_child(backdrop, 0)
-	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	backdrop.color = UITheme.CANVAS
-	backdrop.material = null
-	backdrop.show()
 
 
 func _run_shop_enter() -> void:
@@ -430,13 +330,17 @@ func _refresh() -> void:
 	_refresh_relics()
 
 
+func _sync_offer_card_visibility() -> void:
+	for i in _offer_cards.size():
+		_offer_cards[i].visible = i < _offer_count and i < _offers.size()
+
+
 func _refresh_offers(hide_until_deal_in: bool = false) -> void:
+	_sync_offer_card_visibility()
 	for i in _offer_cards.size():
 		var card := _offer_cards[i]
-		if i >= _offer_count or i >= _offers.size():
-			card.visible = false
+		if not card.visible:
 			continue
-		card.visible = true
 		var offer := _offers[i]
 		var used := i < _offer_used.size() and _offer_used[i]
 		var kind: String = offer.get("kind", "")

@@ -156,6 +156,7 @@ text = "0"
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_font_sizes/font_size = 7
+text = ""
 
 [node name="TurnPill" type="PanelContainer" parent="LeftPanel/SidebarVBox/ScorePanel/Margin/VBox" unique_id=1502113987]
 layout_mode = 2

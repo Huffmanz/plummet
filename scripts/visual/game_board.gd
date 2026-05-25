@@ -66,6 +66,8 @@ var _idle_t: float = 0.0
 # Score milestone tracking
 var _score_milestone: int = 0
 
+const _SCORE_DELTA_RESERVE_TEXT := "+999 last turn"
+
 # Match metadata (injected by RunController in run mode)
 @export var standalone: bool = true
 @export var sandbox_mode: bool = false
@@ -742,11 +744,11 @@ func _refresh_all() -> void:
 func _update_labels() -> void:
 	_player_score_label.text = str(int(_disp_player_score))
 	var delta := _state.score_delta if _state != null else 0
+	_score_delta_label.visible = true
 	if delta > 0:
 		_score_delta_label.text = "+%d last turn" % delta
-		_score_delta_label.visible = true
 	else:
-		_score_delta_label.visible = false
+		_score_delta_label.text = ""
 	_player_turns_label.text = str(_state.player_turns_remaining)
 	_ai_score_label.text = str(int(_disp_ai_score))
 	_ai_turns_label.text = str(_state.ai_turns_remaining)
@@ -793,6 +795,13 @@ func _apply_panel_style(vbox: VBoxContainer, panel_names: Array[String], panel_s
 			panel.add_theme_stylebox_override("panel", panel_style)
 
 
+func _reserve_score_delta_label_size() -> void:
+	_score_delta_label.text = _SCORE_DELTA_RESERVE_TEXT
+	_score_delta_label.custom_minimum_size = _score_delta_label.get_minimum_size()
+	_score_delta_label.text = ""
+	_score_delta_label.visible = true
+
+
 func _style_player_sidebar_labels() -> void:
 	for header_path in [
 		"ChipsPanel/Margin/VBox/HBoxContainer/Header",
@@ -803,6 +812,7 @@ func _style_player_sidebar_labels() -> void:
 			lbl.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	_player_score_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	_score_delta_label.add_theme_color_override("font_color", UITheme.TEXT_MUTED_ON_SURFACE)
+	_reserve_score_delta_label_size()
 	_player_turns_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)
 	_player_turns_label.add_theme_font_size_override("font_size", 18)
 	_chip_label.add_theme_color_override("font_color", UITheme.TEXT_ON_SURFACE)

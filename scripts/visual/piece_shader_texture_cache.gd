@@ -15,11 +15,6 @@ static func warm_for_layout_async(pixel_size: int, player_color: Color, ai_color
 	var size := maxi(8, pixel_size)
 	if size == _warmed_pixel_size and not _textures.is_empty():
 		return
-	# SubViewport readback is unreliable on WebGL; ThemeCozy falls back to vector drawing.
-	if OS.has_feature("web"):
-		_warmed_pixel_size = size
-		return
-
 	_textures.clear()
 	var baker := _ensure_baker()
 	for style in 5:
@@ -36,7 +31,7 @@ static func get_texture_sync(base_color: Color, piece_type: CellState.PieceType,
 	return null
 
 
-## Returns a cached disc texture or bakes one. Returns null on web (use vector fallback).
+## Returns a cached disc texture or bakes one. Returns null if bake/readback fails.
 static func get_or_bake_texture_async(
 		base_color: Color,
 		piece_type: CellState.PieceType,
@@ -45,8 +40,6 @@ static func get_or_bake_texture_async(
 	var tex := get_texture_sync(base_color, piece_type, pixel_size)
 	if tex != null:
 		return tex
-	if OS.has_feature("web"):
-		return null
 	var size := maxi(8, pixel_size)
 	var style := PieceVisualUtil.shader_style_index(piece_type)
 	var baker := _ensure_baker()

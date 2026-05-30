@@ -127,11 +127,10 @@ func _make_preview_bag() -> PieceBag:
 
 func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = false) -> void:
 	DataRegistry.ensure_loaded()
-	if not OS.has_feature("web"):
-		var disc_px := PieceShaderTextureCache.layout_pixel_size(
-			52.0 * ShopPiecePreview.DISC_FILL_RATIO
-		)
-		await PieceShaderTextureCache.warm_for_layout_async(disc_px, UITheme.PLAYER, UITheme.AI)
+	var disc_px := PieceShaderTextureCache.layout_pixel_size(
+		52.0 * ShopPiecePreview.DISC_FILL_RATIO
+	)
+	await PieceShaderTextureCache.warm_for_layout_async(disc_px, UITheme.PLAYER, UITheme.AI)
 	_enter_anim_done = false
 	if OS.has_feature("web"):
 		reduced_motion = true
@@ -171,6 +170,7 @@ func open(bag: PieceBag, chips: int, relic_mgr: RelicManager, muted: bool = fals
 		_update_shop_cursor()
 	else:
 		_force_canvas_visible(self)
+		_set_bag_row_visible_for_fly_in(false)
 		_sync_offer_card_visibility()
 		_set_input_enabled(false)
 		_update_shop_cursor()
@@ -463,7 +463,6 @@ func _play_bag_deal_in() -> void:
 	if reduced_motion:
 		_show_shop_content_immediately()
 		return
-	# Row stays transparent until slots are wrapped and hidden behind pan alpha 0.
 	await _bag_fly_in.prepare_fly_in()
 	if not is_inside_tree():
 		return
@@ -474,7 +473,6 @@ func _play_bag_deal_in() -> void:
 
 func _ensure_bag_row_visible() -> void:
 	_set_bag_row_visible_for_fly_in(true)
-	_refresh_bag()
 
 
 func _reset_offer_cards_for_deal_in() -> void:

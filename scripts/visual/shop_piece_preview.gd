@@ -1,19 +1,15 @@
 class_name ShopPiecePreview extends Control
-## Bag / offer piece disc — baked shader texture (board pipeline) or vector fallback on web.
+## Bag / offer piece disc — baked shader texture, live shader, or vector fallback.
 
 const DISC_FILL_RATIO := 0.9
 
 var _piece_type: CellState.PieceType = CellState.PieceType.NORMAL
 var _disc_texture: Texture2D = null
-var _use_vector_fallback: bool = false
-
-@onready var _piece_rect: ColorRect = %PieceRect
 
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	if _piece_rect != null:
-		_piece_rect.visible = false
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR
 	resized.connect(_on_resized)
 
 
@@ -32,17 +28,15 @@ func flash_type_change() -> void:
 
 
 func _apply_disc_visual() -> void:
-	if _piece_rect != null:
-		_piece_rect.visible = false
+	if size.x < 8.0 or size.y < 8.0:
+		return
 	_disc_texture = null
-	_use_vector_fallback = false
-	var pixel_size := PieceShaderTextureCache.layout_pixel_size(minf(size.x, size.y))
+	var pixel_size := PieceShaderTextureCache.layout_pixel_size(minf(size.x, size.y) * DISC_FILL_RATIO)
 	_disc_texture = await PieceShaderTextureCache.get_or_bake_texture_async(
 		UITheme.PLAYER,
 		_piece_type,
 		pixel_size
 	)
-	_use_vector_fallback = _disc_texture == null
 	modulate = Color.WHITE
 	queue_redraw()
 
@@ -59,8 +53,7 @@ func _draw() -> void:
 	if _disc_texture != null:
 		draw_texture_rect(_disc_texture, draw_rect, false)
 		return
-	if _use_vector_fallback:
-		_draw_vector_disc(draw_rect)
+	_draw_vector_disc(draw_rect)
 
 
 func _draw_vector_disc(rect: Rect2) -> void:

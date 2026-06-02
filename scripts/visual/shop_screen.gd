@@ -15,7 +15,6 @@ const WEIGHT_RELIC_UNCOMMON: int = 2
 const WEIGHT_RELIC_RARE: int = 1
 
 const OFFER_EXIT_DURATION := 0.18
-const DROP_HOVER_SFX_MS := 200
 const PIECE_INFO_DELAY := 0.25
 
 @onready var _audio: ShopAudio = $ShopAudio
@@ -46,7 +45,7 @@ var _input_enabled: bool = true
 @export var reduced_motion: bool = false
 var _displayed_chips: int = 0
 var _chip_tween: Tween
-var _hover_sfx_ms: int = 0
+var _last_drag_hover_state: String = ""
 var _drag_drop_accepted: bool = false
 var _piece_hover_slot: ShopPieceSlot = null
 var _piece_hover_time: float = 0.0
@@ -62,7 +61,7 @@ func _ready() -> void:
 	_wire_signals()
 	hide()
 	if get_parent() == get_tree().root:
-		open(_make_preview_bag(), 30, null)
+		open(_make_preview_bag(), 300, null)
 
 
 func _collect_nodes() -> void:
@@ -356,6 +355,9 @@ func _refresh_offers(hide_until_deal_in: bool = false) -> void:
 			continue
 		var offer := _offers[i]
 		var used := i < _offer_used.size() and _offer_used[i]
+		if used:
+			card.set_consumed(true)
+			continue
 		var kind: String = offer.get("kind", "")
 		var id: String = offer.get("id", "")
 		var cost := _offer_cost(kind)
@@ -395,15 +397,14 @@ func _refresh_offers(hide_until_deal_in: bool = false) -> void:
 				hint = "drag to relic row"
 				cost = _relic_purchase_cost()
 		card.setup(i, kind, id, cost, title, type_lbl, desc, hint, icon_color, is_relic, icon_texture)
-		card.set_consumed(used)
-		var can_use := not used and _chips >= cost
-		if not used and kind == "modifier" and _count_empty_mod_slots() == 0:
+		var can_use := _chips >= cost
+		if kind == "modifier" and _count_empty_mod_slots() == 0:
 			can_use = false
-		if not used and kind == "relic":
+		if kind == "relic":
 			if _count_empty_relic_slots() == 0 or not _relic_manager.can_add_relic():
 				can_use = false
 		card.set_affordable(can_use)
-		if hide_until_deal_in and not used:
+		if hide_until_deal_in:
 			var hidden := card.modulate
 			hidden.a = 0.0
 			card.modulate = hidden
@@ -630,6 +631,7 @@ func _on_offer_drag_started(offer_idx: int) -> void:
 	_offer_dragging = true
 	_drag_drop_accepted = false
 	_drag_offer_idx = offer_idx
+	_last_drag_hover_state = ""
 	_piece_hover_slot = null
 	if _piece_info != null:
 		_piece_info.hide_popup()
@@ -689,17 +691,18 @@ func _update_drag_hover_sfx() -> void:
 	if _audio == null:
 		return
 	var hover := _get_drag_hover_target()
-	if hover.is_empty():
-		return
-	var now := Time.get_ticks_msec()
-	if now - _hover_sfx_ms < DROP_HOVER_SFX_MS:
-		return
+	var state := ""
 	if hover.get("valid", false):
-		_audio.play_drop_valid_hover()
-		_hover_sfx_ms = now
+		state = "valid"
 	elif hover.get("invalid", false):
+		state = "invalid"
+	if state == _last_drag_hover_state:
+		return
+	_last_drag_hover_state = state
+	if state == "valid":
+		_audio.play_drop_valid_hover()
+	elif state == "invalid":
 		_audio.play_drop_invalid()
-		_hover_sfx_ms = now
 
 
 func _get_drag_hover_target() -> Dictionary:

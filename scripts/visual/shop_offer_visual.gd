@@ -33,7 +33,7 @@ func _badge_size(display_size: Vector2) -> Vector2:
 
 
 func _mount_modifier(modifier_id: String, display_size: Vector2) -> void:
-	var badge := ModifierIconBadge.create_for_modifier(modifier_id, _badge_size(display_size))
+	var badge := ModifierIconBadge.create_for_modifier(modifier_id, display_size)
 	_add_centered(badge)
 
 
@@ -48,7 +48,7 @@ func _mount_piece_type(type_id: String, display_size: Vector2) -> void:
 
 
 func _mount_relic(relic_id: String, display_size: Vector2) -> void:
-	var badge := ModifierIconBadge.create_for_relic(relic_id, _badge_size(display_size))
+	var badge := ModifierIconBadge.create_for_relic(relic_id, display_size)
 	_add_centered(badge)
 
 

@@ -2,7 +2,7 @@ class_name ShopRelicSlot extends PanelContainer
 
 signal relic_dropped(slot_index: int, data: Dictionary)
 
-@onready var _icon: ShopIcon = %ShopIcon
+@onready var _icon: ShopOfferVisual = %ShopIcon
 @onready var _name_lbl: Label = %NameLabel
 @onready var _empty_lbl: Label = %EmptyLabel
 
@@ -37,7 +37,7 @@ func setup(index: int, relic_id: String) -> void:
 	if _occupied:
 		var rd: RelicData = DataRegistry.get_relic(relic_id)
 		_name_lbl.text = rd.display_name if rd else relic_id
-		_icon.setup_relic(rd.icon if rd != null else null)
+		_icon.setup("relic", relic_id, Vector2(22, 22))
 		_icon.visible = true
 		_name_lbl.visible = true
 		_empty_lbl.visible = false

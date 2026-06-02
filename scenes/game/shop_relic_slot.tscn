@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://b3e6lwoj0jiwu"]
 
 [ext_resource type="Script" uid="uid://daq3o7kje7jh1" path="res://scripts/visual/shop_relic_slot.gd" id="1_slot"]
-[ext_resource type="PackedScene" uid="uid://c8k2shopicon7m3" path="res://scenes/game/shop_icon.tscn" id="2_icon"]
+[ext_resource type="PackedScene" path="res://scenes/game/shop_offer_visual.tscn" id="2_visual"]
 
 [node name="ShopRelicSlot" type="PanelContainer" unique_id=1983432133]
 size_flags_horizontal = 3
@@ -19,14 +19,12 @@ theme_override_constants/margin_bottom = 4
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="ShopIcon" parent="Margin/HBox" instance=ExtResource("2_icon")]
+[node name="ShopIcon" parent="Margin/HBox" instance=ExtResource("2_visual")]
 unique_name_in_owner = true
 visible = false
 custom_minimum_size = Vector2(22, 22)
 layout_mode = 2
 size_flags_vertical = 4
-texture_min_size = Vector2(12, 12)
-glyph_min_size = Vector2(8, 8)
 
 [node name="NameLabel" type="Label" parent="Margin/HBox" unique_id=1672977521]
 unique_name_in_owner = true

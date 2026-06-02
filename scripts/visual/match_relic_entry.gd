@@ -1,6 +1,6 @@
 class_name MatchRelicEntry extends PanelContainer
 
-@onready var _icon: ShopIcon = %ShopIcon
+@onready var _icon: ShopOfferVisual = %ShopIcon
 
 var relic_id: String = ""
 
@@ -8,7 +8,7 @@ var relic_id: String = ""
 func setup(id: String) -> void:
 	relic_id = id
 	var rd: RelicData = DataRegistry.get_relic(id)
-	_icon.setup_relic(rd.icon if rd != null else null)
+	_icon.setup("relic", id, Vector2(22, 22))
 	add_theme_stylebox_override("panel", StyleBoxEmpty.new())
 	GameTooltip.unbind(self)
 	GameTooltip.bind(self, _tooltip_text(rd, id))

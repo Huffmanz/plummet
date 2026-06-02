@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://c4hgr74hv8mho"]
 
 [ext_resource type="Script" uid="uid://c04ms5nshctg" path="res://scripts/visual/boss_relic_offer_card.gd" id="1_card"]
-[ext_resource type="PackedScene" uid="uid://c8k2shopicon7m3" path="res://scenes/game/shop_icon.tscn" id="6_icon"]
+[ext_resource type="PackedScene" path="res://scenes/game/shop_offer_visual.tscn" id="6_visual"]
 [ext_resource type="PackedScene" path="res://scenes/audio/random_audio_player.tscn" id="2_rap"]
 [ext_resource type="AudioStream" uid="uid://cxiguwesqt88c" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_001.ogg" id="3_imp1"]
 [ext_resource type="AudioStream" uid="uid://bvkelokoa3nk6" path="res://assets/sfx/kenney_impact-sounds/Audio/impactGeneric_light_002.ogg" id="4_imp2"]
@@ -27,12 +27,10 @@ theme_override_constants/separation = 6
 layout_mode = 2
 theme_override_constants/separation = 7
 
-[node name="ShopIcon" parent="Margin/VBox/Header" instance=ExtResource("6_icon")]
+[node name="ShopIcon" parent="Margin/VBox/Header" instance=ExtResource("6_visual")]
 unique_name_in_owner = true
 custom_minimum_size = Vector2(30, 30)
 layout_mode = 2
-texture_min_size = Vector2(18, 18)
-glyph_min_size = Vector2(12, 12)
 
 [node name="TitleCol" type="VBoxContainer" parent="Margin/VBox/Header" unique_id=40337106]
 layout_mode = 2

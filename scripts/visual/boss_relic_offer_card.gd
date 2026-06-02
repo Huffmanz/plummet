@@ -4,7 +4,7 @@ signal chosen(relic_id: String)
 
 const RELIC_BORDER := Color("#4DA8B0")
 
-@onready var _icon: ShopIcon = %ShopIcon
+@onready var _icon: ShopOfferVisual = %ShopIcon
 @onready var _name_lbl: Label = %NameLabel
 @onready var _type_lbl: Label = %TypeLabel
 @onready var _desc_lbl: Label = %DescLabel
@@ -53,12 +53,12 @@ func _apply_setup(id: String) -> void:
 		_name_lbl.text = id
 		_type_lbl.text = ShopOfferCard.format_relic_type()
 		_desc_lbl.text = ""
-		_icon.setup_relic(null)
+		_icon.setup("relic", "", Vector2(30, 30))
 	else:
 		_name_lbl.text = rd.display_name
 		_type_lbl.text = _format_relic_type(rd)
 		_desc_lbl.text = rd.description
-		_icon.setup_relic(rd.icon)
+		_icon.setup("relic", id, Vector2(30, 30))
 	_apply_border()
 	_footer_lbl.text = "Click to choose"
 

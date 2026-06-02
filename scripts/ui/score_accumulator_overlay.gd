@@ -102,7 +102,7 @@ func _count_up_player() -> void:
 	_player_tween.tween_method(
 		func(v: float) -> void:
 			_player_disp = v
-			_player_base_label.text = str(int(v)),
+			_player_base_label.text = str(roundi(v)),
 		from, to, _COUNTUP_DUR
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 
@@ -116,7 +116,7 @@ func _count_up_ai() -> void:
 	_ai_tween.tween_method(
 		func(v: float) -> void:
 			_ai_disp = v
-			_ai_base_label.text = str(int(v)),
+			_ai_base_label.text = str(roundi(v)),
 		from, to, _COUNTUP_DUR
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
 

@@ -105,6 +105,7 @@ func _count_up_player() -> void:
 			_player_base_label.text = str(roundi(v)),
 		from, to, _COUNTUP_DUR
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_player_tween.finished.connect(_snap_player_display, CONNECT_ONE_SHOT)
 
 
 func _count_up_ai() -> void:
@@ -119,6 +120,17 @@ func _count_up_ai() -> void:
 			_ai_base_label.text = str(roundi(v)),
 		from, to, _COUNTUP_DUR
 	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_ai_tween.finished.connect(_snap_ai_display, CONNECT_ONE_SHOT)
+
+
+func _snap_player_display() -> void:
+	_player_disp = float(_player_base)
+	_player_base_label.text = str(_player_base)
+
+
+func _snap_ai_display() -> void:
+	_ai_disp = float(_ai_base)
+	_ai_base_label.text = str(_ai_base)
 
 
 func _kill_tweens() -> void:

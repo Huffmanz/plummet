@@ -131,10 +131,8 @@ func _process(delta: float) -> void:
 
 	# Score tween — tick displayed score toward actual over ~20 frames
 	if _state != null:
-		var max_step := maxf(1.0, absf(float(_state.player_score) - _disp_player_score) / 20.0 + delta * 30.0)
-		_disp_player_score = move_toward(_disp_player_score, float(_state.player_score), max_step)
-		var max_step_ai := maxf(1.0, absf(float(_state.ai_score) - _disp_ai_score) / 20.0 + delta * 30.0)
-		_disp_ai_score = move_toward(_disp_ai_score, float(_state.ai_score), max_step_ai)
+		_disp_player_score = _tick_display_score(_disp_player_score, _state.player_score, delta)
+		_disp_ai_score = _tick_display_score(_disp_ai_score, _state.ai_score, delta)
 
 	# Board idle breathe
 	if not _animating and _renderer != null:
@@ -973,8 +971,23 @@ func _refresh_all() -> void:
 	_update_labels()
 
 
+func _tick_display_score(disp: float, target: int, delta: float) -> float:
+	var target_f := float(target)
+	var max_step := maxf(1.0, absf(target_f - disp) / 20.0 + delta * 30.0)
+	var next := move_toward(disp, target_f, max_step)
+	if is_equal_approx(next, target_f):
+		return target_f
+	return next
+
+
+func _format_display_score(disp: float, target: int) -> String:
+	if is_equal_approx(disp, float(target)):
+		return str(target)
+	return str(roundi(disp))
+
+
 func _update_labels() -> void:
-	_player_score_label.text = str(int(_disp_player_score))
+	_player_score_label.text = _format_display_score(_disp_player_score, _state.player_score)
 	var delta := _state.score_delta if _state != null else 0
 	_score_delta_label.visible = true
 	if delta > 0:
@@ -982,7 +995,7 @@ func _update_labels() -> void:
 	else:
 		_score_delta_label.text = ""
 	_player_turns_label.text = str(_state.player_turns_remaining)
-	_ai_score_label.text = str(int(_disp_ai_score))
+	_ai_score_label.text = _format_display_score(_disp_ai_score, _state.ai_score)
 	_ai_turns_label.text = str(_state.ai_turns_remaining)
 	_chip_label.text = str(_chip_count)
 	if _relic_display != null:

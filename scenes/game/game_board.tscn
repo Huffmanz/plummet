@@ -27,6 +27,7 @@
 [ext_resource type="AudioStream" uid="uid://de3ybywjupdi3" path="res://assets/sfx/571581__el_boss__playing-card-slide-right.wav" id="23_cardslide"]
 [ext_resource type="PackedScene" uid="uid://bqxakp7mr3n5t" path="res://scenes/ui/score_accumulator_overlay.tscn" id="24_accumoverlay"]
 [ext_resource type="PackedScene" uid="uid://bid1oolhdwpeo" path="res://scenes/game/match_relic_display.tscn" id="25_relicdisp"]
+[ext_resource type="PackedScene" uid="uid://c8enemyintro001" path="res://scenes/game/enemy_intro_overlay.tscn" id="26_enemyintro"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_1idxs"]
 frequency = 0.062
@@ -276,6 +277,7 @@ size_flags_vertical = 3
 theme_override_constants/separation = 4
 
 [node name="EnemyPanel" type="PanelContainer" parent="RightPanel/AISidebarVBox" unique_id=2030132308]
+unique_name_in_owner = true
 layout_mode = 2
 size_flags_vertical = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_64pfw")
@@ -397,6 +399,9 @@ text = "Act 1 · Match 1"
 
 [node name="MatchEndOverlay" parent="." unique_id=1903911458 instance=ExtResource("6_matchend")]
 visible = false
+layout_mode = 1
+
+[node name="EnemyIntroOverlay" parent="." instance=ExtResource("26_enemyintro")]
 layout_mode = 1
 
 [node name="ScoreAccumulatorOverlay" parent="." unique_id=2034567890 instance=ExtResource("24_accumoverlay")]

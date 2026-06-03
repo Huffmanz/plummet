@@ -20,6 +20,7 @@ signal gimmick_test_match_finished(player_won: bool)
 @onready var _chip_label: Label = %ChipCount
 @onready var _relic_display: MatchRelicDisplay = %RelicDisplay
 @onready var _enemy_header: RichTextLabel = %EnemyHeader
+@onready var _enemy_panel: PanelContainer = %EnemyPanel
 @onready var _boss_tag: Label = %BossTag
 @onready var _enemy_gimmick_label: Label = %EnemyGimmick
 @onready var _turn_indicator_label: Label = %TurnIndicator
@@ -30,6 +31,7 @@ signal gimmick_test_match_finished(player_won: bool)
 @onready var _match_progress_panel: PanelContainer = %MatchProgressPanel
 @onready var _anim_layer: AnimLayer = $AnimLayer
 @onready var _match_end_overlay: MatchEndOverlay = $MatchEndOverlay
+@onready var _enemy_intro_overlay: EnemyIntroOverlay = $EnemyIntroOverlay
 @onready var _score_accum: ScoreAccumulatorOverlay = $ScoreAccumulatorOverlay
 
 # Visual
@@ -69,6 +71,9 @@ var _idle_t: float = 0.0
 var _score_milestone: int = 0
 
 const _SCORE_DELTA_RESERVE_TEXT := "+999 last turn"
+const _INTRO_PANEL_SLIDE_OFFSET := 180.0
+const _INTRO_PANEL_SLIDE_SEC := 0.45
+const _INTRO_PANEL_PUNCH_SEC := 0.22
 
 # Match metadata (injected by RunController in run mode)
 @export var standalone: bool = true
@@ -223,6 +228,8 @@ func _init_game() -> void:
 	_refresh_all()
 	if _layout != null:
 		_apply_viewport_layout_sync()
+	_animating = true
+	call_deferred("_play_enemy_intro")
 
 
 # Called externally to hot-swap game state (e.g. from a parent game controller).
@@ -317,6 +324,84 @@ func _build_state() -> RenderState:
 	else:
 		_was_gravity_flipped = gf
 	return _make_render_state(gf)
+
+
+func _play_enemy_intro() -> void:
+	if _enemy_intro_overlay == null:
+		_animating = false
+		return
+	var skip_motion := _anim_layer != null and _anim_layer.reduced_motion
+	if skip_motion:
+		_animating = false
+		return
+
+	var slide_panel := _right_panel.visible and _layout != null and _layout.panel_width > 0.0
+	var panel_rest := _right_panel.position
+
+	if slide_panel:
+		_right_panel.position = panel_rest + Vector2(_INTRO_PANEL_SLIDE_OFFSET, 0.0)
+
+	await _enemy_intro_overlay.play(_match_enemy_name, _match_enemy_gimmick, _match_is_boss, false)
+	if not is_inside_tree():
+		return
+
+	if slide_panel:
+		var panel_tween := _begin_intro_panel_slide()
+		if panel_tween != null and panel_tween.is_valid():
+			await panel_tween.finished
+		_right_panel.position = panel_rest
+		await _play_enemy_panel_intro_punch()
+
+	_intro_panel_tween = null
+	_animating = false
+
+
+func _begin_intro_panel_slide() -> Tween:
+	if not _right_panel.visible or _layout == null or _layout.panel_width <= 0.0:
+		return null
+	var panel_rest := Vector2(
+		_layout.viewport_size.x - _layout.panel_width - 5.0,
+		_right_panel.position.y
+	)
+	_kill_intro_panel_tween()
+	var tween := create_tween()
+	tween.tween_property(_right_panel, "position", panel_rest, _INTRO_PANEL_SLIDE_SEC) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_OUT)
+	_intro_panel_tween = tween
+	return tween
+
+
+var _intro_panel_tween: Tween = null
+
+
+func _play_enemy_panel_intro_punch() -> void:
+	if _enemy_panel == null:
+		return
+	await get_tree().process_frame
+	_enemy_panel.pivot_offset = _enemy_panel.size * 0.5
+	_enemy_panel.scale = Vector2(0.96, 0.96)
+	var punch := create_tween()
+	punch.set_parallel(true)
+	punch.tween_property(_enemy_panel, "scale", Vector2.ONE, _INTRO_PANEL_PUNCH_SEC) \
+		.set_trans(Tween.TRANS_BACK) \
+		.set_ease(Tween.EASE_OUT)
+	punch.tween_property(_enemy_panel, "modulate", Color(1.12, 1.12, 1.12, 1.0), _INTRO_PANEL_PUNCH_SEC * 0.45) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_OUT)
+	punch.chain().tween_property(_enemy_panel, "modulate", Color.WHITE, _INTRO_PANEL_PUNCH_SEC * 0.55) \
+		.set_trans(Tween.TRANS_QUAD) \
+		.set_ease(Tween.EASE_OUT)
+	await punch.finished
+	_enemy_panel.pivot_offset = Vector2.ZERO
+	_enemy_panel.modulate = Color.WHITE
+	_enemy_panel.scale = Vector2.ONE
+
+
+func _kill_intro_panel_tween() -> void:
+	if _intro_panel_tween != null and _intro_panel_tween.is_valid():
+		_intro_panel_tween.kill()
+	_intro_panel_tween = null
 
 
 func _on_player_turn_started(_remaining: int) -> void:

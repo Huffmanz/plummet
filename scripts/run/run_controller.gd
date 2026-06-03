@@ -3,12 +3,20 @@ extends Control
 const _GAME_BOARD_SCENE := preload("res://scenes/game/game_board.tscn")
 const _BOSS_RELIC_OVERLAY_SCENE := preload("res://scenes/run/boss_relic_offer_overlay.tscn")
 
-# Enemy name/gimmick per [act][match_in_act] (match_in_act 1-4, 4=boss)
-const _ENEMY_SCHEDULE: Array = [
-	[],  # unused index 0
-	["The Stoic", "The Blocker", "", "The Mirror"],          # act 1
-	["The Gravedigger", "The Architect", "", "The Taxman"], # act 2
-	["The Painter", "The Shifter", "", "The Hoarder"],        # act 3
+# All non-boss opponents; three per act are drawn without replacement. Match 4 uses _ACT_BOSSES.
+const _ALL_REGULAR_ENEMIES: Array[String] = [
+	"The Stoic",
+	"The Blocker",
+	"The Gravedigger",
+	"The Architect",
+	"The Painter",
+	"The Shifter",
+]
+const _ACT_BOSSES: Array = [
+	"",
+	"The Mirror",
+	"The Taxman",
+	"The Hoarder",
 ]
 const _ENEMY_GIMMICK: Dictionary = {
 	"The Stoic":      "No gimmick",
@@ -52,7 +60,10 @@ func _get_relic_manager() -> RelicManager:
 func _start_match() -> void:
 	_teardown_game_board()
 
-	var enemy_name := _get_enemy_name(_run_state.act, _run_state.match_in_act)
+	if _run_state.match_in_act == 1:
+		_run_state.enemies_used_this_act.clear()
+
+	var enemy_name := _pick_enemy_for_match()
 	var gimmick := _ENEMY_GIMMICK.get(enemy_name, "No gimmick") as String
 
 	_game_board = _GAME_BOARD_SCENE.instantiate()
@@ -79,11 +90,34 @@ func _start_match() -> void:
 		_game_board._score_tracker.add_starting_bonus(momentum_bonus)
 
 
-func _get_enemy_name(act: int, match_in_act: int) -> String:
-	var schedule: Array = _ENEMY_SCHEDULE[act]
-	if match_in_act == 3:
-		return schedule[randi() % 2]
-	return schedule[match_in_act - 1]
+func _pick_enemy_for_match() -> String:
+	if _run_state.is_boss_match():
+		return _ACT_BOSSES[_run_state.act] as String
+
+	# First match of the run is always The Stoic (tutorial).
+	if _run_state.total_matches_played() == 0:
+		_run_state.enemies_used_this_act.append("The Stoic")
+		return "The Stoic"
+
+	var pool := _unused_regular_enemies()
+	if pool.is_empty():
+		push_warning("RunController: no unused enemies for act %d match %d" % [
+			_run_state.act, _run_state.match_in_act
+		])
+		return "The Stoic"
+
+	pool.shuffle()
+	var pick: String = pool[0]
+	_run_state.enemies_used_this_act.append(pick)
+	return pick
+
+
+func _unused_regular_enemies() -> Array[String]:
+	var pool: Array[String] = []
+	for enemy_id in _ALL_REGULAR_ENEMIES:
+		if not _run_state.enemies_used_this_act.has(enemy_id):
+			pool.append(enemy_id)
+	return pool
 
 
 func _on_match_complete(

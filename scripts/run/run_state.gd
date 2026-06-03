@@ -13,6 +13,8 @@ var player_bag: PieceBag
 var chip_count: int = 0
 var win_streak: int = 0
 var relic_manager: RelicManager
+## Regular enemy ids already fought this act (bosses excluded).
+var enemies_used_this_act: Array[String] = []
 
 
 func _init() -> void:

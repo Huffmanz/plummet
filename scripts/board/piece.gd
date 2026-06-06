@@ -15,3 +15,9 @@ func _init(p_owner: Owner, p_type: Type = Type.NORMAL) -> void:
 
 func has_modifier() -> bool:
 	return modifier != ""
+
+
+func copy_for_bag() -> Piece:
+	var copy := Piece.new(owner, type)
+	copy.modifier = modifier
+	return copy

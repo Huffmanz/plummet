@@ -13,6 +13,7 @@ func _ready() -> void:
 	test_inverter_landing_row_at_ceiling()
 	test_taxman_chip_tax_per_placement()
 	test_taxman_no_placement_tax_other_enemies()
+	test_painter_does_not_corrupt_bag_piece_owner()
 	print("-----------------------------")
 	print("Gimmick results: %d passed, %d failed" % [_passed, _failed])
 
@@ -111,3 +112,21 @@ func test_taxman_chip_tax_per_placement() -> void:
 func test_taxman_no_placement_tax_other_enemies() -> void:
 	var gimmick := EnemyGimmickController.for_enemy("The Stoic")
 	_assert("Stoic charges 0 per placement", gimmick.chip_tax_per_placement() == 0)
+
+
+func test_painter_does_not_corrupt_bag_piece_owner() -> void:
+	var board := BoardEngine.new()
+	var ai := AIOpponent.new(0.0)
+	var st := ScoreTracker.new()
+	var gimmick := EnemyGimmickController.for_enemy("The Painter")
+	gimmick.setup(ai, board, st)
+	var bag := PieceBag.new(Piece.Owner.PLAYER)
+	var dropped := bag.current()
+	board.drop_piece(3, dropped)
+	bag.advance()
+	for _i in gimmick.PAINTER_INTERVAL:
+		gimmick._on_painter_turn_start(board)
+	_assert("Painter recolors board piece", board.get_cell(3, 0).owner == Piece.Owner.AI)
+	for i in PieceBag.BAG_SIZE - 1:
+		bag.advance()
+	_assert("Bag slot keeps player owner after painted piece cycles back", bag.current().owner == Piece.Owner.PLAYER)

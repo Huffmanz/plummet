@@ -31,4 +31,6 @@ func get_piece_at(index: int) -> Piece:
 
 
 func advance() -> void:
+	var slot := _index
+	_pieces[slot] = _pieces[slot].copy_for_bag()
 	_index = (_index + 1) % BAG_SIZE
